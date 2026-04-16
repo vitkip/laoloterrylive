@@ -1,5 +1,14 @@
 <?php
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/config.php';
+
+if (PRODUCTION) {
+    error_reporting(0);
+    ini_set('display_errors', '0');
+}
+
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+$allowedOrigin = in_array($origin, ALLOWED_ORIGINS, true) ? $origin : ALLOWED_ORIGINS[0];
+header("Access-Control-Allow-Origin: " . $allowedOrigin);
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
@@ -9,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-define('SECRET_KEY', 'lao_lottery_super_secret_key');
+define('SECRET_KEY', JWT_SECRET);
 
 function getAuthorizationHeader()
 {
@@ -93,7 +102,7 @@ function requireAuth($role = null)
     return $payload;
 }
 
-$conn = new mysqli("localhost", "root", "", "lao_lottery_pro");
+$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if ($conn->connect_error) {
     http_response_code(500);
     echo json_encode(["error" => "Database connection failed"]);

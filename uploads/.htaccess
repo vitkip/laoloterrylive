@@ -1,3 +1,10 @@
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
 </IfModule>
+
+# Block PHP execution inside uploads — prevent webshell attacks
+<FilesMatch "\.php[0-9]?$">
+    Require all denied
+</FilesMatch>
+
+Options -Indexes

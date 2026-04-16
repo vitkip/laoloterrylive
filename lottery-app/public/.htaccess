@@ -1,8 +1,8 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /laoloterylive/lottery-app/dist/
+  RewriteBase /laolots/lottery-app/dist/
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /laoloterylive/lottery-app/dist/index.html [L]
+  RewriteRule . /laolots/lottery-app/dist/index.html [L]
 </IfModule>
