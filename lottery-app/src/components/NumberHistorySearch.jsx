@@ -26,19 +26,19 @@ export default function NumberHistorySearch() {
   }, [searchNumber, draws]);
 
   return (
-    <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-[#dee9fd] h-full flex flex-col min-h-0">
+    <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 sm:p-8 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54] h-full flex flex-col min-h-0">
       <div className="mb-6 shrink-0">
-        <h2 className="text-2xl font-black text-[#121c2a] mb-2 flex items-center gap-2">
+        <h2 className="text-2xl font-black text-[#121c2a] dark:text-white mb-2 flex items-center gap-2">
           <span className="material-symbols-outlined text-[#006c49]">history</span>
           ຄົ້ນຫາຍ້ອນຫຼັງສະເພາະເລກ
         </h2>
-        <p className="text-sm text-[#434654]">
+        <p className="text-sm text-[#434654] dark:text-[#c7d2fe]">
           ພິມຕົວເລກ 2-6 ຕົວ ເພື່ອເບິ່ງປະຫວັດວ່າມັນເຄີຍອອກມາວັນທີໃດແດ່.
         </p>
       </div>
 
       <div className="relative mb-6 shrink-0">
-        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686]">
+        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] dark:text-[#94a3b8]">
           123
         </span>
         <input 
@@ -47,7 +47,7 @@ export default function NumberHistorySearch() {
           placeholder="ພິມຕົວເລກ ເຊັ່ນ: 99 ຫຼື 1563..."
           value={searchNumber}
           onChange={(e) => setSearchNumber(e.target.value.replace(/\D/g, ''))} // only numbers
-          className="w-full bg-[#eff3ff] pl-12 pr-4 py-3.5 rounded-xl border border-transparent focus:border-[#006c49]/30 focus:bg-white outline-none font-bold text-lg tracking-widest transition-all"
+          className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] pl-12 pr-4 py-3.5 rounded-xl border border-transparent focus:border-[#006c49]/30 focus:bg-white dark:bg-[#152033] outline-none font-bold text-lg tracking-widest transition-all"
         />
       </div>
 
@@ -60,10 +60,10 @@ export default function NumberHistorySearch() {
                  </p>
                  <div className="space-y-3">
                    {results.map(d => (
-                     <div key={d.draw_id} className="border border-[#dee9fd] rounded-xl p-4 flex justify-between items-center hover:bg-[#eff3ff]/50 transition-colors">
+                     <div key={d.draw_id} className="border border-[#dee9fd] dark:border-[#2b3a54] rounded-xl p-4 flex justify-between items-center hover:bg-[#eff3ff] dark:bg-[#1e2d4a]/50 transition-colors">
                        <div>
-                         <p className="text-xs text-[#737686] mb-1">ງວດທີ {d.draw_number}</p>
-                         <p className="font-bold text-[#121c2a]">{new Date(d.draw_date).toLocaleDateString('lo-LA')}</p>
+                         <p className="text-xs text-[#737686] dark:text-[#94a3b8] mb-1">ງວດທີ {d.draw_number}</p>
+                         <p className="font-bold text-[#121c2a] dark:text-white">{new Date(d.draw_date).toLocaleDateString('lo-LA')}</p>
                        </div>
                        <div className="text-right">
                          <p className="text-xl font-black tracking-[0.2em]">{d.full_result}</p>
@@ -74,13 +74,13 @@ export default function NumberHistorySearch() {
                  </div>
              </div>
           ) : (
-             <div className="text-center py-10 text-[#737686] flex flex-col items-center gap-2">
+             <div className="text-center py-10 text-[#737686] dark:text-[#94a3b8] flex flex-col items-center gap-2">
                  <span className="material-symbols-outlined text-4xl opacity-50">block</span>
                  <p>ບໍ່ເຄີຍອອກເລກນີ້ມາກ່ອນ (ໃນຖານຂໍ້ມູນປັດຈຸບັນ)</p>
              </div>
           )
         ) : (
-          <div className="text-center py-10 text-[#737686] flex flex-col items-center gap-2 opacity-60">
+          <div className="text-center py-10 text-[#737686] dark:text-[#94a3b8] flex flex-col items-center gap-2 opacity-60">
              <span className="material-symbols-outlined text-4xl">keyboard</span>
              <p>ພິມຕົວເລກເພື່ອຄົ້ນຫາ</p>
           </div>

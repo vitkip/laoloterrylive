@@ -26,11 +26,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-16 bg-white p-8 rounded-2xl shadow-sm border border-[#dee9fd]">
+    <div className="max-w-md mx-auto mt-16 bg-white dark:bg-[#152033] p-8 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
       <div className="flex flex-col items-center mb-8">
         <span className="material-symbols-outlined text-[#003fb1] text-5xl mb-4">lock_person</span>
-        <h2 className="text-2xl font-bold text-[#121c2a]">ເຂົ້າສູ່ລະບົບແອດມິນ</h2>
-        <p className="text-sm text-[#737686] mt-2 text-center">
+        <h2 className="text-2xl font-bold text-[#121c2a] dark:text-white">ເຂົ້າສູ່ລະບົບແອດມິນ</h2>
+        <p className="text-sm text-[#737686] dark:text-[#94a3b8] mt-2 text-center">
           ກະລຸນາປ້ອນຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານເພື່ອຈັດການລະບົບ
         </p>
       </div>
@@ -43,10 +43,10 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-bold text-[#434654] mb-2">ຊື່ຜູ້ໃຊ້ (Username)</label>
+          <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ຊື່ຜູ້ໃຊ້ (Username)</label>
           <input
             type="text"
-            className="w-full bg-[#eff3ff] border-none rounded-lg p-3 text-[#121c2a] focus:ring-2 focus:ring-[#003fb1]"
+            className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
             placeholder="admin"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -54,10 +54,10 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-bold text-[#434654] mb-2">ລະຫັດຜ່ານ (Password)</label>
+          <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ລະຫັດຜ່ານ (Password)</label>
           <input
             type="password"
-            className="w-full bg-[#eff3ff] border-none rounded-lg p-3 text-[#121c2a] focus:ring-2 focus:ring-[#003fb1]"
+            className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

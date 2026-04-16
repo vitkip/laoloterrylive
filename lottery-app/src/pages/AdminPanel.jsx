@@ -103,9 +103,9 @@ export default function AdminPanel() {
 
   return (
     <div className="space-y-8">
-      <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-[#dee9fd]">
+      <div className="max-w-3xl mx-auto bg-white dark:bg-[#152033] p-8 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-[#121c2a] flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-[#121c2a] dark:text-white flex items-center gap-2">
             <span className="material-symbols-outlined text-[#003fb1]">
               {isEditing ? 'edit_square' : 'add_circle'}
             </span>
@@ -131,9 +131,9 @@ export default function AdminPanel() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-bold text-[#434654] mb-2">ປະເພດຫວຍ</label>
+            <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ປະເພດຫວຍ</label>
             <select
-              className="w-full bg-[#eff3ff] border-none rounded-lg p-3 text-[#121c2a] focus:ring-2 focus:ring-[#003fb1]"
+              className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
               value={formData.type_id}
               onChange={(e) => setFormData({ ...formData, type_id: parseInt(e.target.value) })}
               required
@@ -144,10 +144,10 @@ export default function AdminPanel() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-bold text-[#434654] mb-2">ງວດວັນທີ</label>
+            <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ງວດວັນທີ</label>
             <input
               type="date"
-              className="w-full bg-[#eff3ff] border-none rounded-lg p-3 text-[#121c2a] focus:ring-2 focus:ring-[#003fb1]"
+              className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
               value={formData.draw_date}
               onChange={(e) => setFormData({ ...formData, draw_date: e.target.value })}
               required
@@ -157,10 +157,10 @@ export default function AdminPanel() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-bold text-[#434654] mb-2">ງວດທີ (ເລກລຳດັບ)</label>
+            <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ງວດທີ (ເລກລຳດັບ)</label>
             <input
               type="number"
-              className="w-full bg-[#eff3ff] border-none rounded-lg p-3 text-[#121c2a] focus:ring-2 focus:ring-[#003fb1]"
+              className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
               placeholder="ຕົວຢ່າງ: 202"
               value={formData.draw_number}
               onChange={(e) => setFormData({ ...formData, draw_number: e.target.value })}
@@ -168,11 +168,11 @@ export default function AdminPanel() {
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-[#434654] mb-2">ເລກທີ່ອອກ (6 ຕົວ)</label>
+            <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ເລກທີ່ອອກ (6 ຕົວ)</label>
             <input
               type="text"
               maxLength={6}
-              className="w-full bg-[#eff3ff] border-none rounded-lg p-3 text-xl font-black text-[#003fb1] tracking-[0.5em] text-center focus:ring-2 focus:ring-[#003fb1]"
+              className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-xl font-black text-[#003fb1] tracking-[0.5em] text-center focus:ring-2 focus:ring-[#003fb1]"
               placeholder="000000"
               value={formData.full_result}
               onChange={(e) => setFormData({ ...formData, full_result: e.target.value.replace(/[^0-9]/g, '') })}
@@ -182,9 +182,9 @@ export default function AdminPanel() {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-[#434654] mb-2">ເລືອກນາມສັດ (ຕາມເລກ 2 ຕົວ)</label>
+          <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ເລືອກນາມສັດ (ຕາມເລກ 2 ຕົວ)</label>
           <select
-            className="w-full bg-[#eff3ff] border-none rounded-lg p-3 text-[#121c2a] focus:ring-2 focus:ring-[#003fb1]"
+            className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
             value={formData.animal_id}
             onChange={(e) => setFormData({ ...formData, animal_id: e.target.value })}
           >
@@ -204,13 +204,13 @@ export default function AdminPanel() {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-[#434654] mb-2 flex items-center gap-1">
+          <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2 flex items-center gap-1">
             <span className="material-symbols-outlined text-[#ba1a1a] text-sm">smart_display</span>
             ລິ້ງວິດີໂອ YouTube Shorts (ທາງເລືອກ)
           </label>
           <input
             type="url"
-            className="w-full bg-[#eff3ff] border-none rounded-lg p-3 text-[#121c2a] focus:ring-2 focus:ring-[#ba1a1a]"
+            className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#ba1a1a]"
             placeholder="ເຊັ່ນ: https://youtube.com/shorts/..."
             value={formData.youtube_url}
             onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
@@ -227,12 +227,12 @@ export default function AdminPanel() {
       </form>
     </div>
 
-      <div className="max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-[#dee9fd]">
-        <h3 className="text-lg font-bold text-[#121c2a] mb-4">ຜົນການອອກລາງວັນລ່າສຸດ (10 ງວດຫຼ້າສຸດ)</h3>
+      <div className="max-w-3xl mx-auto bg-white dark:bg-[#152033] p-6 sm:p-8 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+        <h3 className="text-lg font-bold text-[#121c2a] dark:text-white mb-4">ຜົນການອອກລາງວັນລ່າສຸດ (10 ງວດຫຼ້າສຸດ)</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
-              <tr className="bg-[#eff3ff] text-[#434654] text-xs uppercase tracking-widest font-bold">
+              <tr className="bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#434654] dark:text-[#c7d2fe] text-xs uppercase tracking-widest font-bold">
                 <th className="px-4 py-3 rounded-tl-lg">ງວດທີ</th>
                 <th className="px-4 py-3">ວັນທີ</th>
                 <th className="px-4 py-3">ເລກອອກ</th>
@@ -241,9 +241,9 @@ export default function AdminPanel() {
             </thead>
             <tbody className="text-sm">
               {draws?.slice(0, 10).map((d) => (
-                <tr key={d.draw_id} className="border-b border-[#eff3ff] hover:bg-[#fafbff] transition">
-                  <td className="px-4 py-3 font-medium text-[#121c2a]">{d.draw_number}</td>
-                  <td className="px-4 py-3 text-[#434654]">{d.draw_date}</td>
+                <tr key={d.draw_id} className="border-b border-[#eff3ff] dark:border-[#1e2d4a] hover:bg-[#fafbff] transition">
+                  <td className="px-4 py-3 font-medium text-[#121c2a] dark:text-white">{d.draw_number}</td>
+                  <td className="px-4 py-3 text-[#434654] dark:text-[#c7d2fe]">{d.draw_date}</td>
                   <td className="px-4 py-3 font-bold text-[#003fb1] tracking-wider">{d.full_result}</td>
                   <td className="px-4 py-3 text-right">
                     <button 

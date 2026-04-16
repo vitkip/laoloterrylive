@@ -39,19 +39,19 @@ export default function DreamDictionary() {
   }, [searchTerm]);
 
   return (
-    <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-[#dee9fd] h-full flex flex-col min-h-0">
+    <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 sm:p-8 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54] h-full flex flex-col min-h-0">
       <div className="mb-6 shrink-0">
-        <h2 className="text-2xl font-black text-[#121c2a] mb-2 flex items-center gap-2">
+        <h2 className="text-2xl font-black text-[#121c2a] dark:text-white mb-2 flex items-center gap-2">
           <span className="material-symbols-outlined text-[#003fb1]">menu_book</span>
           ຕຳລາແປຄວາມຝັນ
         </h2>
-        <p className="text-sm text-[#737686]">
+        <p className="text-sm text-[#737686] dark:text-[#94a3b8]">
           ພິມສິ່ງທີ່ທ່ານຝັນເຫັນ ເພື່ອຄົ້ນຫາຕົວເລກ ຫຼື ນາມສັດທີ່ກ່ຽວຂ້ອງ (ເຊັ່ນ: "ງູ", "ຊ້າງ", "ນ້ຳ").
         </p>
       </div>
 
       <div className="relative mb-6 shrink-0">
-        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686]">
+        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] dark:text-[#94a3b8]">
           search
         </span>
         <input 
@@ -59,7 +59,7 @@ export default function DreamDictionary() {
           placeholder="ຄົ້ນຫາຄວາມຝັນ..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-[#eff3ff] pl-12 pr-4 py-3.5 rounded-xl border border-transparent focus:border-[#003fb1]/30 focus:bg-white outline-none font-medium transition-all"
+          className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] pl-12 pr-4 py-3.5 rounded-xl border border-transparent focus:border-[#003fb1]/30 focus:bg-white dark:bg-[#152033] outline-none font-medium transition-all"
         />
       </div>
 
@@ -68,24 +68,24 @@ export default function DreamDictionary() {
           results.length > 0 ? (
             <div className="space-y-4">
               {results.map((res, idx) => (
-                <div key={idx} className="bg-white p-4 sm:p-5 rounded-xl border border-[#dee9fd] shadow-sm flex flex-col gap-3 hover:border-[#003fb1]/30 transition-colors">
+                <div key={idx} className="bg-white dark:bg-[#152033] p-4 sm:p-5 rounded-xl border border-[#dee9fd] dark:border-[#2b3a54] shadow-sm flex flex-col gap-3 hover:border-[#003fb1]/30 transition-colors">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4 flex-1">
-                      <div className="w-12 h-12 rounded-full bg-[#eff3ff] flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-[#eff3ff] dark:bg-[#1e2d4a] flex items-center justify-center shrink-0">
                         <span className="material-symbols-outlined text-[#003fb1] text-2xl">
                           {res.type === 'animal' ? res.data.icon : 'format_list_numbered'}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-[#121c2a] truncate text-lg">
+                          <h3 className="font-bold text-[#121c2a] dark:text-white truncate text-lg">
                             {res.type === 'animal' ? res.data.animal_name_lao : 'ເລກເດັດ'}
                           </h3>
-                          <span className="text-[10px] bg-[#f9f9ff] text-[#737686] px-2 py-0.5 rounded border border-[#dee9fd] uppercase tracking-wider">
+                          <span className="text-[10px] bg-[#f9f9ff] dark:bg-[#0d1627] text-[#737686] dark:text-[#94a3b8] px-2 py-0.5 rounded border border-[#dee9fd] dark:border-[#2b3a54] uppercase tracking-wider">
                             {res.category}
                           </span>
                         </div>
-                        <p className="text-xs text-[#737686] truncate mb-2">ຈາກຄຳວ່າ: {res.keywords}</p>
+                        <p className="text-xs text-[#737686] dark:text-[#94a3b8] truncate mb-2">ຈາກຄຳວ່າ: {res.keywords}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
@@ -98,8 +98,8 @@ export default function DreamDictionary() {
                     </div>
                   </div>
                   {res.meaning && (
-                    <div className="mt-2 bg-[#eff3ff]/50 rounded-lg p-3 border border-[#dee9fd]/50">
-                      <p className="text-sm font-medium text-[#434654] leading-relaxed flex gap-2">
+                    <div className="mt-2 bg-[#eff3ff] dark:bg-[#1e2d4a]/50 rounded-lg p-3 border border-[#dee9fd] dark:border-[#2b3a54]/50">
+                      <p className="text-sm font-medium text-[#434654] dark:text-[#c7d2fe] leading-relaxed flex gap-2">
                         <span className="material-symbols-outlined text-[#003fb1] text-[18px]">lightbulb</span>
                         {res.meaning}
                       </p>
@@ -109,13 +109,13 @@ export default function DreamDictionary() {
               ))}
             </div>
           ) : (
-             <div className="text-center py-10 text-[#737686] flex flex-col items-center gap-2">
+             <div className="text-center py-10 text-[#737686] dark:text-[#94a3b8] flex flex-col items-center gap-2">
                  <span className="material-symbols-outlined text-4xl opacity-50">search_off</span>
                  <p>ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັບຄວາມຝັນນີ້</p>
              </div>
           )
         ) : (
-          <div className="text-center py-10 text-[#737686] flex flex-col items-center gap-2 opacity-60">
+          <div className="text-center py-10 text-[#737686] dark:text-[#94a3b8] flex flex-col items-center gap-2 opacity-60">
              <span className="material-symbols-outlined text-4xl">auto_awesome</span>
              <p>ເລີ່ມພິມເພື່ອຄົ້ນຫາ</p>
           </div>

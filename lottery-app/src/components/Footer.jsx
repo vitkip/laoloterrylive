@@ -13,7 +13,7 @@ export default function Footer() {
           ຄັງຂໍ້ມູນຫວຍ
         </div>
         <p className="text-xs font-medium text-slate-500">
-          © 2024 The Editorial Archive. All Rights Reserved.
+          © 2026 The Editorial Archive. All Rights Reserved.
         </p>
       </div>
 

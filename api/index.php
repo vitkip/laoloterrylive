@@ -11,7 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 define('SECRET_KEY', 'lao_lottery_super_secret_key');
 
-function verifyToken() {
+function verifyToken()
+{
     $headers = apache_request_headers();
     $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '');
     if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
@@ -19,16 +20,19 @@ function verifyToken() {
     }
     $token = $matches[1];
     $parts = explode('.', $token);
-    if (count($parts) !== 3) return false;
+    if (count($parts) !== 3)
+        return false;
 
     $signature = hash_hmac('sha256', $parts[0] . "." . $parts[1], SECRET_KEY, true);
     $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
-    
-    if ($base64UrlSignature !== $parts[2]) return false;
+
+    if ($base64UrlSignature !== $parts[2])
+        return false;
 
     $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
-    if ($payload['exp'] < time()) return false;
-    
+    if ($payload['exp'] < time())
+        return false;
+
     return $payload;
 }
 
@@ -81,7 +85,7 @@ switch ($action) {
             echo json_encode(["error" => "Unauthorized. Admin or Staff access required."]);
             break;
         }
-        $userId = (int)$userPayload['user_id'];
+        $userId = (int) $userPayload['user_id'];
 
         $input = json_decode(file_get_contents('php://input'), true);
         if (!$input) {
@@ -90,11 +94,11 @@ switch ($action) {
             break;
         }
 
-        $type_id = isset($input['type_id']) ? (int)$input['type_id'] : 1;
-        $draw_number = isset($input['draw_number']) ? (int)$input['draw_number'] : 0;
+        $type_id = isset($input['type_id']) ? (int) $input['type_id'] : 1;
+        $draw_number = isset($input['draw_number']) ? (int) $input['draw_number'] : 0;
         $draw_date = isset($input['draw_date']) ? $conn->real_escape_string($input['draw_date']) : '';
         $full_result = isset($input['full_result']) ? $conn->real_escape_string($input['full_result']) : '';
-        $animal_id = isset($input['animal_id']) && $input['animal_id'] ? (int)$input['animal_id'] : null;
+        $animal_id = isset($input['animal_id']) && $input['animal_id'] ? (int) $input['animal_id'] : null;
         $youtube_url = isset($input['youtube_url']) && $input['youtube_url'] !== '' ? $conn->real_escape_string($input['youtube_url']) : null;
 
         if (!$draw_number || !$draw_date || strlen($full_result) !== 6) {
@@ -114,7 +118,7 @@ switch ($action) {
 
             // 2. Insert details
             $stmt_detail = $conn->prepare("INSERT INTO draw_results_detail (draw_id, prize_type, result_value, animal_id) VALUES (?, ?, ?, ?)");
-            
+
             $prizes = [
                 "6_digits" => $full_result,
                 "5_digits" => substr($full_result, 1, 5),
@@ -160,12 +164,12 @@ switch ($action) {
             break;
         }
 
-        $draw_id = (int)$input['draw_id'];
-        $type_id = isset($input['type_id']) ? (int)$input['type_id'] : 1;
-        $draw_number = isset($input['draw_number']) ? (int)$input['draw_number'] : 0;
+        $draw_id = (int) $input['draw_id'];
+        $type_id = isset($input['type_id']) ? (int) $input['type_id'] : 1;
+        $draw_number = isset($input['draw_number']) ? (int) $input['draw_number'] : 0;
         $draw_date = isset($input['draw_date']) ? $conn->real_escape_string($input['draw_date']) : '';
         $full_result = isset($input['full_result']) ? $conn->real_escape_string($input['full_result']) : '';
-        $animal_id = isset($input['animal_id']) && $input['animal_id'] ? (int)$input['animal_id'] : null;
+        $animal_id = isset($input['animal_id']) && $input['animal_id'] ? (int) $input['animal_id'] : null;
         $youtube_url = isset($input['youtube_url']) && $input['youtube_url'] !== '' ? $conn->real_escape_string($input['youtube_url']) : null;
 
         if (!$draw_number || !$draw_date || strlen($full_result) !== 6) {
@@ -228,7 +232,7 @@ switch ($action) {
             break;
         }
 
-        $animal_id = isset($_POST['animal_id']) ? (int)$_POST['animal_id'] : 0;
+        $animal_id = isset($_POST['animal_id']) ? (int) $_POST['animal_id'] : 0;
         if (!$animal_id || !isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
             http_response_code(400);
             echo json_encode(["error" => "Missing or invalid animal ID or image file"]);
@@ -253,12 +257,12 @@ switch ($action) {
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $dest)) {
             $imageUrl = '/laoloterylive/uploads/animals/' . $fileName;
-            
+
             $stmt = $conn->prepare("UPDATE animals SET image_url=? WHERE animal_id=?");
             $stmt->bind_param("si", $imageUrl, $animal_id);
             $stmt->execute();
             $stmt->close();
-            
+
             echo json_encode(["status" => "success", "image_url" => $imageUrl]);
         } else {
             http_response_code(500);
@@ -275,8 +279,8 @@ switch ($action) {
         }
         $res = $conn->query("SELECT user_id, username, full_name, role, is_active, created_at FROM users");
         if (!$res) {
-            http_response_code(500); 
-            echo json_encode(["error" => $conn->error]); 
+            http_response_code(500);
+            echo json_encode(["error" => $conn->error]);
             break;
         }
         echo json_encode($res->fetch_all(MYSQLI_ASSOC));
@@ -296,8 +300,12 @@ switch ($action) {
         $role = $conn->real_escape_string($input['role']);
         $stmt = $conn->prepare("INSERT INTO users (username, password_hash, full_name, role) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssss", $username, $password_hash, $full_name, $role);
-        if($stmt->execute()) echo json_encode(["success" => true]);
-        else { http_response_code(500); echo json_encode(["error" => $conn->error]); }
+        if ($stmt->execute())
+            echo json_encode(["success" => true]);
+        else {
+            http_response_code(500);
+            echo json_encode(["error" => $conn->error]);
+        }
         break;
 
     case 'update_user':
@@ -308,16 +316,20 @@ switch ($action) {
             break;
         }
         $input = json_decode(file_get_contents('php://input'), true);
-        $user_id = (int)$input['user_id'];
+        $user_id = (int) $input['user_id'];
         $full_name = $conn->real_escape_string($input['full_name']);
         $role = $conn->real_escape_string($input['role']);
-        $is_active = (int)$input['is_active'];
-        
+        $is_active = (int) $input['is_active'];
+
         $sql = "UPDATE users SET full_name=?, role=?, is_active=? WHERE user_id=?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ssii", $full_name, $role, $is_active, $user_id);
-        if($stmt->execute()) echo json_encode(["success" => true]);
-        else { http_response_code(500); echo json_encode(["error" => $conn->error]); }
+        if ($stmt->execute())
+            echo json_encode(["success" => true]);
+        else {
+            http_response_code(500);
+            echo json_encode(["error" => $conn->error]);
+        }
         break;
 
     case 'delete_user':
@@ -328,14 +340,20 @@ switch ($action) {
             break;
         }
         $input = json_decode(file_get_contents('php://input'), true);
-        $user_id = (int)$input['user_id'];
-        if($user_id === $userPayload['user_id']) {
-            http_response_code(400); echo json_encode(["error" => "Cannot delete yourself"]); break;
+        $user_id = (int) $input['user_id'];
+        if ($user_id === $userPayload['user_id']) {
+            http_response_code(400);
+            echo json_encode(["error" => "Cannot delete yourself"]);
+            break;
         }
         $stmt = $conn->prepare("DELETE FROM users WHERE user_id=?");
         $stmt->bind_param("i", $user_id);
-        if($stmt->execute()) echo json_encode(["success" => true]);
-        else { http_response_code(500); echo json_encode(["error" => $conn->error]); }
+        if ($stmt->execute())
+            echo json_encode(["success" => true]);
+        else {
+            http_response_code(500);
+            echo json_encode(["error" => $conn->error]);
+        }
         break;
 
     case 'change_password':
@@ -347,29 +365,35 @@ switch ($action) {
         }
         $input = json_decode(file_get_contents('php://input'), true);
         // Admin can change anyone's password if they provide target_user_id. Otherwise, change own.
-        $target_id = (isset($input['target_user_id']) && $userPayload['role'] === 'admin') ? (int)$input['target_user_id'] : $userPayload['user_id'];
-        
+        $target_id = (isset($input['target_user_id']) && $userPayload['role'] === 'admin') ? (int) $input['target_user_id'] : $userPayload['user_id'];
+
         if ($target_id === $userPayload['user_id'] && $userPayload['role'] !== 'admin') {
             // Normal user must provide current password
             $current_pass = $input['current_password'];
             $res = $conn->query("SELECT password_hash FROM users WHERE user_id={$target_id}");
             $row = $res->fetch_assoc();
             if (!password_verify($current_pass, $row['password_hash'])) {
-                http_response_code(400); echo json_encode(["error" => "Current password incorrect"]); break;
+                http_response_code(400);
+                echo json_encode(["error" => "Current password incorrect"]);
+                break;
             }
         }
 
         $new_pass_hash = password_hash($input['new_password'], PASSWORD_DEFAULT);
         $stmt = $conn->prepare("UPDATE users SET password_hash=? WHERE user_id=?");
         $stmt->bind_param("si", $new_pass_hash, $target_id);
-        if($stmt->execute()) echo json_encode(["success" => true]);
-        else { http_response_code(500); echo json_encode(["error" => "Database error"]); }
+        if ($stmt->execute())
+            echo json_encode(["success" => true]);
+        else {
+            http_response_code(500);
+            echo json_encode(["error" => "Database error"]);
+        }
         break;
 
     case 'live_settings':
         $res = $conn->query("SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('youtube_live_url', 'is_live')");
         $settings = [];
-        while($row = $res->fetch_assoc()) {
+        while ($row = $res->fetch_assoc()) {
             $settings[$row['setting_key']] = $row['setting_value'];
         }
         echo json_encode($settings);
@@ -385,10 +409,10 @@ switch ($action) {
         $input = json_decode(file_get_contents('php://input'), true);
         $url = $conn->real_escape_string($input['youtube_live_url']);
         $is_live = $conn->real_escape_string($input['is_live']);
-        
+
         $conn->query("UPDATE system_settings SET setting_value='$url' WHERE setting_key='youtube_live_url'");
         $conn->query("UPDATE system_settings SET setting_value='$is_live' WHERE setting_key='is_live'");
-        
+
         echo json_encode(["success" => true]);
         break;
 

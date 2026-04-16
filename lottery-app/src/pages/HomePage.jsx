@@ -35,13 +35,13 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-3">
             <Link
               to="/statistics"
-              className="bg-white text-[#003fb1] px-6 py-2.5 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
+              className="bg-white dark:bg-[#152033] text-[#003fb1] px-6 py-2.5 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
             >
               ເບິ່ງສະຖິຕິ
             </Link>
             <Link
               to="/history"
-              className="border border-white/40 text-white px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white/10 transition-colors"
+              className="border border-white/40 text-white px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white dark:bg-[#152033]/10 transition-colors"
             >
               ປະຫວັດຍ້ອນຫຼັງ
             </Link>
@@ -51,7 +51,7 @@ export default function HomePage() {
 
       {/* Latest Result */}
       <section>
-        <h2 className="text-2xl font-bold text-[#121c2a] mb-6 flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-[#121c2a] dark:text-white mb-6 flex items-center gap-2">
           <span className="w-1.5 h-6 bg-[#003fb1] rounded-full" />
           ຜົນລ່າສຸດ
         </h2>
@@ -61,7 +61,7 @@ export default function HomePage() {
       {/* Recent Draws Grid */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-[#121c2a] flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[#121c2a] dark:text-white flex items-center gap-2">
             <span className="w-1.5 h-5 bg-[#006c49] rounded-full" />
             ງວດຜ່ານມາ
           </h2>
@@ -88,11 +88,11 @@ export default function HomePage() {
           { icon: 'trending_up', label: 'ເລກ Hot ສູງສຸດ', value: stats?.hotNumbers?.[0]?.number || '-' },
           { icon: 'ac_unit', label: 'ບໍ່ອອກດົນສຸດ',  value: stats?.coldNumbers?.[0] ? `${stats.coldNumbers[0].number} (${stats.coldNumbers[0].missedRounds} ງວດ)` : '-' },
         ].map(({ icon, label, value }) => (
-          <div key={label} className="bg-[#eff3ff] rounded-xl p-5 flex flex-col gap-3">
+          <div key={label} className="bg-[#eff3ff] dark:bg-[#1e2d4a] rounded-xl p-5 flex flex-col gap-3">
             <span className="material-symbols-outlined text-[#003fb1]">{icon}</span>
             <div>
-              <p className="text-xs text-[#737686] mb-1">{label}</p>
-              <p className="text-lg font-bold text-[#121c2a]">{value}</p>
+              <p className="text-xs text-[#737686] dark:text-[#94a3b8] mb-1">{label}</p>
+              <p className="text-lg font-bold text-[#121c2a] dark:text-white">{value}</p>
             </div>
           </div>
         ))}

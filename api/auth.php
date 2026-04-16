@@ -20,7 +20,8 @@ $conn->set_charset("utf8mb4");
 // A very simplified JWT-like mechanism for this project's scope
 define('SECRET_KEY', 'lao_lottery_super_secret_key');
 
-function generateToken($user) {
+function generateToken($user)
+{
     $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
     $payload = json_encode(['user_id' => $user['user_id'], 'role' => $user['role'], 'exp' => time() + 86400]);
     $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
@@ -60,7 +61,7 @@ switch ($action) {
                     break;
                 }
                 $token = generateToken($user);
-                
+
                 // Logging login
                 $ip = $_SERVER['REMOTE_ADDR'];
                 $conn->query("INSERT INTO user_logs (user_id, action, ip_address) VALUES ({$user['user_id']}, 'Login success', '$ip')");

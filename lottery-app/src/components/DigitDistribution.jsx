@@ -8,7 +8,7 @@ export default function DigitDistribution({ timeframe }) {
 
   return (
     <div>
-      <h3 className="text-lg sm:text-xl font-bold text-[#121c2a] mb-8 flex items-center gap-2">
+      <h3 className="text-lg sm:text-xl font-bold text-[#121c2a] dark:text-white mb-8 flex items-center gap-2">
         <span className="w-1.5 h-6 bg-[#003fb1] rounded-full shrink-0" />
         ຄວາມຖີ່ຂອງຕົວເລກ 0-9
       </h3>
@@ -17,7 +17,7 @@ export default function DigitDistribution({ timeframe }) {
         {digitDistributions.map(({ digit, percent, barWidth }) => (
           <div key={digit} className="group">
             <div className="flex justify-between text-sm font-medium mb-2">
-              <span className="text-[#121c2a]">ເລກ {digit}</span>
+              <span className="text-[#121c2a] dark:text-white">ເລກ {digit}</span>
               <span className="text-[#003fb1]">{percent}%</span>
             </div>
             <div className="h-4 w-full bg-[#d9e3f7] rounded-full overflow-hidden">

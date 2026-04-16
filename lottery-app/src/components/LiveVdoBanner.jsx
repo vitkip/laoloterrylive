@@ -30,7 +30,7 @@ export default function LiveVdoBanner() {
           <span className="material-symbols-outlined animate-pulse">podcasts</span>
           ກຳລັງຖ່າຍທອດສົດອອກລາງວັນ
         </div>
-        <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+        <div className="bg-white dark:bg-[#152033]/20 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
           LIVE
         </div>
       </div>

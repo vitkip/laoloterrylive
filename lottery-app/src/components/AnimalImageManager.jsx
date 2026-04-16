@@ -65,8 +65,8 @@ export default function AnimalImageManager() {
   };
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#dee9fd] mt-10">
-      <h2 className="text-2xl font-bold text-[#121c2a] mb-6 flex items-center gap-2">
+    <div className="bg-white dark:bg-[#152033] p-8 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54] mt-10">
+      <h2 className="text-2xl font-bold text-[#121c2a] dark:text-white mb-6 flex items-center gap-2">
         <span className="material-symbols-outlined text-[#006c49]">image</span>
         ຈັດການຮູບນາມສັດ
       </h2>
@@ -86,12 +86,12 @@ export default function AnimalImageManager() {
           }
 
           return (
-            <div key={animal.animal_id} className="bg-[#f9f9ff] border border-[#dee9fd] rounded-xl p-4 flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-[#e6eeff] rounded-full overflow-hidden mb-3 relative flex items-center justify-center">
+            <div key={animal.animal_id} className="bg-[#f9f9ff] dark:bg-[#0d1627] border border-[#dee9fd] dark:border-[#2b3a54] rounded-xl p-4 flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-[#e6eeff] dark:bg-[#1e293b] rounded-full overflow-hidden mb-3 relative flex items-center justify-center">
                 <img 
                   src={displayUrl} 
                   alt={animal.animal_name_lao}
-                  className="w-full h-full object-cover bg-white z-10"
+                  className="w-full h-full object-cover bg-white dark:bg-[#152033] z-10"
                   onError={(e) => {
                     e.target.style.opacity = '0';
                   }}
@@ -101,10 +101,10 @@ export default function AnimalImageManager() {
                 </span>
               </div>
               
-              <h4 className="font-bold text-[#121c2a] text-sm mb-1">{animal.animal_name_lao}</h4>
-              <p className="text-xs text-[#737686] mb-3">ເລກ: {animal.animal_numbers}</p>
+              <h4 className="font-bold text-[#121c2a] dark:text-white text-sm mb-1">{animal.animal_name_lao}</h4>
+              <p className="text-xs text-[#737686] dark:text-[#94a3b8] mb-3">ເລກ: {animal.animal_numbers}</p>
               
-              <label className="cursor-pointer bg-[#eff3ff] hover:bg-[#dee9fd] text-[#003fb1] px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+              <label className="cursor-pointer bg-[#eff3ff] dark:bg-[#1e2d4a] hover:bg-[#dee9fd] dark:bg-[#2b3a54] text-[#003fb1] px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
                 {uploadingId === animal.animal_id ? 'ອັບໂຫຼດ...' : 'ປ່ຽນຮູບພາບ'}
                 <input 
                   type="file" 

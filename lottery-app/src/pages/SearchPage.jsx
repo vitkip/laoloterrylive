@@ -9,7 +9,7 @@ export default function SearchPage() {
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#003fb1] mb-2 tracking-tight">
           ຄົ້ນຫາ ແລະ ແປຄວາມຝັນ
         </h1>
-        <p className="text-[#434654] max-w-2xl text-sm sm:text-base leading-relaxed">
+        <p className="text-[#434654] dark:text-[#c7d2fe] max-w-2xl text-sm sm:text-base leading-relaxed">
           ລະບົບຄົ້ນຫາປະຫວັດການອອກລາງວັນແບບລະບຸຕົວເລກ ແລະ ຕຳລາແປຄວາມຝັນ ຊອກຫານາມສັດ ຈາກສິ່ງທີ່ຝັນເຫັນຮ່ວມສະໄໝ.
         </p>
       </div>

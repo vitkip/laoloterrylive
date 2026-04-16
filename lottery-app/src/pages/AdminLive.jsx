@@ -61,8 +61,8 @@ export default function AdminLive() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#dee9fd]">
-        <h2 className="text-2xl font-bold text-[#121c2a] mb-6 flex items-center gap-2">
+      <div className="bg-white dark:bg-[#152033] p-8 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+        <h2 className="text-2xl font-bold text-[#121c2a] dark:text-white mb-6 flex items-center gap-2">
           <span className="material-symbols-outlined text-[#ba1a1a]">podcasts</span>
           ຈັດການຖ່າຍທອດສົດ (Live Stream)
         </h2>
@@ -75,10 +75,10 @@ export default function AdminLive() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-bold text-[#434654] mb-2">ລິ້ງ YouTube Live (URL ຫຼື Video ID)</label>
+            <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ລິ້ງ YouTube Live (URL ຫຼື Video ID)</label>
             <input
               type="text"
-              className="w-full bg-[#eff3ff] border-none rounded-lg p-3 text-[#121c2a] focus:ring-2 focus:ring-[#003fb1]"
+              className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
               placeholder="https://www.youtube.com/watch?v=..."
               value={formData.youtube_live_url}
               onChange={(e) => setFormData({ ...formData, youtube_live_url: e.target.value })}
@@ -86,9 +86,9 @@ export default function AdminLive() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#434654] mb-2">ສະຖານະຖ່າຍທອດສົດ</label>
+            <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ສະຖານະຖ່າຍທອດສົດ</label>
             <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer bg-[#eff3ff] px-4 py-3 rounded-xl flex-1 border-2 border-transparent has-[:checked]:border-[#ba1a1a] has-[:checked]:bg-[#ffdad6]/30 transition-all">
+              <label className="flex items-center gap-2 cursor-pointer bg-[#eff3ff] dark:bg-[#1e2d4a] px-4 py-3 rounded-xl flex-1 border-2 border-transparent has-[:checked]:border-[#ba1a1a] has-[:checked]:bg-[#ffdad6]/30 transition-all">
                 <input
                   type="radio"
                   name="is_live"
@@ -103,16 +103,16 @@ export default function AdminLive() {
                 </span>
               </label>
 
-              <label className="flex items-center gap-2 cursor-pointer bg-[#eff3ff] px-4 py-3 rounded-xl flex-1 border-2 border-transparent has-[:checked]:border-[#434654] has-[:checked]:bg-[#e3e2e6] transition-all">
+              <label className="flex items-center gap-2 cursor-pointer bg-[#eff3ff] dark:bg-[#1e2d4a] px-4 py-3 rounded-xl flex-1 border-2 border-transparent has-[:checked]:border-[#434654] has-[:checked]:bg-[#e3e2e6] transition-all">
                 <input
                   type="radio"
                   name="is_live"
                   value="0"
                   checked={formData.is_live === '0'}
                   onChange={(e) => setFormData({ ...formData, is_live: e.target.value })}
-                  className="w-4 h-4 text-[#434654] focus:ring-[#434654]"
+                  className="w-4 h-4 text-[#434654] dark:text-[#c7d2fe] focus:ring-[#434654]"
                 />
-                <span className="font-bold text-[#434654]">ປິດການຖ່າຍທອດສົດ</span>
+                <span className="font-bold text-[#434654] dark:text-[#c7d2fe]">ປິດການຖ່າຍທອດສົດ</span>
               </label>
             </div>
           </div>
@@ -128,8 +128,8 @@ export default function AdminLive() {
       </div>
 
       {formData.youtube_live_url && (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#dee9fd]">
-          <h3 className="text-sm font-bold text-[#434654] uppercase tracking-widest mb-4">ຕົວຢ່າງວີດີໂອ (Preview)</h3>
+        <div className="bg-white dark:bg-[#152033] p-6 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+          <h3 className="text-sm font-bold text-[#434654] dark:text-[#c7d2fe] uppercase tracking-widest mb-4">ຕົວຢ່າງວີດີໂອ (Preview)</h3>
           <div className="aspect-video rounded-xl overflow-hidden bg-black">
             <iframe
               width="100%"

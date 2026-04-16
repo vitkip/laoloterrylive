@@ -2,6 +2,8 @@
 
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Colors */
   --color-error: #ba1a1a;
@@ -84,6 +86,12 @@ body {
   background-color: #f9f9ff;
   color: #121c2a;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Dark mode basic overrides */
+.dark body {
+  background-color: #0b1120;
+  color: #f8fafc;
 }
 
 #root {

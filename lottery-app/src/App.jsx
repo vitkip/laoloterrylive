@@ -4,6 +4,7 @@ import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
 import DashboardPage from './pages/DashboardPage'
 import SearchPage from './pages/SearchPage'
+import HistoryPage from './pages/HistoryPage'
 import AdminPanel from './pages/AdminPanel'
 import LoginPage from './pages/LoginPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -15,7 +16,7 @@ import AdminLive from './pages/AdminLive'
 
 function PublicLayout() {
   return (
-    <div className="flex flex-col min-h-screen bg-[#f9f9ff] text-[#121c2a]">
+    <div className="flex flex-col min-h-screen bg-[#f9f9ff] dark:bg-[#0d1627] text-[#121c2a] dark:text-white">
       <Navbar />
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-12">
         <Outlet />
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/statistics" element={<DashboardPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/history" element={<HistoryPage />} />
           <Route path="/login" element={<LoginPage />} />
         </Route>
 

@@ -10,7 +10,7 @@ export default function AnimalStats({ timeframe }) {
   const { animalStats } = stats;
 
   return (
-    <section className="bg-[#eff3ff] rounded-3xl p-8 sm:p-10 overflow-hidden relative">
+    <section className="bg-[#eff3ff] dark:bg-[#1e2d4a] rounded-3xl p-8 sm:p-10 overflow-hidden relative">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-1/3 h-full opacity-5 pointer-events-none select-none">
         <img
@@ -27,11 +27,11 @@ export default function AnimalStats({ timeframe }) {
             <span className="text-[#006c49] font-bold tracking-[0.2em] text-xs uppercase mb-2 block">
               Premium Analysis
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#121c2a] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#121c2a] dark:text-white tracking-tight">
               ສະຖິຕິເລກນາມສັດ (Animal Stats)
             </h2>
           </div>
-          <p className="text-[#434654] max-w-sm text-sm leading-relaxed">
+          <p className="text-[#434654] dark:text-[#c7d2fe] max-w-sm text-sm leading-relaxed">
             ການວິເຄາະຄວາມຖີ່ຂອງນາມສັດທີ່ປະກົດຂຶ້ນໃນຜົນການອອກລາງວັນ ໂດຍແບ່ງຕາມໝວດໝູ່ສັດມຸງຄຸນ.
           </p>
         </div>
