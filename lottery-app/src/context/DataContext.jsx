@@ -19,10 +19,10 @@ export const DataProvider = ({ children }) => {
   const fetchData = async () => {
     try {
       const [animalsRes, drawsRes, typesRes, liveRes] = await Promise.all([
-        fetch('http://localhost/laoloterylive/api/index.php?action=animals'),
-        fetch('http://localhost/laoloterylive/api/index.php?action=draws'),
-        fetch('http://localhost/laoloterylive/api/index.php?action=types'),
-        fetch('http://localhost/laoloterylive/api/index.php?action=live_settings')
+        fetch('/api/index.php?action=animals'),
+        fetch('/api/index.php?action=draws'),
+        fetch('/api/index.php?action=types'),
+        fetch('/api/index.php?action=live_settings')
       ]);
       
       if (!animalsRes.ok || !drawsRes.ok || !typesRes.ok || !liveRes.ok) {

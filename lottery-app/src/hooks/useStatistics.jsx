@@ -77,7 +77,7 @@ export const useStatistics = (timeframe = 'all') => {
       const isUploadedImage = a.image_url && (a.image_url.startsWith('/') || a.image_url.startsWith('http'));
       let constructedUrl = `/images/animals/${a.animal_id}.png`;
       if (isUploadedImage) {
-        constructedUrl = a.image_url.startsWith('/laoloterylive') ? `http://localhost${a.image_url}` : a.image_url;
+        constructedUrl = a.image_url.replace('/laoloterylive', '');
       }
       
       return {

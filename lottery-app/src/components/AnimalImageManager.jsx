@@ -42,7 +42,7 @@ export default function AnimalImageManager() {
       formData.append('image', blob, 'animal.png');
 
       try {
-        const res = await fetch('http://localhost/laoloterylive/api/index.php?action=upload_animal_image', {
+        const res = await fetch('/api/index.php?action=upload_animal_image', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData
@@ -82,7 +82,7 @@ export default function AnimalImageManager() {
           const isUploadedImage = animal.image_url && (animal.image_url.startsWith('/') || animal.image_url.startsWith('http'));
           let displayUrl = `/images/animals/${animal.animal_id}.png`;
           if (isUploadedImage) {
-            displayUrl = animal.image_url.startsWith('/laoloterylive') ? `http://localhost${animal.image_url}` : animal.image_url;
+            displayUrl = animal.image_url.replace('/laoloterylive', '');
           }
 
           return (

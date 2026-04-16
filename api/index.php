@@ -256,7 +256,7 @@ switch ($action) {
         $dest = $uploadDir . $fileName;
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $dest)) {
-            $imageUrl = '/laoloterylive/uploads/animals/' . $fileName;
+            $imageUrl = '/uploads/animals/' . $fileName;
 
             $stmt = $conn->prepare("UPDATE animals SET image_url=? WHERE animal_id=?");
             $stmt->bind_param("si", $imageUrl, $animal_id);

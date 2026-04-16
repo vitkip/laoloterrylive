@@ -30,7 +30,7 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('lao_lottery_token');
-      const res = await fetch('http://localhost/laoloterylive/api/index.php?action=list_users', {
+      const res = await fetch('/api/index.php?action=list_users', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -56,7 +56,7 @@ export default function AdminUsers() {
     const action = editingUser ? 'update_user' : 'create_user';
     
     try {
-      const res = await fetch(`http://localhost/laoloterylive/api/index.php?action=${action}`, {
+      const res = await fetch(`/api/index.php?action=${action}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ export default function AdminUsers() {
     if (!confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຜູ້ໃຊ້ນີ້?')) return;
     const token = localStorage.getItem('lao_lottery_token');
     try {
-      const res = await fetch(`http://localhost/laoloterylive/api/index.php?action=delete_user`, {
+      const res = await fetch(`/api/index.php?action=delete_user`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export default function AdminUsers() {
     const token = localStorage.getItem('lao_lottery_token');
     
     try {
-      const res = await fetch(`http://localhost/laoloterylive/api/index.php?action=change_password`, {
+      const res = await fetch(`/api/index.php?action=change_password`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

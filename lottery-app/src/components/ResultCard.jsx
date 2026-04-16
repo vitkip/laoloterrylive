@@ -21,7 +21,7 @@ export default function ResultCard({ draw, compact = false }) {
     const isUploadedImage = animal.image_url && (animal.image_url.startsWith('/') || animal.image_url.startsWith('http'));
     animalDisplayUrl = `/images/animals/${animal.animal_id}.png`;
     if (isUploadedImage) {
-      animalDisplayUrl = animal.image_url.startsWith('/laoloterylive') ? `http://localhost${animal.image_url}` : animal.image_url;
+      animalDisplayUrl = animal.image_url.replace('/laoloterylive', '');
     }
   }
 

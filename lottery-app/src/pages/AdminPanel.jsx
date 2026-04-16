@@ -45,7 +45,7 @@ export default function AdminPanel() {
       if (isEditing) {
         bodyPayload.draw_id = editDrawId;
       }
-      const res = await fetch(`http://localhost/laoloterylive/api/index.php?action=${action}`, {
+      const res = await fetch(`/api/index.php?action=${action}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

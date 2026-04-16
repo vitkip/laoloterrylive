@@ -23,7 +23,7 @@ export default function AdminLive() {
     
     try {
       const token = localStorage.getItem('lao_lottery_token');
-      const res = await fetch('http://localhost/laoloterylive/api/index.php?action=update_live_settings', {
+      const res = await fetch('/api/index.php?action=update_live_settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
