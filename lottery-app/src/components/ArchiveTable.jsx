@@ -2,12 +2,16 @@ import { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { formatLaoDate } from '../utils/date';
 
-export default function ArchiveTable() {
+export default function ArchiveTable({ compact = false }) {
   const { draws, animals } = useData();
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (!draws || draws.length === 0) return null;
+  if (!draws || draws.length === 0) return (
+    <div className="text-center py-8 text-[#737686] dark:text-[#94a3b8] text-sm">
+      ກຳລັງໂຫຼດຂໍ້ມູນ...
+    </div>
+  );
 
   const filteredDraws = draws.filter(d => {
     if (!searchTerm) return true;
@@ -21,7 +25,7 @@ export default function ArchiveTable() {
   });
 
   return (
-    <section className="mt-16 sm:mt-20">
+    <section className={compact ? '' : 'mt-16 sm:mt-20'}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <h3 className="text-xl sm:text-2xl font-bold text-[#121c2a] dark:text-white">
@@ -58,7 +62,7 @@ export default function ArchiveTable() {
           <tbody className="text-sm">
             {filteredDraws.slice(0, showAll || searchTerm ? filteredDraws.length : 10).map((row, idx) => {
               const twoDigitResult = row.results_detail?.find(r => r.prize_type === '2_digits');
-              const animal = animals.find(a => a.animal_id === twoDigitResult?.animal_id);
+              const animal = animals.find(a => String(a.animal_id) === String(twoDigitResult?.animal_id));
               
               const numbersArr = [];
               if (row.full_result.length >= 6) {

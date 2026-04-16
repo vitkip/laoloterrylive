@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useData } from '../context/DataContext';
+import { API, resolveAnimalImage } from '../utils/api';
 
 export default function AnimalImageManager() {
   const { animals, refreshData } = useData();
@@ -42,7 +43,7 @@ export default function AnimalImageManager() {
       formData.append('image', blob, 'animal.png');
 
       try {
-        const res = await fetch('/api/index.php?action=upload_animal_image', {
+        const res = await fetch(`${API}/index.php?action=upload_animal_image`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData
@@ -79,11 +80,7 @@ export default function AnimalImageManager() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {animals.map((animal) => {
-          const isUploadedImage = animal.image_url && (animal.image_url.startsWith('/') || animal.image_url.startsWith('http'));
-          let displayUrl = `/images/animals/${animal.animal_id}.png`;
-          if (isUploadedImage) {
-            displayUrl = animal.image_url.replace('/laoloterylive', '');
-          }
+          const displayUrl = resolveAnimalImage(animal);
 
           return (
             <div key={animal.animal_id} className="bg-[#f9f9ff] dark:bg-[#0d1627] border border-[#dee9fd] dark:border-[#2b3a54] rounded-xl p-4 flex flex-col items-center text-center">
@@ -97,7 +94,7 @@ export default function AnimalImageManager() {
                   }}
                 />
                 <span className="material-symbols-outlined text-3xl text-[#003fb1] absolute z-0">
-                  {isUploadedImage ? '' : (animal.image_url || 'pets')}
+                  {animal.image_url ? '' : 'pets'}
                 </span>
               </div>
               

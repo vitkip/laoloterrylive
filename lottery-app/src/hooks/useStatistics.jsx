@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useData } from '../context/DataContext';
+import { resolveAnimalImage } from '../utils/api';
 
 export const useStatistics = (timeframe = 'all') => {
   const { draws, animals, loading } = useData();
@@ -32,21 +33,28 @@ export const useStatistics = (timeframe = 'all') => {
 
     // 1. Hot & Cold Numbers (using 2-digit prizes)
     const twoDigitFreq = {};
-    targetDraws.forEach(d => {
-      const twoDigit = d.results_detail?.find(r => r.prize_type === '2_digits');
-      if (twoDigit) {
-        const v = twoDigit.result_value;
-        if (!twoDigitFreq[v]) twoDigitFreq[v] = { count: 0, lastSeen: 0 };
-        twoDigitFreq[v].count += 1;
-      }
-      
-      // Increment lastSeen for all previously seen numbers
+    // Initialize all 100 numbers (00-99)
+    for (let i = 0; i < 100; i++) {
+      const numStr = i.toString().padStart(2, '0');
+      twoDigitFreq[numStr] = { count: 0, lastSeen: 0 };
+    }
+
+    // Process from oldest to newest to correctly calculate 'lastSeen'
+    const chronologicalDraws = [...targetDraws].reverse();
+    
+    chronologicalDraws.forEach(d => {
+      // Every round, increase 'lastSeen' for everyone
       Object.keys(twoDigitFreq).forEach(key => {
         twoDigitFreq[key].lastSeen += 1;
       });
-      // Reset lastSeen for the one drawn in this round
-      if (twoDigit) {
-        twoDigitFreq[twoDigit.result_value].lastSeen = 0;
+
+      const twoDigit = d.results_detail?.find(r => r.prize_type === '2_digits');
+      if (twoDigit && twoDigit.result_value) {
+        const v = twoDigit.result_value;
+        if (twoDigitFreq[v]) {
+          twoDigitFreq[v].count += 1;
+          twoDigitFreq[v].lastSeen = 0; // Reset lastSeen for the drawn number
+        }
       }
     });
 
@@ -56,7 +64,9 @@ export const useStatistics = (timeframe = 'all') => {
       missedRounds: data.lastSeen
     }));
 
-    const hotNumbers = [...frequencyArray].sort((a, b) => b.count - a.count).slice(0, 4);
+    // Hot: Highest frequency count (break ties with missedRounds to reward recent hotness)
+    const hotNumbers = [...frequencyArray].sort((a, b) => b.count - a.count || a.missedRounds - b.missedRounds).slice(0, 4);
+    // Cold: Highest missedRounds (longest time without showing up)
     const coldNumbers = [...frequencyArray].sort((a, b) => b.missedRounds - a.missedRounds).slice(0, 3);
 
     // 2. Animal Stats (which animals appeared the most in 2-digit results)
@@ -74,11 +84,7 @@ export const useStatistics = (timeframe = 'all') => {
       const count = animalFreq[a.animal_id] || 0;
       const pct = totalTwoDigitDraws > 0 ? ((count / totalTwoDigitDraws) * 100).toFixed(0) : 0;
       
-      const isUploadedImage = a.image_url && (a.image_url.startsWith('/') || a.image_url.startsWith('http'));
-      let constructedUrl = `/images/animals/${a.animal_id}.png`;
-      if (isUploadedImage) {
-        constructedUrl = a.image_url.replace('/laoloterylive', '');
-      }
+      const constructedUrl = resolveAnimalImage(a);
       
       return {
         animal_id: a.animal_id,
@@ -113,7 +119,7 @@ export const useStatistics = (timeframe = 'all') => {
         barWidth: Math.min(100, Math.max(0, parseFloat(percent) * 5)), // approx scaling, or just use percent directly
         count: count
       };
-    }).sort((a, b) => b.percent - a.percent).slice(0, 6);
+    }).sort((a, b) => b.percent - a.percent);
 
     // Normalize barWidth so highest is ~100%
     if (digitDistributions.length > 0) {
@@ -125,11 +131,44 @@ export const useStatistics = (timeframe = 'all') => {
       }
     }
 
+    // 4. Consecutive Number Pairs
+    const pairsTracker = {};
+    for (let i = 0; i < chronologicalDraws.length - 1; i++) {
+      const currentDraw = chronologicalDraws[i];
+      const currentTwoDigit = currentDraw.results_detail?.find(r => r.prize_type === '2_digits');
+      
+      const nextDraw = chronologicalDraws[i+1];
+      const nextTwoDigit = nextDraw.results_detail?.find(r => r.prize_type === '2_digits');
+
+      if (currentTwoDigit?.result_value && nextTwoDigit?.result_value) {
+        const currentNum = currentTwoDigit.result_value;
+        const nextNum = nextTwoDigit.result_value;
+        
+        if (!pairsTracker[currentNum]) pairsTracker[currentNum] = {};
+        if (!pairsTracker[currentNum][nextNum]) pairsTracker[currentNum][nextNum] = 0;
+        pairsTracker[currentNum][nextNum]++;
+      }
+    }
+
+    const allPairs = [];
+    Object.keys(pairsTracker).forEach(currentNum => {
+      Object.keys(pairsTracker[currentNum]).forEach(nextNum => {
+        allPairs.push({
+          currentNum,
+          nextNum,
+          count: pairsTracker[currentNum][nextNum]
+        });
+      });
+    });
+
+    const hotPairs = allPairs.sort((a, b) => b.count - a.count).slice(0, 5);
+
     return {
       hotNumbers,
       coldNumbers,
       animalStats,
-      digitDistributions
+      digitDistributions,
+      hotPairs
     };
   }, [draws, animals, timeframe]);
 

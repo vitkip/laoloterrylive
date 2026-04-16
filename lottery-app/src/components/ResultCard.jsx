@@ -4,6 +4,7 @@ import { prizeLabels } from '../data/draws'
 import { formatLaoDate } from '../utils/date'
 import ShareResultCapture from './ShareResultCapture';
 import { toPng } from 'html-to-image';
+import { resolveAnimalImage } from '../utils/api';
 
 export default function ResultCard({ draw, compact = false }) {
   const { animals, types: lotteryTypes } = useData();
@@ -13,17 +14,10 @@ export default function ResultCard({ draw, compact = false }) {
   const typeName = lotteryTypes.find(t => t.type_id === draw.type_id)?.type_name || ''
   const twoDigitResult = draw.results_detail?.find(r => r.prize_type === '2_digits')
   const animal = twoDigitResult?.animal_id
-    ? animals.find(a => a.animal_id === twoDigitResult.animal_id)
+    ? animals.find(a => String(a.animal_id) === String(twoDigitResult.animal_id))
     : null
 
-  let animalDisplayUrl = '';
-  if (animal) {
-    const isUploadedImage = animal.image_url && (animal.image_url.startsWith('/') || animal.image_url.startsWith('http'));
-    animalDisplayUrl = `/images/animals/${animal.animal_id}.png`;
-    if (isUploadedImage) {
-      animalDisplayUrl = animal.image_url.replace('/laoloterylive', '');
-    }
-  }
+  const animalDisplayUrl = resolveAnimalImage(animal);
 
   const handleShare = async () => {
     if (captureRef.current === null) return;
@@ -146,7 +140,7 @@ export default function ResultCard({ draw, compact = false }) {
       {/* Prize breakdown */}
       <div className="space-y-3">
         {draw.results_detail?.filter(r => r.prize_type !== '6_digits').map(r => {
-          const animalForRow = r.animal_id ? animals.find(a => a.animal_id === r.animal_id) : null
+          const animalForRow = r.animal_id ? animals.find(a => String(a.animal_id) === String(r.animal_id)) : null
           return (
             <div key={r.detail_id} className="flex items-center justify-between py-2 border-b border-[#eff3ff] dark:border-[#1e2d4a] last:border-0">
               <span className="text-sm text-[#434654] dark:text-[#c7d2fe]">{prizeLabels[r.prize_type]}</span>

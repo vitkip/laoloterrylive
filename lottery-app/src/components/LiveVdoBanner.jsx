@@ -21,7 +21,9 @@ export default function LiveVdoBanner() {
     return url.startsWith('http') ? url : '';
   };
 
-  const latestDraw = draws?.[0]; // Get the currently updating draw to display live numbers
+  const latestDraw = draws?.[0];
+  const threeDigits = latestDraw?.results_detail?.find(r => r.prize_type === '3_digits')?.result_value;
+  const twoDigits   = latestDraw?.results_detail?.find(r => r.prize_type === '2_digits')?.result_value;
 
   return (
     <div className="w-full bg-[#121c2a] rounded-3xl overflow-hidden shadow-2xl mb-12 border-4 border-[#ba1a1a]/20 animate-pulse-slow">
@@ -60,18 +62,18 @@ export default function LiveVdoBanner() {
               <div className="bg-black/40 p-6 rounded-2xl border border-white/10">
                 <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-2">ເລກທີ່ອອກ (ລ່າສຸດ)</p>
                 <div className="text-5xl md:text-6xl font-black text-[#6cf8bb] tracking-widest font-mono">
-                  {latestDraw.six_digits || '......'}
+                  {latestDraw.full_result || '......'}
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-[#ffffff]/5 p-4 rounded-xl border border-white/5">
                   <p className="text-white/50 text-xs mb-1">ເລກ 3 ໂຕ</p>
-                  <p className="text-2xl font-black text-white">{latestDraw.three_digits || '...'}</p>
+                  <p className="text-2xl font-black text-white">{threeDigits || '...'}</p>
                 </div>
                 <div className="bg-[#ffffff]/5 p-4 rounded-xl border border-white/5">
                   <p className="text-white/50 text-xs mb-1">ເລກ 2 ໂຕ</p>
-                  <p className="text-2xl font-black text-white">{latestDraw.two_digits || '..'}</p>
+                  <p className="text-2xl font-black text-white">{twoDigits || '..'}</p>
                 </div>
               </div>
             </div>

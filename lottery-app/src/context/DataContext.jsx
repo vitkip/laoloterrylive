@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react';
+import { API } from '../utils/api';
 
 const DataContext = createContext({
   animals: [],
@@ -19,10 +20,10 @@ export const DataProvider = ({ children }) => {
   const fetchData = async () => {
     try {
       const [animalsRes, drawsRes, typesRes, liveRes] = await Promise.all([
-        fetch('/api/index.php?action=animals'),
-        fetch('/api/index.php?action=draws'),
-        fetch('/api/index.php?action=types'),
-        fetch('/api/index.php?action=live_settings')
+        fetch(`${API}/index.php?action=animals`),
+        fetch(`${API}/index.php?action=draws`),
+        fetch(`${API}/index.php?action=types`),
+        fetch(`${API}/index.php?action=live_settings`)
       ]);
       
       if (!animalsRes.ok || !drawsRes.ok || !typesRes.ok || !liveRes.ok) {
@@ -48,7 +49,7 @@ export const DataProvider = ({ children }) => {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 5000); // Polling every 5 seconds for Real-Time updates
+    const interval = setInterval(fetchData, 30000); // Poll every 30s
     return () => clearInterval(interval);
   }, []);
 

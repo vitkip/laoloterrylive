@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API } from '../utils/api';
 
 export default function AdminUsers() {
   const { user } = useAuth();
@@ -30,7 +31,7 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('lao_lottery_token');
-      const res = await fetch('/api/index.php?action=list_users', {
+      const res = await fetch(`${API}/index.php?action=list_users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -56,7 +57,7 @@ export default function AdminUsers() {
     const action = editingUser ? 'update_user' : 'create_user';
     
     try {
-      const res = await fetch(`/api/index.php?action=${action}`, {
+      const res = await fetch(`${API}/index.php?action=${action}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -81,7 +82,7 @@ export default function AdminUsers() {
     if (!confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຜູ້ໃຊ້ນີ້?')) return;
     const token = localStorage.getItem('lao_lottery_token');
     try {
-      const res = await fetch(`/api/index.php?action=delete_user`, {
+      const res = await fetch(`${API}/index.php?action=delete_user`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ export default function AdminUsers() {
     const token = localStorage.getItem('lao_lottery_token');
     
     try {
-      const res = await fetch(`/api/index.php?action=change_password`, {
+      const res = await fetch(`${API}/index.php?action=change_password`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -281,7 +282,7 @@ export default function AdminUsers() {
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
                 <label className="block text-sm font-bold mb-1">ຕັ້ງລະຫັດຜ່ານໃໝ່</label>
-                <input required minLength={6} type="text" className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] rounded-lg p-2.5" onChange={e => setPassData({...passData, new_password: e.target.value})} />
+                <input required minLength={6} type="password" className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] rounded-lg p-2.5" onChange={e => setPassData({...passData, new_password: e.target.value})} />
               </div>
               <div className="flex gap-2 pt-4">
                 <button type="button" onClick={() => setIsPassOpen(false)} className="flex-1 py-2.5 bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#434654] dark:text-[#c7d2fe] font-bold rounded-xl hover:bg-[#dee9fd] dark:bg-[#2b3a54]">ຍົກເລີກ</button>

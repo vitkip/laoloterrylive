@@ -13,8 +13,10 @@ import AdminOverview from './pages/AdminOverview'
 import AnimalImageManager from './components/AnimalImageManager'
 import AdminUsers from './pages/AdminUsers'
 import AdminLive from './pages/AdminLive'
+import { useVisitorTrack } from './hooks/useVisitorTrack'
 
 function PublicLayout() {
+  useVisitorTrack();
   return (
     <div className="flex flex-col min-h-screen bg-[#f9f9ff] dark:bg-[#0d1627] text-[#121c2a] dark:text-white">
       <Navbar />

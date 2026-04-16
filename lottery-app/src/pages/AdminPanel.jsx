@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
+import { API } from '../utils/api';
 
 export default function AdminPanel() {
   const { animals, types, draws, refreshData } = useData();
@@ -45,7 +46,7 @@ export default function AdminPanel() {
       if (isEditing) {
         bodyPayload.draw_id = editDrawId;
       }
-      const res = await fetch(`/api/index.php?action=${action}`, {
+      const res = await fetch(`${API}/index.php?action=${action}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

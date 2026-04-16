@@ -9,6 +9,7 @@ import ArchiveTable from '../components/ArchiveTable'
 import CustomFrequency from '../components/CustomFrequency'
 import WeekdayStats from '../components/WeekdayStats'
 import PairingStats from '../components/PairingStats'
+import ConsecutivePairs from '../components/ConsecutivePairs'
 
 export default function DashboardPage() {
   const [timeframe, setTimeframe] = useState('all')
@@ -52,9 +53,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Advanced Analytics Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-12">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
         <WeekdayStats timeframe={timeframe} />
         <PairingStats timeframe={timeframe} />
+      </div>
+      <div className="mb-12">
+        <ConsecutivePairs timeframe={timeframe} />
       </div>
 
       {/* Custom Top 40 Section */}
