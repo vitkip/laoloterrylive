@@ -41,7 +41,7 @@ export default function LiveVdoBanner() {
           <iframe
             className="absolute inset-0 w-full h-full"
             src={getEmbedUrl(liveSettings.youtube_live_url)}
-            title="Lao Lottery Live Stream"
+            title="laolots.com Live Stream"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

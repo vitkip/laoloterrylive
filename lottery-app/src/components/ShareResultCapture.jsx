@@ -34,7 +34,7 @@ const ShareResultCapture = forwardRef(({ draw, animal, animalDisplayUrl }, ref) 
              <path d="M11 3 8 9l4 13 4-13-3-6"/>
              <path d="M2 9h20"/>
           </svg>
-          <h1 className="text-3xl font-black tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>LAO LOTTERY LIVE</h1>
+          <h1 className="text-3xl font-black tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>LAOLOTS.COM</h1>
         </div>
         <div className="bg-white/20 px-8 py-2 rounded-full backdrop-blur-md">
           <h2 className="text-2xl font-bold">ຜົນຫວຍພັດທະນາ / ແຊຣ໌ຜົນລາງວັນ</h2>
@@ -112,7 +112,7 @@ const ShareResultCapture = forwardRef(({ draw, animal, animalDisplayUrl }, ref) 
 
       {/* Footer Branding */}
       <div className="bg-[#121c2a] text-center py-4 text-[#737686] text-lg font-bold tracking-widest uppercase border-t-4 border-[#003fb1]">
-        laolottery.live — ສູນລວມຜົນຫວຍລາວອອນລາຍ
+        laolots.com — ສູນລວມຜົນຫວຍລາວອອນລາຍ
       </div>
     </div>
   );

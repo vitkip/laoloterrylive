@@ -44,7 +44,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link to="/" className="text-xl font-bold text-[#003fb1] tracking-tighter shrink-0 flex items-center gap-2">
           <span className="material-symbols-outlined text-2xl">diamond</span>
-          ຄັງຂໍ້ມູນຫວຍ
+          laolots.com
         </Link>
 
         {/* Desktop Nav */}

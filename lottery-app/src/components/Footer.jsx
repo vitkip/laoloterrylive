@@ -10,7 +10,7 @@ export default function Footer() {
       {/* Brand */}
       <div className="flex flex-col items-center md:items-start gap-1.5">
         <div className="text-lg font-black uppercase text-blue-900 tracking-tight">
-          ຄັງຂໍ້ມູນຫວຍ
+          laolots.com
         </div>
         <p className="text-xs font-medium text-slate-500">
           © 2026 The Editorial Archive. All Rights Reserved.
