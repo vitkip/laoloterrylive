@@ -161,14 +161,15 @@ export const useStatistics = (timeframe = 'all') => {
       });
     });
 
-    const hotPairs = allPairs.sort((a, b) => b.count - a.count).slice(0, 5);
+    const hotPairs = allPairs.sort((a, b) => b.count - a.count).slice(0, 10);
 
     return {
       hotNumbers,
       coldNumbers,
       animalStats,
       digitDistributions,
-      hotPairs
+      hotPairs,
+      pairsTracker, // full map: { "07": { "15": 3, "22": 2, ... }, ... }
     };
   }, [draws, animals, timeframe]);
 

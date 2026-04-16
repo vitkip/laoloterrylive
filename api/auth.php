@@ -51,37 +51,47 @@ switch ($action) {
             break;
         }
 
-        $result = $conn->query("SELECT * FROM users WHERE username = '$username' LIMIT 1");
-        if ($result && $result->num_rows > 0) {
-            $user = $result->fetch_assoc();
-            if (password_verify($password, $user['password_hash'])) {
-                if (!$user['is_active']) {
-                    http_response_code(403);
-                    echo json_encode(["error" => "User account is disabled"]);
-                    break;
-                }
-                $token = generateToken($user);
+        $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? LIMIT 1");
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
 
-                // Logging login
-                $ip = $_SERVER['REMOTE_ADDR'];
-                $conn->query("INSERT INTO user_logs (user_id, action, ip_address) VALUES ({$user['user_id']}, 'Login success', '$ip')");
+        $user = ($result && $result->num_rows > 0) ? $result->fetch_assoc() : null;
 
-                echo json_encode([
-                    "token" => $token,
-                    "user" => [
-                        "id" => $user['user_id'],
-                        "username" => $user['username'],
-                        "name" => $user['full_name'],
-                        "role" => $user['role']
-                    ]
-                ]);
-            } else {
-                http_response_code(401);
-                echo json_encode(["error" => "Invalid password"]);
+        // Always run password_verify to prevent timing-based user enumeration
+        $dummyHash = '$2y$10$invalidhashfortimingprotectiononly00000000000000000000000';
+        $passwordOk = $user ? password_verify($password, $user['password_hash']) : password_verify($password, $dummyHash);
+
+        if ($user && $passwordOk) {
+            if (!$user['is_active']) {
+                http_response_code(403);
+                echo json_encode(["error" => "ບັນຊີຜູ້ໃຊ້ຖືກລະງັບການໃຊ້ງານ"]);
+                break;
             }
+            $token = generateToken($user);
+
+            // Log successful login using prepared statement
+            $ip = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+            $action_log = 'Login success';
+            $log_stmt = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
+            $log_stmt->bind_param("iss", $user['user_id'], $action_log, $ip);
+            $log_stmt->execute();
+            $log_stmt->close();
+
+            echo json_encode([
+                "token" => $token,
+                "user" => [
+                    "id" => $user['user_id'],
+                    "username" => $user['username'],
+                    "name" => $user['full_name'],
+                    "role" => $user['role']
+                ]
+            ]);
         } else {
             http_response_code(401);
-            echo json_encode(["error" => "Invalid username"]);
+            // Same error message regardless of whether username or password is wrong
+            echo json_encode(["error" => "ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ"]);
         }
         break;
 

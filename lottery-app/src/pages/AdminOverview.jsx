@@ -1,32 +1,56 @@
 import { useEffect, useState } from 'react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import ArchiveTable from '../components/ArchiveTable';
 import { formatLaoDate } from '../utils/date';
 import { API, resolveAnimalImage } from '../utils/api';
 
 function VisitorStats() {
+  const { token } = useAuth();          // ໃຊ້ context token — ຖືກ update ທັນທີ AuthContext load
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [errMsg, setErrMsg] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('lao_lottery_token');
-    fetch(`${API}/?action=visitor_stats`, {
+    if (!token) return;                 // ລໍຖ້າ token ພ້ອມ
+    setLoading(true);
+    setErrMsg('');
+    fetch(`${API}/index.php?action=visitor_stats`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
-      .then((data) => { setStats(data); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
+      .then((data) => {
+        if (data.error) {
+          setErrMsg(data.error);
+        } else {
+          setStats(data);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setErrMsg('ເຊື່ອມຕໍ່ API ບໍ່ສຳເລັດ');
+        setLoading(false);
+      });
+  }, [token]);                          // re-run ທຸກຄັ້ງທີ່ token ມີ
 
   if (loading) {
     return (
       <div className="bg-white dark:bg-[#152033] p-6 rounded-2xl border border-[#dee9fd] dark:border-[#2b3a54] shadow-sm">
-        <p className="text-[#737686] dark:text-[#94a3b8] text-sm">ກຳລັງໂຫຼດສະຖິຕິ...</p>
+        <p className="text-[#737686] dark:text-[#94a3b8] text-sm animate-pulse">ກຳລັງໂຫຼດສະຖິຕິ...</p>
       </div>
     );
   }
 
-  if (!stats || stats.error) return null;
+  if (errMsg) {
+    return (
+      <div className="bg-white dark:bg-[#152033] p-5 rounded-2xl border border-[#dee9fd] dark:border-[#2b3a54] shadow-sm flex items-center gap-3">
+        <span className="material-symbols-outlined text-[#ba1a1a]">error</span>
+        <p className="text-sm text-[#737686] dark:text-[#94a3b8]">ສະຖິຕິ: <span className="text-[#ba1a1a] font-bold">{errMsg}</span></p>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
 
   // Build 7-day chart data (fill missing days with 0)
   const today = new Date();
