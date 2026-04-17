@@ -1,5 +1,9 @@
 Options -Indexes
 
+# Redirect root to the React app
+RewriteEngine On
+RewriteRule ^$ /lottery-app/dist/ [R=302,L]
+
 # Block access to sensitive files in project root
 <FilesMatch "\.(sql|sh|env|log|bak|md)$">
     Require all denied
