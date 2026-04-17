@@ -19,6 +19,22 @@ export default function AdminPanel() {
   const [isEditing, setIsEditing] = useState(false);
   const [editDrawId, setEditDrawId] = useState(null);
 
+  // ຄຳນວນ draw_number ຕໍ່ໄປຕາມປີທີ່ເລືອກ
+  const getNextDrawNumber = (dateStr) => {
+    if (!draws.length || !dateStr) return 1;
+    const year = new Date(dateStr).getFullYear();
+    const inYear = draws.filter(d => new Date(d.draw_date).getFullYear() === year);
+    if (!inYear.length) return 1;
+    return Math.max(...inYear.map(d => parseInt(d.draw_number) || 0)) + 1;
+  };
+
+  // Auto-suggest draw_number ຕາມປີ ເມື່ອ draws load ຄັ້ງທຳອິດ
+  useMemo(() => {
+    if (!isEditing && !formData.draw_number && draws.length) {
+      setFormData(f => ({ ...f, draw_number: getNextDrawNumber(f.draw_date).toString() }));
+    }
+  }, [draws.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 2-digit animal auto-suggest logic based on full_result
   const suggestedAnimals = useMemo(() => {
     if (formData.full_result.length >= 2) {
@@ -58,11 +74,11 @@ export default function AdminPanel() {
       if (res.ok) {
         setMessage(isEditing ? 'ອັບເດດຜົນສຳເລັດແລ້ວ!' : 'ບັນທຶກຜົນສຳເລັດແລ້ວ!');
         if (!isEditing) {
-          setFormData({ ...formData, full_result: '', youtube_url: '', draw_number: parseInt(formData.draw_number) + 1 });
+          setFormData({ ...formData, full_result: '', youtube_url: '', draw_number: (parseInt(formData.draw_number) + 1).toString() });
         } else {
           setIsEditing(false);
           setEditDrawId(null);
-          setFormData({ ...formData, full_result: '', youtube_url: '', draw_number: parseInt(formData.draw_number) + 1 });
+          setFormData({ type_id: formData.type_id, draw_number: '', draw_date: formData.draw_date, full_result: '', animal_id: '', youtube_url: '' });
         }
         if (refreshData) refreshData();
       } else {
@@ -150,7 +166,15 @@ export default function AdminPanel() {
               type="date"
               className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
               value={formData.draw_date}
-              onChange={(e) => setFormData({ ...formData, draw_date: e.target.value })}
+              onChange={(e) => {
+                const newDate = e.target.value;
+                const oldYear = new Date(formData.draw_date).getFullYear();
+                const newYear = new Date(newDate).getFullYear();
+                const nextNum = !isEditing && oldYear !== newYear
+                  ? getNextDrawNumber(newDate)
+                  : formData.draw_number;
+                setFormData({ ...formData, draw_date: newDate, draw_number: nextNum.toString() });
+              }}
               required
             />
           </div>

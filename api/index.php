@@ -121,7 +121,7 @@ switch ($action) {
 
     case 'draws':
         // Get draws with their details nested
-        $drawsResult = $conn->query("SELECT * FROM lottery_draws ORDER BY draw_number DESC");
+        $drawsResult = $conn->query("SELECT * FROM lottery_draws ORDER BY draw_date DESC, draw_number DESC");
         $draws = [];
         $detailStmt = $conn->prepare("SELECT * FROM draw_results_detail WHERE draw_id = ?");
         while ($row = $drawsResult->fetch_assoc()) {

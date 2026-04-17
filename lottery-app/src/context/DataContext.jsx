@@ -35,8 +35,9 @@ export const DataProvider = ({ children }) => {
       const typesData = await typesRes.json();
       const liveData = await liveRes.json();
 
+      const sortedDraws = [...drawsData].sort((a, b) => new Date(b.draw_date) - new Date(a.draw_date));
       setAnimals(animalsData);
-      setDraws(drawsData);
+      setDraws(sortedDraws);
       setTypes(typesData);
       setLiveSettings(liveData);
       setLoading(false);
