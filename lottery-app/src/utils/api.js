@@ -1,18 +1,12 @@
 export const API = import.meta.env.VITE_API_BASE || '/laoloterylive/api';
 
-/**
- * Resolve an animal's display image URL.
- *
- * DB stores absolute Apache paths like /laoloterylive/uploads/animals/...
- * These work directly as <img src> in both production (XAMPP) and dev (via Vite proxy).
- * If no upload exists, fall back to static assets under public/images/animals/.
- */
+const UPLOADS_BASE = import.meta.env.VITE_UPLOADS_BASE || '/laoloterylive/uploads';
+
 export function resolveAnimalImage(animal) {
   if (!animal) return '';
   if (animal.image_url && animal.image_url.trim() !== '') {
-    // Use the DB path as-is — Apache serves it at the correct URL
-    return animal.image_url;
+    // DB stores /laoloterylive/uploads/... — normalize to env-specific prefix
+    return animal.image_url.replace('/laoloterylive/uploads', UPLOADS_BASE);
   }
-  // Fallback: static placeholder under public/ (uses Vite BASE_URL so it works in prod)
   return `${import.meta.env.BASE_URL}images/animals/${animal.animal_id}.png`;
 }
