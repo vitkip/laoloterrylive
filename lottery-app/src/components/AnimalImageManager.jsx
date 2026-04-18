@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { API, resolveAnimalImage } from '../utils/api';
 
 export default function AnimalImageManager() {
   const { animals, refreshData } = useData();
+  const { authFetch } = useAuth();
   const [uploadingId, setUploadingId] = useState(null);
   const [message, setMessage] = useState('');
 
@@ -37,20 +39,17 @@ export default function AnimalImageManager() {
     ctx.drawImage(img, x, y, w, h);
 
     canvas.toBlob(async (blob) => {
-      const token = localStorage.getItem('lao_lottery_token');
       const formData = new FormData();
       formData.append('animal_id', animalId);
       formData.append('image', blob, 'animal.png');
 
       try {
-        const res = await fetch(`${API}/index.php?action=upload_animal_image`, {
+        const { ok, data } = await authFetch(`${API}/index.php?action=upload_animal_image`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
           body: formData
         });
 
-        const data = await res.json();
-        if (res.ok) {
+        if (ok) {
           setMessage('ອັບໂຫຼດຮູບພາບສຳເລັດ!');
           if (refreshData) refreshData();
         } else {

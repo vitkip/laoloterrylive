@@ -6,11 +6,13 @@ import ColdNumbers from '../components/ColdNumbers'
 import DigitDistribution from '../components/DigitDistribution'
 import HistoricalVolatility from '../components/HistoricalVolatility'
 import AnimalStats from '../components/AnimalStats'
-import ArchiveTable from '../components/ArchiveTable'
 import CustomFrequency from '../components/CustomFrequency'
 import WeekdayStats from '../components/WeekdayStats'
 import PairingStats from '../components/PairingStats'
 import ConsecutivePairs from '../components/ConsecutivePairs'
+import TrendMomentum from '../components/TrendMomentum'
+import GapAnalysis from '../components/GapAnalysis'
+import RepeatPattern from '../components/RepeatPattern'
 
 const TIMEFRAMES = [
   { value: '1_month',  label: '1 ເດືອນ',  icon: 'calendar_view_month' },
@@ -152,16 +154,20 @@ export default function DashboardPage() {
         <ConsecutivePairs timeframe={timeframe} />
       </div>
 
-      {/* ─── Section 5: Frequency ─── */}
+      {/* ─── Section 5: Trend Intelligence ─── */}
+      <div>
+        <SectionLabel icon="trending_up" label="Trend Intelligence" accent="#006c49" />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
+          <TrendMomentum timeframe={timeframe} />
+          <GapAnalysis timeframe={timeframe} />
+        </div>
+        <RepeatPattern timeframe={timeframe} />
+      </div>
+
+      {/* ─── Section 6: Frequency ─── */}
       <div>
         <SectionLabel icon="format_list_numbered" label="ຄວາມຖີ່ທຸກຕົວເລກ" accent="#0891b2" />
         <CustomFrequency timeframe={timeframe} />
-      </div>
-
-      {/* ─── Section 6: Archive ─── */}
-      <div>
-        <SectionLabel icon="table_rows" label="ຕາຕະລາງຍ້ອນຫຼັງ" accent="#374151" />
-        <ArchiveTable compact />
       </div>
 
     </div>

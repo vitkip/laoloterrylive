@@ -163,13 +163,83 @@ export const useStatistics = (timeframe = 'all') => {
 
     const hotPairs = allPairs.sort((a, b) => b.count - a.count).slice(0, 10);
 
+    // ─── Trend Momentum ───
+    // targetDraws is sorted DESC (newest first)
+    const last5 = targetDraws.slice(0, 5);
+    const last20 = targetDraws.slice(0, 20);
+    const freq5 = {}, freq20 = {};
+    for (let i = 0; i < 100; i++) {
+      const n = i.toString().padStart(2, '0');
+      freq5[n] = 0; freq20[n] = 0;
+    }
+    last5.forEach(d => {
+      const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value;
+      if (v !== undefined && freq5[v] !== undefined) freq5[v]++;
+    });
+    last20.forEach(d => {
+      const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value;
+      if (v !== undefined && freq20[v] !== undefined) freq20[v]++;
+    });
+    const momentumList = Object.keys(freq5).map(n => {
+      const recentRate = freq5[n] / Math.max(last5.length, 1);
+      const baselineRate = freq20[n] / Math.max(last20.length, 1);
+      return { number: n, momentum: recentRate - baselineRate, recentCount: freq5[n], baselineCount: freq20[n] };
+    });
+    const trendMomentum = {
+      rising: momentumList.filter(x => x.momentum > 0).sort((a, b) => b.momentum - a.momentum).slice(0, 6),
+      falling: momentumList.filter(x => x.momentum < 0 && x.baselineCount > 0).sort((a, b) => a.momentum - b.momentum).slice(0, 6),
+    };
+
+    // ─── Gap Analysis ───
+    const totalRounds = chronologicalDraws.length;
+    const gapAnalysis = frequencyArray.map(({ number, count, missedRounds }) => {
+      const expectedGap = count > 0 ? totalRounds / count : totalRounds;
+      const overdueRatio = missedRounds / Math.max(expectedGap, 1);
+      return { number, count, missedRounds, expectedGap: Math.round(expectedGap), overdueRatio };
+    }).sort((a, b) => b.missedRounds - a.missedRounds).slice(0, 10);
+
+    // ─── Repeat Pattern Detection ───
+    const totalTwoDigitCount = targetDraws.filter(
+      d => d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    ).length;
+
+    const doubleNumbers = ['00','11','22','33','44','55','66','77','88','99'].map(n => ({
+      number: n,
+      count: twoDigitFreq[n]?.count || 0,
+      pct: totalTwoDigitCount > 0 ? +((twoDigitFreq[n]?.count || 0) / totalTwoDigitCount * 100).toFixed(1) : 0,
+    })).sort((a, b) => b.count - a.count);
+
+    const mirrorSeen = new Set();
+    const mirrorPairs = [];
+    for (let a = 0; a <= 9; a++) {
+      for (let b = 0; b <= 9; b++) {
+        if (a === b) continue;
+        const n1 = `${a}${b}`, n2 = `${b}${a}`;
+        if (mirrorSeen.has(n1)) continue;
+        mirrorSeen.add(n1); mirrorSeen.add(n2);
+        const c1 = twoDigitFreq[n1]?.count || 0;
+        const c2 = twoDigitFreq[n2]?.count || 0;
+        if (c1 > 0 || c2 > 0) {
+          mirrorPairs.push({ pair: [n1, n2], counts: [c1, c2], total: c1 + c2 });
+        }
+      }
+    }
+    const repeatPatterns = {
+      doubles: doubleNumbers,
+      mirrors: mirrorPairs.sort((a, b) => b.total - a.total).slice(0, 8),
+      totalTwoDigitCount,
+    };
+
     return {
       hotNumbers,
       coldNumbers,
       animalStats,
       digitDistributions,
       hotPairs,
-      pairsTracker, // full map: { "07": { "15": 3, "22": 2, ... }, ... }
+      pairsTracker,
+      trendMomentum,
+      gapAnalysis,
+      repeatPatterns,
     };
   }, [draws, animals, timeframe]);
 

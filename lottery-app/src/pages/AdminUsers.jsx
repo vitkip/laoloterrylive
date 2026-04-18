@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { API } from '../utils/api';
 
 export default function AdminUsers() {
-  const { user, token } = useAuth();
+  const { user, token, authFetch } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: '', type: '' }); // type: 'success' | 'error'
@@ -37,10 +37,7 @@ export default function AdminUsers() {
     if (user.role !== 'admin') { setLoading(false); return; }
     if (!token) return;
     setLoading(true);
-    fetch(`${API}/index.php?action=list_users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+    authFetch(`${API}/index.php?action=list_users`)
       .then(({ ok, data }) => {
         if (ok) setUsers(data);
         else showMsg(data.error || 'ໂຫຼດຂໍ້ມູນ user ບໍ່ສຳເລັດ', 'error');
@@ -50,11 +47,7 @@ export default function AdminUsers() {
   }, [user, token]);
 
   const fetchUsers = () => {
-    if (!token) return;
-    fetch(`${API}/index.php?action=list_users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+    authFetch(`${API}/index.php?action=list_users`)
       .then(({ ok, data }) => { if (ok) setUsers(data); })
       .catch(() => {});
   };
@@ -84,16 +77,11 @@ export default function AdminUsers() {
     clearMsg();
     const action = editingUser ? 'update_user' : 'create_user';
     try {
-      const res = await fetch(`${API}/index.php?action=${action}`, {
+      const { ok, data } = await authFetch(`${API}/index.php?action=${action}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(formData),
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (ok) {
         showMsg('ບັນທຶກສຳເລັດແລ້ວ', 'success');
         setIsFormOpen(false);
         fetchUsers();
@@ -108,16 +96,11 @@ export default function AdminUsers() {
   const handleDelete = async (id) => {
     if (!confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຜູ້ໃຊ້ນີ້?')) return;
     try {
-      const res = await fetch(`${API}/index.php?action=delete_user`, {
+      const { ok, data } = await authFetch(`${API}/index.php?action=delete_user`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ user_id: id }),
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (ok) {
         fetchUsers();
       } else {
         showMsg(data.error || 'ລຶບ user ບໍ່ສຳເລັດ', 'error');
@@ -131,16 +114,11 @@ export default function AdminUsers() {
     e.preventDefault();
     clearMsg();
     try {
-      const res = await fetch(`${API}/index.php?action=change_password`, {
+      const { ok, data } = await authFetch(`${API}/index.php?action=change_password`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(passData),
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (ok) {
         showMsg('ປ່ຽນລະຫັດຜ່ານສຳເລັດແລ້ວ', 'success');
         setIsPassOpen(false);
       } else {

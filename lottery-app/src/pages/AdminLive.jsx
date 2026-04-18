@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { API } from '../utils/api';
 
 export default function AdminLive() {
   const { liveSettings, refreshData } = useData();
+  const { authFetch } = useAuth();
   const [formData, setFormData] = useState({ youtube_live_url: '', is_live: '0' });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,17 +25,11 @@ export default function AdminLive() {
     setMessage('');
     
     try {
-      const token = localStorage.getItem('lao_lottery_token');
-      const res = await fetch(`${API}/index.php?action=update_live_settings`, {
+      const { ok, data } = await authFetch(`${API}/index.php?action=update_live_settings`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(formData)
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (ok) {
         setMessage('ບັນທຶກການຕັ້ງຄ່າLiveສຳເລັດ!');
         if (refreshData) refreshData();
       } else {
