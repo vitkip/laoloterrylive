@@ -1,8 +1,125 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { formatLaoDate } from '../utils/date';
 import { resolveAnimalImage } from '../utils/api';
 import Pagination from './Pagination';
+
+// ── YouTube URL → embed ID ──
+function getYouTubeId(url) {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+// ── Video Modal ──
+function VideoModal({ draw, onClose }) {
+  const videoId = getYouTubeId(draw?.youtube_url);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+
+      {/* Modal card */}
+      <div
+        className="relative z-10 w-full max-w-2xl bg-[#0d1627] rounded-3xl overflow-hidden shadow-2xl border border-white/10"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-[#ba1a1a]/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[#ff6b6b] text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                smart_display
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-extrabold text-white leading-tight">
+                ວິດີໂອງວດທີ {draw?.draw_number}
+              </p>
+              <p className="text-[11px] text-white/50">
+                {formatLaoDate(draw?.draw_date, true)}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          >
+            <span className="material-symbols-outlined text-white text-[18px]">close</span>
+          </button>
+        </div>
+
+        {/* Video embed */}
+        <div className="aspect-video bg-black">
+          {videoId ? (
+            <iframe
+              key={videoId}
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+              title="Lao Lottery Video"
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+              <span className="material-symbols-outlined text-white/30 text-[48px]">videocam_off</span>
+              <p className="text-white/40 text-sm">ບໍ່ພົບລິ້ງວິດີໂອ</p>
+              {draw?.youtube_url && (
+                <a
+                  href={draw.youtube_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#ff6b6b] text-xs underline"
+                >
+                  ເປີດໃນ YouTube
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
+          <p className="text-[11px] text-white/40">
+            ກົດ ESC ຫຼື ກົດນອກ ເພື່ອປິດ
+          </p>
+          {draw?.youtube_url && (
+            <a
+              href={draw.youtube_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-[11px] font-bold text-white/60 hover:text-white transition-colors"
+            >
+              <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+              ເປີດໃນ YouTube
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const DigitPair = ({ value }) => (
   <span className="inline-flex items-center gap-0.5">
@@ -22,6 +139,7 @@ export default function ArchiveTable({ compact = false }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [videoModalDraw, setVideoModalDraw] = useState(null);
 
   if (!draws || draws.length === 0) return (
     <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -45,6 +163,10 @@ export default function ArchiveTable({ compact = false }) {
   const pagedDraws = filteredDraws.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
+    <>
+    {videoModalDraw && (
+      <VideoModal draw={videoModalDraw} onClose={() => setVideoModalDraw(null)} />
+    )}
     <section className={compact ? '' : ''}>
 
       {/* ─── Toolbar ─── */}
@@ -105,7 +227,6 @@ export default function ArchiveTable({ compact = false }) {
                 const pairs = row.full_result.length >= 6
                   ? [row.full_result.slice(0,2), row.full_result.slice(2,4), row.full_result.slice(4,6)]
                   : [];
-                const videoLink = row.youtube_url || 'https://www.youtube.com/results?search_query=lao+lottery+live';
                 const rowNum = (safePage - 1) * pageSize + idx + 1;
 
                 return (
@@ -176,15 +297,13 @@ export default function ArchiveTable({ compact = false }) {
 
                     {/* Video */}
                     <td className="px-4 sm:px-5 py-4 text-center">
-                      <a
-                        href={videoLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => setVideoModalDraw(row)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#fff0f0] dark:bg-[#2a1010] text-[#ba1a1a] border border-[#ffdad6]/60 dark:border-[#5c1515] hover:bg-[#ffdad6] hover:shadow-sm font-bold text-[11px] transition-all duration-200 group-hover:border-[#ffdad6]"
                       >
-                        <span className="material-symbols-outlined text-[14px]">play_circle</span>
+                        <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>play_circle</span>
                         ເບິ່ງ
-                      </a>
+                      </button>
                     </td>
                   </tr>
                 );
@@ -226,5 +345,6 @@ export default function ArchiveTable({ compact = false }) {
         />
       )}
     </section>
+    </>
   )
 }
