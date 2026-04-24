@@ -1,6 +1,32 @@
 import { useData } from '../context/DataContext';
 import { formatLaoDate } from '../utils/date';
 
+function getEmbedUrl(url, source) {
+  if (!url) return '';
+  const s = source || 'youtube';
+
+  if (s === 'youtube') {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const match = url.match(regex);
+    if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1&mute=0`;
+    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return `https://www.youtube.com/embed/${url}?autoplay=1&mute=0`;
+    return '';
+  }
+
+  if (s === 'facebook') {
+    if (url.includes('facebook.com')) {
+      return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=734&height=413&appId`;
+    }
+    return '';
+  }
+
+  if (s === 'web') {
+    return url.startsWith('http') ? url : '';
+  }
+
+  return '';
+}
+
 export default function LiveVdoBanner() {
   const { liveSettings, draws } = useData();
 
@@ -8,18 +34,9 @@ export default function LiveVdoBanner() {
     return null;
   }
 
-  const getEmbedUrl = (url) => {
-    if (!url) return '';
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
-    const match = url.match(regex);
-    if (match) {
-      return `https://www.youtube.com/embed/${match[1]}?autoplay=1&mute=0`;
-    }
-    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
-      return `https://www.youtube.com/embed/${url}?autoplay=1&mute=0`;
-    }
-    return url.startsWith('http') ? url : '';
-  };
+  const source = liveSettings.live_source || 'youtube';
+  const rawUrl = liveSettings.youtube_live_url;
+  const embedUrl = getEmbedUrl(rawUrl, source);
 
   const latestDraw = draws?.[0];
   const threeDigits = latestDraw?.results_detail?.find(r => r.prize_type === '3_digits')?.result_value;
@@ -30,24 +47,43 @@ export default function LiveVdoBanner() {
       <div className="bg-[#ba1a1a] text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 font-black tracking-widest uppercase">
           <span className="material-symbols-outlined animate-pulse">podcasts</span>
-          ກຳລັງຖ່າຍທອດສົດອອກລາງວັນ
+          ກຳລັງຖ່າຍທອດສົດ
         </div>
-        <div className="bg-white dark:bg-[#152033]/20 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-          LIVE
+        <div className="flex items-center gap-2">
+          <div className="bg-white dark:bg-[#152033]/20 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+            LIVE
+          </div>
+       
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-        {/* VDO Player Section */}
+        {/* Video Player Section */}
         <div className="lg:col-span-2 aspect-video bg-black relative">
-          <iframe
-            className="absolute inset-0 w-full h-full"
-            src={getEmbedUrl(liveSettings.youtube_live_url)}
-            title="laolots.com Live Stream"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
+          {embedUrl ? (
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src={embedUrl}
+              title="laolots.com Live Stream"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+              <span className="material-symbols-outlined text-5xl text-white/40">live_tv</span>
+              <p className="text-white/60 text-sm">ບໍ່ສາມາດ embed ໄດ້ — ກົດປຸ່ມດ້ານເທິງເພື່ອເປີດດູ Live</p>
+              <a
+                href={rawUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#ba1a1a] hover:bg-[#d32f2f] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors"
+              >
+                <span className="material-symbols-outlined">open_in_new</span>
+                ເບິ່ງ Live ສົດ
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Real-time Result Section */}
@@ -56,7 +92,7 @@ export default function LiveVdoBanner() {
           <h3 className="text-white font-black text-xl md:text-2xl mb-6 leading-relaxed">
             {formatLaoDate(new Date().toISOString())}
           </h3>
-          
+
           {latestDraw ? (
             <div className="space-y-6 w-full">
               <div className="bg-black/40 p-6 rounded-2xl border border-white/10">
@@ -65,7 +101,6 @@ export default function LiveVdoBanner() {
                   {latestDraw.full_result || '......'}
                 </div>
               </div>
-              
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-[#ffffff]/5 p-4 rounded-xl border border-white/5">
                   <p className="text-white/50 text-xs mb-1">ເລກ 3 ໂຕ</p>
