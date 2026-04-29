@@ -3,10 +3,11 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const NAV_LINKS = [
-  { label: 'ຜົນຫວຍລ່າສຸດ', href: '/',          icon: 'home' },
-  { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history',   icon: 'history' },
-  { label: 'ສະຖິຕິ',         href: '/statistics', icon: 'bar_chart' },
-  { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search',     icon: 'manage_search' },
+  { label: 'ຜົນຫວຍລ່າສຸດ', href: '/',           icon: 'home' },
+  { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history',    icon: 'history' },
+  { label: 'ສະຖິຕິ',         href: '/statistics',  icon: 'bar_chart' },
+  { label: 'AI Analytics',   href: '/analytics',   icon: 'psychology' },
+  { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search',      icon: 'manage_search' },
 ]
 
 export default function Navbar() {

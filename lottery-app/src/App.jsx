@@ -13,6 +13,7 @@ import AdminOverview from './pages/AdminOverview'
 import AnimalImageManager from './components/AnimalImageManager'
 import AdminUsers from './pages/AdminUsers'
 import AdminLive from './pages/AdminLive'
+import AnalyticsPage from './pages/AnalyticsPage'
 import { useVisitorTrack } from './hooks/useVisitorTrack'
 
 function PublicLayout() {
@@ -36,6 +37,7 @@ export default function App() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/statistics" element={<DashboardPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/login" element={<LoginPage />} />

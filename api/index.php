@@ -483,11 +483,12 @@ switch ($action) {
         break;
 
     case 'live_settings':
-        $res = $conn->query("SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('youtube_live_url', 'is_live')");
+        $res = $conn->query("SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('youtube_live_url', 'is_live', 'live_source')");
         $settings = [];
         while ($row = $res->fetch_assoc()) {
             $settings[$row['setting_key']] = $row['setting_value'];
         }
+        if (!isset($settings['live_source'])) $settings['live_source'] = 'youtube';
         echo json_encode($settings);
         break;
 
@@ -496,6 +497,7 @@ switch ($action) {
         $input = json_decode(file_get_contents('php://input'), true);
         $url     = isset($input['youtube_live_url']) ? substr($input['youtube_live_url'], 0, 500) : '';
         $is_live = isset($input['is_live']) && $input['is_live'] === '1' ? '1' : '0';
+        $source  = isset($input['live_source']) && in_array($input['live_source'], ['youtube', 'facebook', 'web']) ? $input['live_source'] : 'youtube';
 
         $stmt1 = $conn->prepare("UPDATE system_settings SET setting_value=? WHERE setting_key='youtube_live_url'");
         $stmt1->bind_param("s", $url);
@@ -506,6 +508,11 @@ switch ($action) {
         $stmt2->bind_param("s", $is_live);
         $stmt2->execute();
         $stmt2->close();
+
+        $stmt3 = $conn->prepare("INSERT INTO system_settings (setting_key, setting_value) VALUES ('live_source', ?) ON DUPLICATE KEY UPDATE setting_value=?");
+        $stmt3->bind_param("ss", $source, $source);
+        $stmt3->execute();
+        $stmt3->close();
 
         echo json_encode(["success" => true]);
         break;

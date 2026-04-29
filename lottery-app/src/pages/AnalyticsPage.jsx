@@ -1,0 +1,822 @@
+import { useState, useMemo } from 'react'
+import { useData } from '../context/DataContext'
+import {
+  LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell, ReferenceLine,
+} from 'recharts'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPUTATION ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
+
+function computeAnalytics(draws, range) {
+  if (!draws?.length) return null
+  const n = range === 'all' ? draws.length : Math.min(parseInt(range), draws.length)
+  const sliced = draws.slice(0, n)
+  const chrono = [...sliced].reverse()
+
+  // Initialize frequency + last-seen maps
+  const freq = {}
+  const lastAt = {}
+  for (let i = 0; i < 100; i++) {
+    const k = i.toString().padStart(2, '0')
+    freq[k] = 0
+    lastAt[k] = -1
+  }
+
+  // Single pass: build freq + lastAt + raw series
+  const seriesRaw = chrono.map((d, idx) => {
+    const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    if (v !== undefined && freq[v] !== undefined) {
+      freq[v]++
+      lastAt[v] = idx
+    }
+    return { idx, date: d.draw_date, drawNum: d.draw_number, v }
+  })
+
+  // Precompute recent hit maps (O(N) each instead of O(100*N))
+  const r10Map = {}; const r30Map = {}
+  for (let i = 0; i < 100; i++) {
+    const k = i.toString().padStart(2, '0'); r10Map[k] = 0; r30Map[k] = 0
+  }
+  chrono.slice(-10).forEach(d => {
+    const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    if (v && r10Map[v] !== undefined) r10Map[v]++
+  })
+  chrono.slice(-30).forEach(d => {
+    const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    if (v && r30Map[v] !== undefined) r30Map[v]++
+  })
+
+  const maxFreq = Math.max(...Object.values(freq), 1)
+  const minFreq = Math.min(...Object.values(freq), 0)
+
+  // Score each number
+  const scores = Object.keys(freq).map(num => {
+    const f = freq[num]
+    const lastIdx = lastAt[num]
+    const gap = lastIdx === -1 ? n : n - 1 - lastIdx
+    const avgGap = f > 0 ? n / f : n
+    const overdue = gap / Math.max(avgGap, 1)
+    const r10 = r10Map[num]
+    const r30 = r30Map[num]
+    const recentRate = r10 / Math.max(Math.min(10, chrono.length), 1)
+    const baseRate  = r30 / Math.max(Math.min(30, chrono.length), 1)
+    const momentum  = +(recentRate - baseRate).toFixed(3)
+    const heatIntensity = maxFreq > minFreq ? (f - minFreq) / (maxFreq - minFreq) : 0.5
+
+    // Composite AI score 0–100
+    const freqScore     = (f / maxFreq) * 35
+    const gapScore      = Math.min(overdue / 3, 1) * 35
+    const momentumScore = Math.max(Math.min((momentum + 0.1) / 0.2, 1), 0) * 30
+    const aiScore       = +Math.min(freqScore + gapScore + momentumScore, 100).toFixed(1)
+
+    return { num, freq: f, gap, avgGap: Math.round(avgGap), overdue: +overdue.toFixed(2),
+             pct: +((f / Math.max(n, 1)) * 100).toFixed(1), r10, r30, momentum, aiScore, heatIntensity }
+  })
+
+  // Time-series (last 50, newest-first → reverse for chart)
+  const series = seriesRaw.filter(d => d.v).slice(-50).map((d, i) => ({
+    x: i + 1, date: d.date?.slice(5), drawNum: d.drawNum,
+    val: parseInt(d.v), label: d.v,
+  }))
+
+  // Top-20 frequency bar chart data
+  const freqBars = [...scores].sort((a, b) => b.freq - a.freq).slice(0, 20)
+    .map(s => ({ num: s.num, freq: s.freq }))
+
+  return {
+    n, freq, scores, series, freqBars, maxFreq, minFreq,
+    hot:     [...scores].sort((a, b) => b.freq - a.freq).slice(0, 10),
+    cold:    [...scores].sort((a, b) => b.gap  - a.gap).slice(0, 10),
+    aiTop:   [...scores].sort((a, b) => b.aiScore - a.aiScore).slice(0, 10),
+    rising:  [...scores].filter(s => s.momentum > 0).sort((a, b) => b.momentum - a.momentum).slice(0, 8),
+    falling: [...scores].filter(s => s.momentum < 0).sort((a, b) => a.momentum - b.momentum).slice(0, 8),
+    overdue: [...scores].filter(s => s.overdue >= 1.0).sort((a, b) => b.overdue - a.overdue).slice(0, 12),
+  }
+}
+
+function computeAIBacktest(draws, trials) {
+  if (!draws?.length || draws.length < trials + 5) return null
+  const results = []
+  for (let i = 0; i < trials; i++) {
+    const draw = draws[i]
+    const actual = draw?.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    if (!actual) continue
+    const training = draws.slice(i + 1)
+    if (training.length < 5) continue
+    const analytics = computeAnalytics(training, 'all')
+    if (!analytics) continue
+    const top5 = analytics.aiTop.slice(0, 5).map(s => s.num)
+    const top3 = top5.slice(0, 3)
+    const top1 = top5[0]
+    results.push({
+      drawNum: draw.draw_number,
+      date: draw.draw_date,
+      predicted: top1,
+      top3,
+      top5,
+      actual,
+      hit1: top1 === actual,
+      hit3: top3.includes(actual),
+      hit5: top5.includes(actual),
+      aiScore: analytics.aiTop[0]?.aiScore,
+    })
+  }
+  const t = results.length
+  return {
+    results,
+    trials: t,
+    hits1: results.filter(r => r.hit1).length,
+    hits3: results.filter(r => r.hit3).length,
+    hits5: results.filter(r => r.hit5).length,
+  }
+}
+
+function computeBacktest(draws, range, targetNum) {
+  if (!targetNum || !draws?.length) return null
+  const n = range === 'all' ? draws.length : Math.min(parseInt(range), draws.length)
+  const chrono = [...draws.slice(0, n)].reverse()
+  const hits = []
+  chrono.forEach((d, idx) => {
+    const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    if (v === targetNum) hits.push({ idx, date: d.draw_date, drawNum: d.draw_number })
+  })
+  const gaps = []
+  for (let i = 1; i < hits.length; i++) gaps.push(hits[i].idx - hits[i - 1].idx)
+  const lastHitAgo = hits.length ? n - 1 - hits[hits.length - 1].idx : n
+  const avgGap  = gaps.length ? +(gaps.reduce((a, b) => a + b, 0) / gaps.length).toFixed(1) : n
+  const maxGap  = gaps.length ? Math.max(...gaps) : n
+  const hitRate = +((hits.length / n) * 100).toFixed(1)
+  const timeline = chrono.slice(-50).map((d, i) => {
+    const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    return { x: i + 1, hit: v === targetNum ? 1 : 0, date: d.draw_date?.slice(5) }
+  })
+  return { hits, hitRate, n, avgGap, maxGap, lastHitAgo, timeline }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function heatBg(t) {
+  if (t < 0.15) return 'rgba(51,65,85,0.55)'
+  if (t < 0.35) return 'rgba(37,99,235,0.50)'
+  if (t < 0.55) return 'rgba(234,179,8,0.55)'
+  if (t < 0.75) return 'rgba(249,115,22,0.65)'
+  return 'rgba(239,68,68,0.80)'
+}
+
+const RANGE_OPTIONS = [
+  { value: '10',  label: '10' },
+  { value: '30',  label: '30' },
+  { value: '50',  label: '50' },
+  { value: '100', label: '100' },
+  { value: 'all', label: 'ທັງໝົດ' },
+]
+
+const MODES = [
+  { value: 'heatmap', label: 'Heatmap',   icon: 'grid_view' },
+  { value: 'charts',  label: 'Charts',    icon: 'show_chart' },
+  { value: 'trend',   label: 'Trend',     icon: 'trending_up' },
+  { value: 'ai',      label: 'AI Engine', icon: 'psychology' },
+  { value: 'backtest',label: 'Backtest',  icon: 'science' },
+]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHART TOOLTIPS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ChartTip({ active, payload }) {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  return (
+    <div className="bg-[#0d1829] border border-[#2b3a54] rounded-xl px-4 py-2.5 shadow-xl text-xs pointer-events-none">
+      <p className="text-[#93b4ff] font-bold mb-0.5">ງວດ #{d.drawNum}</p>
+      <p className="text-white font-black text-xl font-mono">{d.label}</p>
+      <p className="text-[#94a3b8]">{d.date}</p>
+    </div>
+  )
+}
+
+function FreqTip({ active, payload }) {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  return (
+    <div className="bg-[#0d1829] border border-[#2b3a54] rounded-xl px-4 py-2 shadow-xl text-xs pointer-events-none">
+      <p className="text-white font-black text-base">{d.num}</p>
+      <p className="text-[#6cf8bb]">{d.freq} ຄັ້ງ</p>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUB-COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function RankTable({ title, accent, data, field, unit }) {
+  const max = data[0]?.[field] ?? 1
+  return (
+    <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+      <h3 className="font-black text-[#121c2a] dark:text-white text-sm mb-4">{title}</h3>
+      <div className="space-y-2.5">
+        {data.map((s, i) => (
+          <div key={s.num} className="flex items-center gap-2 text-sm">
+            <span className="text-[10px] text-[#94a3b8] w-4 text-right">{i + 1}</span>
+            <span className="font-black font-mono text-[#121c2a] dark:text-white w-8 text-center">{s.num}</span>
+            <div className="flex-1 h-3 bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all" style={{ width: `${(s[field] / Math.max(max, 1)) * 100}%`, background: accent }} />
+            </div>
+            <span className="text-[11px] font-bold text-[#737686] dark:text-[#94a3b8] w-16 text-right shrink-0">{s[field]} {unit}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TrendList({ title, accent, data, field, fieldLabel }) {
+  const max = Math.max(...data.map(s => Math.abs(s[field])), 0.001)
+  return (
+    <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+      <h3 className="font-black text-[#121c2a] dark:text-white text-sm mb-4">{title}</h3>
+      <div className="space-y-2.5">
+        {data.length === 0 && <p className="text-xs text-[#94a3b8]">ບໍ່ມີຂໍ້ມູນ</p>}
+        {data.map(s => (
+          <div key={s.num} className="flex items-center gap-3">
+            <span className="font-black font-mono text-[#121c2a] dark:text-white text-sm w-8 text-center">{s.num}</span>
+            <div className="flex-1 h-3 bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all" style={{ width: `${(Math.abs(s[field]) / max) * 100}%`, background: accent }} />
+            </div>
+            <span className="text-[11px] font-bold w-14 text-right shrink-0" style={{ color: accent }}>
+              {s[fieldLabel]}x/10
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) {
+  const nums = Array.from({ length: 100 }, (_, i) => i.toString().padStart(2, '0'))
+  return (
+    <div className="space-y-5">
+      <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+        <h3 className="font-black text-[#121c2a] dark:text-white text-lg mb-1">Simulation / Backtest</h3>
+        <p className="text-xs text-[#737686] dark:text-[#94a3b8] mb-5">ທົດສອບຕົວເລກໃດໜຶ່ງໃນຂໍ້ມູນຍ້ອນຫຼັງ</p>
+        <div className="flex gap-3 items-center flex-wrap">
+          <label className="text-sm font-bold text-[#434654] dark:text-[#c7d2fe]">ເລືອກຕົວເລກ (00–99):</label>
+          <select
+            value={backtestNum}
+            onChange={e => setBacktestNum(e.target.value)}
+            className="bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-xl px-5 py-2.5 text-[#121c2a] dark:text-white font-black text-2xl focus:ring-2 focus:ring-[#003fb1] font-mono"
+          >
+            <option value="">-- ເລືອກ --</option>
+            {nums.map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {!backtestNum && (
+        <div className="text-center py-20">
+          <span className="material-symbols-outlined text-6xl text-[#2b3a54] mb-3 block">science</span>
+          <p className="text-[#94a3b8]">ເລືອກຕົວເລກ ເພື່ອເລີ່ມ Simulation</p>
+        </div>
+      )}
+
+      {backtest && backtestNum && (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: 'ຈຳນວນຄັ້ງ',    val: backtest.hits.length,     sub: `ໃນ ${backtest.n} ງວດ`,    c: '#6cf8bb' },
+              { label: 'Hit Rate',      val: `${backtest.hitRate}%`,   sub: 'win rate',               c: '#818cf8' },
+              { label: 'Avg Gap',       val: backtest.avgGap,          sub: 'ງວດ ຕໍ່ ຄັ້ງ',            c: '#fbbf24' },
+              { label: 'ຫ່າງສູງສຸດ',   val: backtest.maxGap,          sub: 'max gap (ງວດ)',           c: '#f87171' },
+            ].map(({ label, val, sub, c }) => (
+              <div key={label} className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: c + 'aa' }}>{label}</p>
+                <p className="text-3xl font-black text-[#121c2a] dark:text-white">{val}</p>
+                <p className="text-[10px] mt-0.5" style={{ color: c + '80' }}>{sub}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54]">
+            <h3 className="font-black text-[#121c2a] dark:text-white mb-4 text-sm">Hit/Miss Timeline (50 ງວດລ່າສຸດ)</h3>
+            <ResponsiveContainer width="100%" height={110}>
+              <BarChart data={backtest.timeline} margin={{ top: 5, right: 5, bottom: 0, left: -30 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d4a" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 9 }} tickLine={false} axisLine={false} interval={4} />
+                <YAxis domain={[0, 1]} hide />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null
+                    const d = payload[0].payload
+                    return (
+                      <div className="bg-[#0d1829] border border-[#2b3a54] rounded-xl px-3 py-2 text-xs pointer-events-none">
+                        <p className={`font-black ${d.hit ? 'text-[#6cf8bb]' : 'text-[#475569]'}`}>
+                          {d.hit ? `✓ ອອກ ${backtestNum}` : '✗ ບໍ່ອອກ'}
+                        </p>
+                        <p className="text-[#94a3b8]">{d.date}</p>
+                      </div>
+                    )
+                  }}
+                />
+                <Bar dataKey="hit" radius={[3, 3, 0, 0]}>
+                  {backtest.timeline.map((entry, i) => (
+                    <Cell key={i} fill={entry.hit ? '#6cf8bb' : '#1e2d4a'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {backtest.hits.length > 0 && (
+            <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54]">
+              <h3 className="font-black text-[#121c2a] dark:text-white mb-4 text-sm">
+                ປະຫວັດທີ່ອອກ ({backtest.hits.length} ຄັ້ງ)
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {[...backtest.hits].reverse().slice(0, 40).map((h, i) => (
+                  <div key={i} className="bg-[#6cf8bb]/10 border border-[#6cf8bb]/30 rounded-lg px-3 py-1.5 text-center min-w-[70px]">
+                    <p className="text-[9px] text-[#94a3b8]">#{h.drawNum}</p>
+                    <p className="text-[11px] font-bold text-[#6cf8bb]">{h.date?.slice(0, 10)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN PAGE
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function AnalyticsPage() {
+  const { draws, loading } = useData()
+  const [range, setRange] = useState('50')
+  const [mode, setMode]   = useState('heatmap')
+  const [heatMode, setHeatMode] = useState('freq')
+  const [hoveredNum, setHoveredNum] = useState(null)
+  const [backtestNum, setBacktestNum] = useState('')
+  const [aiTrials, setAiTrials] = useState(10)
+
+  const analytics    = useMemo(() => computeAnalytics(draws, range), [draws, range])
+  const backtest     = useMemo(() => computeBacktest(draws, range, backtestNum), [draws, range, backtestNum])
+  const aiBacktest   = useMemo(() => computeAIBacktest(draws, aiTrials), [draws, aiTrials])
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#003fb1]" />
+    </div>
+  )
+  if (!analytics) return <div className="text-center py-20 text-[#94a3b8]">ບໍ່ມີຂໍ້ມູນ</div>
+
+  const { n, scores, series, freqBars, hot, cold, aiTop, rising, falling, overdue } = analytics
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Hero Header ─────────────────────────────────────────────────────── */}
+      <div className="relative rounded-3xl overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#020818] via-[#001040] to-[#0f172a]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.3),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(108,248,187,0.08),transparent_55%)]" />
+        <div className="absolute right-6 bottom-0 text-[7rem] font-black text-white/[0.03] leading-none select-none pointer-events-none tracking-tighter">
+          BIG DATA
+        </div>
+        <div className="relative z-10 px-6 sm:px-10 py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-3 py-1 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#6cf8bb] animate-pulse" />
+                <span className="text-white/70 text-[11px] font-bold uppercase tracking-widest">AI-Powered Analytics</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 leading-tight">
+                Analytics <span className="text-[#818cf8]">Dashboard</span>
+              </h1>
+              <p className="text-white/50 text-sm max-w-md">
+                ລະບົບວິເຄາະ Big Data — ຄວາມຖີ່ · Trend · Gap · AI Score
+              </p>
+            </div>
+
+            {/* KPI cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
+              {[
+                { label: 'ງວດທີ່ວິເຄາະ', val: n,                           sub: 'draws',             c: '#818cf8' },
+                { label: 'Hot #1',         val: hot[0]?.num ?? '-',          sub: `${hot[0]?.freq ?? 0}x`,      c: '#f87171' },
+                { label: 'ຊ້ານານ',         val: cold[0]?.num ?? '-',         sub: `${cold[0]?.gap ?? 0} ງວດ`,  c: '#fbbf24' },
+                { label: 'AI Pick',        val: aiTop[0]?.num ?? '-',        sub: `${aiTop[0]?.aiScore ?? 0} pts`, c: '#6cf8bb' },
+              ].map(({ label, val, sub, c }) => (
+                <div key={label} className="bg-white/[0.07] backdrop-blur border border-white/10 rounded-2xl px-4 py-3 text-center">
+                  <p className="text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: c + 'aa' }}>{label}</p>
+                  <p className="text-2xl font-black text-white font-mono">{val}</p>
+                  <p className="text-[9px] mt-0.5" style={{ color: c + '80' }}>{sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Control Panel ───────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
+        {/* Range */}
+        <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-[#e8edf8] dark:border-[#2b3a54]">
+          <span className="text-[10px] font-bold text-[#94a3b8] px-2 uppercase tracking-widest">ງວດ</span>
+          {RANGE_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setRange(value)}
+              className={`px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all
+                ${range === value
+                  ? 'bg-[#003fb1] text-white shadow-sm'
+                  : 'text-[#737686] dark:text-[#94a3b8] hover:text-[#003fb1] dark:hover:text-white'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Mode tabs */}
+        <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-[#e8edf8] dark:border-[#2b3a54] overflow-x-auto">
+          {MODES.map(({ value, label, icon }) => (
+            <button
+              key={value}
+              onClick={() => setMode(value)}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[12px] font-bold whitespace-nowrap transition-all
+                ${mode === value
+                  ? 'bg-white dark:bg-[#152033] text-[#003fb1] dark:text-[#93b4ff] shadow-sm'
+                  : 'text-[#737686] dark:text-[#94a3b8] hover:text-[#003fb1] dark:hover:text-white'}`}
+            >
+              <span className="material-symbols-outlined text-[14px]">{icon}</span>
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── TAB: HEATMAP ────────────────────────────────────────────────────── */}
+      {mode === 'heatmap' && (
+        <div className="space-y-5">
+          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+              <div>
+                <h3 className="font-black text-[#121c2a] dark:text-white text-lg">Frequency Heatmap 00–99</h3>
+                <p className="text-xs text-[#737686] dark:text-[#94a3b8] mt-0.5">
+                  Hover ເພື່ອເບິ່ງລາຍລະອຽດ · ສີແດງ = ອອກຫຼາຍ · ສີນ້ຳເງິນ = ອອກໜ້ອຍ
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {[{ v: 'freq', label: 'ຄວາມຖີ່' }, { v: 'overdue', label: 'Overdue' }].map(({ v, label }) => (
+                  <button
+                    key={v}
+                    onClick={() => setHeatMode(v)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all
+                      ${heatMode === v ? 'bg-[#003fb1] text-white' : 'bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#434654] dark:text-[#c7d2fe]'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Hover info bar */}
+            <div className={`mb-4 transition-all duration-200 ${hoveredNum ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+              {(() => {
+                const s = scores.find(x => x.num === hoveredNum)
+                if (!s) return null
+                return (
+                  <div className="p-3 bg-[#eff3ff] dark:bg-[#1e2d4a] rounded-xl flex items-center gap-5 flex-wrap text-sm">
+                    <span className="text-3xl font-black text-[#003fb1] dark:text-[#93b4ff] font-mono w-12">{s.num}</span>
+                    <span className="text-[#434654] dark:text-[#c7d2fe]">ອອກ <b className="text-[#121c2a] dark:text-white">{s.freq}</b> ຄັ້ງ ({s.pct}%)</span>
+                    <span className="text-[#434654] dark:text-[#c7d2fe]">ຫ່າງ <b className="text-[#121c2a] dark:text-white">{s.gap}</b> ງວດ</span>
+                    <span className="text-[#434654] dark:text-[#c7d2fe]">Avg Gap <b className="text-[#121c2a] dark:text-white">{s.avgGap}</b></span>
+                    <span className="text-[#434654] dark:text-[#c7d2fe]">Overdue <b className={s.overdue >= 2 ? 'text-[#ef4444]' : s.overdue >= 1.5 ? 'text-[#f97316]' : 'text-[#121c2a] dark:text-white'}>{s.overdue}x</b></span>
+                    <span className="text-[#434654] dark:text-[#c7d2fe]">AI Score <b className="text-[#818cf8]">{s.aiScore}</b></span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.momentum > 0 ? 'bg-[#6cf8bb]/20 text-[#059669]' : 'bg-[#f87171]/20 text-[#dc2626]'}`}>
+                      {s.momentum > 0 ? '↑ Rising' : '↓ Falling'}
+                    </span>
+                  </div>
+                )
+              })()}
+            </div>
+
+            {/* 10×10 Grid */}
+            <div className="grid grid-cols-10 gap-1">
+              {Array.from({ length: 100 }, (_, i) => {
+                const num = i.toString().padStart(2, '0')
+                const s = scores.find(x => x.num === num)
+                const intensity = heatMode === 'freq' ? (s?.heatIntensity ?? 0) : Math.min((s?.overdue ?? 0) / 4, 1)
+                const isHovered = hoveredNum === num
+                return (
+                  <div
+                    key={num}
+                    onMouseEnter={() => setHoveredNum(num)}
+                    onMouseLeave={() => setHoveredNum(null)}
+                    className={`aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-150 relative select-none
+                      ${isHovered ? 'scale-125 z-10 shadow-lg ring-2 ring-white/40' : 'hover:scale-110 hover:z-10'}`}
+                    style={{ background: heatBg(intensity) }}
+                  >
+                    <span className="text-[11px] font-black text-white leading-none">{num}</span>
+                    {s?.freq > 0 && (
+                      <span className="text-[7px] text-white/60 leading-none mt-0.5">{s.freq}</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center gap-2 mt-5 justify-end">
+              <span className="text-[10px] text-[#94a3b8]">ໜ້ອຍ</span>
+              {[0.1, 0.3, 0.5, 0.7, 0.9].map((t, i) => (
+                <div key={i} className="w-7 h-3.5 rounded" style={{ background: heatBg(t) }} />
+              ))}
+              <span className="text-[10px] text-[#94a3b8]">ຫຼາຍ</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <RankTable title="🔥 Top 10 ເລກ Hot" accent="#ef4444" data={hot}  field="freq" unit="ຄັ້ງ" />
+            <RankTable title="🧊 Top 10 ເລກ Cold" accent="#60a5fa" data={cold} field="gap"  unit="ງວດ" />
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB: CHARTS ─────────────────────────────────────────────────────── */}
+      {mode === 'charts' && (
+        <div className="space-y-5">
+          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+            <h3 className="font-black text-[#121c2a] dark:text-white text-lg mb-1">Time-Series: ຕົວເລກ 2 ໂຕ ຕາມງວດ</h3>
+            <p className="text-xs text-[#737686] dark:text-[#94a3b8] mb-5">ແກນ Y = ຕົວເລກ 00–99 · ສະແດງ {series.length} ງວດລ່າສຸດ</p>
+            <ResponsiveContainer width="100%" height={290}>
+              <LineChart data={series} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(43,58,84,0.5)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval={4} />
+                <YAxis domain={[0, 99]} tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <Tooltip content={<ChartTip />} />
+                <ReferenceLine y={49} stroke="#2b3a54" strokeDasharray="4 4" label={{ value: '50', fill: '#475569', fontSize: 9 }} />
+                <Line type="monotone" dataKey="val" stroke="#818cf8" strokeWidth={2}
+                  dot={{ fill: '#818cf8', r: 2.5, strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: '#6cf8bb', strokeWidth: 0 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+            <h3 className="font-black text-[#121c2a] dark:text-white text-lg mb-5">Top 20 ຄວາມຖີ່</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={freqBars} margin={{ top: 0, right: 10, bottom: 0, left: -10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(43,58,84,0.5)" vertical={false} />
+                <XAxis dataKey="num" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <Tooltip content={<FreqTip />} />
+                <Bar dataKey="freq" radius={[4, 4, 0, 0]}>
+                  {freqBars.map((entry, i) => (
+                    <Cell key={i} fill={i === 0 ? '#fbbf24' : i < 3 ? '#ef4444' : i < 8 ? '#f97316' : '#818cf8'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB: TREND ──────────────────────────────────────────────────────── */}
+      {mode === 'trend' && (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <TrendList title="📈 ກຳລັງຂຶ້ນ (Rising)" accent="#6cf8bb" data={rising}  field="momentum" fieldLabel="r10" />
+            <TrendList title="📉 ກຳລັງລົງ (Falling)"  accent="#f87171" data={falling} field="momentum" fieldLabel="r10" />
+          </div>
+
+          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#d97706] to-[#f59e0b] flex items-center justify-center shadow-sm">
+                <span className="material-symbols-outlined text-white text-[18px]">hourglass_top</span>
+              </div>
+              <div>
+                <h3 className="font-black text-[#121c2a] dark:text-white">ເລກທີ່ຊ້ານານ (Overdue Numbers)</h3>
+                <p className="text-xs text-[#737686] dark:text-[#94a3b8]">Overdue ≥ 1.0× = ເກີນຄ່າສະເລ່ຍ — ສູງ = ຄາດວ່າຈະອອກ</p>
+              </div>
+            </div>
+            <div className="space-y-2.5 mt-5">
+              {overdue.map((s, i) => (
+                <div key={s.num} className="flex items-center gap-3">
+                  <span className="text-[10px] text-[#94a3b8] w-5 text-right">{i + 1}</span>
+                  <span className="font-black font-mono text-white bg-gradient-to-br from-[#1e2d4a] to-[#152033] rounded-lg px-3 py-1.5 text-sm w-12 text-center shadow-sm">{s.num}</span>
+                  <div className="flex-1 relative h-7 bg-[#1e2d4a] rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${Math.min(s.overdue / 5, 1) * 100}%`,
+                        background: s.overdue >= 3 ? 'linear-gradient(90deg,#dc2626,#ef4444)'
+                          : s.overdue >= 2 ? 'linear-gradient(90deg,#d97706,#f59e0b)'
+                          : 'linear-gradient(90deg,#0369a1,#0ea5e9)'
+                      }}
+                    />
+                    <span className="absolute inset-0 flex items-center px-3 text-[11px] font-bold text-white/90">
+                      {s.overdue}× overdue — ຫ່າງ {s.gap} ງວດ (avg {s.avgGap})
+                    </span>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0
+                    ${s.overdue >= 3 ? 'bg-[#ef4444]/20 text-[#f87171]' : s.overdue >= 2 ? 'bg-[#f59e0b]/20 text-[#fbbf24]' : 'bg-[#0ea5e9]/20 text-[#38bdf8]'}`}
+                  >
+                    {s.freq}x
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB: AI ENGINE ──────────────────────────────────────────────────── */}
+      {mode === 'ai' && (
+        <div className="space-y-5">
+          <div className="bg-[#070d1a] rounded-2xl p-6 border border-[#1a2540] shadow-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#818cf8] to-[#6cf8bb] flex items-center justify-center shadow-lg">
+                <span className="material-symbols-outlined text-white text-[22px]">psychology</span>
+              </div>
+              <div>
+                <h3 className="font-black text-white text-xl">AI Prediction Engine</h3>
+                <p className="text-xs text-[#64748b]">Composite score: Frequency + Gap + Momentum</p>
+              </div>
+            </div>
+
+            <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/25 rounded-xl px-4 py-2.5 mb-6 text-xs text-[#fbbf24] flex items-start gap-2">
+              <span className="material-symbols-outlined text-[14px] mt-0.5 shrink-0">warning</span>
+              ຫວຍລາວເປັນການສຸ່ມ — AI Score ເປັນພຽງການວິເຄາະສະຖິຕິ ບໍ່ຮັບປະກັນການອອກລາງວັນ
+            </div>
+
+            <div className="space-y-3.5">
+              {aiTop.map((s, i) => (
+                <div key={s.num} className="flex items-center gap-3">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0
+                    ${i === 0 ? 'bg-[#fbbf24] text-black' : i === 1 ? 'bg-[#94a3b8] text-black' : i === 2 ? 'bg-[#b45309] text-white' : 'bg-[#1e2d4a] text-[#64748b]'}`}
+                  >
+                    {i + 1}
+                  </div>
+                  <span className="font-black text-white text-2xl font-mono w-12 shrink-0">{s.num}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="relative h-5 bg-[#1e2d4a] rounded-full overflow-hidden mb-1">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${s.aiScore}%`,
+                          background: `linear-gradient(90deg, #818cf8 0%, #6cf8bb 100%)`
+                        }}
+                      />
+                      <span className="absolute inset-0 flex items-center justify-end pr-2.5 text-[10px] font-black text-white">
+                        {s.aiScore} pts
+                      </span>
+                    </div>
+                    <div className="flex gap-3 text-[10px] text-[#475569]">
+                      <span className="text-[#64748b]">Freq <span className="text-[#94a3b8]">{s.freq}× ({s.pct}%)</span></span>
+                      <span className="text-[#64748b]">Gap <span className="text-[#94a3b8]">{s.gap}/{s.avgGap}</span></span>
+                      <span className="text-[#64748b]">10ງວດ <span className="text-[#94a3b8]">{s.r10}×</span></span>
+                      <span className={s.momentum > 0 ? 'text-[#6cf8bb]' : 'text-[#f87171]'}>
+                        {s.momentum > 0 ? '↑' : '↓'} momentum
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0
+                    ${s.aiScore >= 60 ? 'bg-[#6cf8bb]/15 text-[#6cf8bb]' : s.aiScore >= 40 ? 'bg-[#fbbf24]/15 text-[#fbbf24]' : 'bg-[#94a3b8]/10 text-[#94a3b8]'}`}
+                  >
+                    {s.aiScore >= 60 ? 'HIGH' : s.aiScore >= 40 ? 'MID' : 'LOW'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Score model explanation */}
+          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+            <h3 className="font-black text-[#121c2a] dark:text-white mb-5">ສູດຄຳນວນ AI Score</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { name: 'Frequency Score', weight: '35 pts', icon: 'equalizer',   color: '#818cf8', desc: '(ຈຳນວນຄັ້ງ / max) × 35 — ອອກຫຼາຍ = ຄະແນນສູງ' },
+                { name: 'Gap Score',       weight: '35 pts', icon: 'timer',        color: '#fbbf24', desc: '(Overdue ÷ 3) × 35 — ຊ້ານານ = ຄາດອອກ' },
+                { name: 'Momentum',        weight: '30 pts', icon: 'trending_up',  color: '#6cf8bb', desc: '(Rate 10ງວດ vs 30ງວດ) × 30 — ຂຶ້ນໃຫ້ຫຼາຍ' },
+              ].map(({ name, weight, icon, color, desc }) => (
+                <div key={name} className="bg-[#eff3ff] dark:bg-[#1e2d4a] rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="material-symbols-outlined text-[20px]" style={{ color }}>{icon}</span>
+                    <span className="font-black text-[#121c2a] dark:text-white text-sm">{name}</span>
+                  </div>
+                  <p className="text-3xl font-black mb-2" style={{ color }}>{weight}</p>
+                  <p className="text-xs text-[#737686] dark:text-[#94a3b8] leading-relaxed">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Accuracy Backtest */}
+          <div className="bg-[#070d1a] rounded-2xl p-6 border border-[#1a2540] shadow-xl">
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#fbbf24] to-[#f97316] flex items-center justify-center shadow-lg">
+                  <span className="material-symbols-outlined text-white text-[20px]">fact_check</span>
+                </div>
+                <div>
+                  <h3 className="font-black text-white text-lg">AI Accuracy Backtest</h3>
+                  <p className="text-xs text-[#64748b]">ຖ້າຊື້ຕາມ AI ຍ້ອນຫຼັງ — ຈະຖືກຈັກຄັ້ງ?</p>
+                </div>
+              </div>
+              <div className="flex gap-1.5">
+                {[10, 20, 30, 50].map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setAiTrials(t)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all
+                      ${aiTrials === t ? 'bg-[#fbbf24] text-black' : 'bg-[#1e2d4a] text-[#64748b] hover:text-white'}`}
+                  >
+                    {t} ຄັ້ງ
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {!aiBacktest ? (
+              <p className="text-[#475569] text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
+            ) : (
+              <>
+                {/* Summary cards */}
+                <div className="grid grid-cols-3 gap-3 mb-5">
+                  {[
+                    { label: 'Top 1 ຖືກ', hits: aiBacktest.hits1, color: '#fbbf24', sublabel: 'ເລກດຽວ' },
+                    { label: 'Top 3 ຖືກ', hits: aiBacktest.hits3, color: '#818cf8', sublabel: 'ໃນ 3 ເລກ' },
+                    { label: 'Top 5 ຖືກ', hits: aiBacktest.hits5, color: '#6cf8bb', sublabel: 'ໃນ 5 ເລກ' },
+                  ].map(({ label, hits, color, sublabel }) => {
+                    const pct = Math.round((hits / aiBacktest.trials) * 100)
+                    return (
+                      <div key={label} className="bg-[#0d1829] rounded-2xl p-4 border border-[#1e2d4a] text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: color + 'aa' }}>{label}</p>
+                        <p className="text-4xl font-black" style={{ color }}>
+                          {hits}<span className="text-xl text-[#475569]">/{aiBacktest.trials}</span>
+                        </p>
+                        <div className="mt-2 h-1.5 bg-[#1e2d4a] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                        </div>
+                        <p className="text-[11px] mt-1.5 font-bold" style={{ color }}>{pct}% · {sublabel}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Per-draw results */}
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#475569] mb-3">ລາຍລະອຽດແຕ່ລະງວດ</p>
+                  {aiBacktest.results.map((r, i) => (
+                    <div key={i} className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm
+                      ${r.hit1 ? 'bg-[#fbbf24]/10 border border-[#fbbf24]/25' : r.hit3 ? 'bg-[#818cf8]/10 border border-[#818cf8]/20' : r.hit5 ? 'bg-[#6cf8bb]/10 border border-[#6cf8bb]/15' : 'bg-[#0d1829] border border-[#1e2d4a]'}`}
+                    >
+                      <span className="text-[10px] text-[#475569] w-4 shrink-0">{i + 1}</span>
+                      <span className="text-[10px] text-[#475569] shrink-0 w-20">#{r.drawNum}</span>
+                      <span className="text-[10px] text-[#475569] shrink-0 w-20">{r.date?.slice(0, 10)}</span>
+                      <div className="flex gap-1 flex-1">
+                        {r.top5.map((num, j) => (
+                          <span key={j} className={`font-black font-mono text-xs px-2 py-0.5 rounded-lg
+                            ${num === r.actual ? 'bg-[#fbbf24] text-black' : j === 0 ? 'bg-[#1e2d4a] text-[#818cf8]' : 'bg-[#1e2d4a] text-[#475569]'}`}
+                          >
+                            {num}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="font-black font-mono text-base text-white shrink-0 w-8 text-right">{r.actual}</span>
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 w-14 text-center
+                        ${r.hit1 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : r.hit3 ? 'bg-[#818cf8]/20 text-[#818cf8]' : r.hit5 ? 'bg-[#6cf8bb]/20 text-[#6cf8bb]' : 'bg-[#1e2d4a] text-[#475569]'}`}
+                      >
+                        {r.hit1 ? '✓ #1' : r.hit3 ? '✓ Top3' : r.hit5 ? '✓ Top5' : '✗ Miss'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB: BACKTEST ───────────────────────────────────────────────────── */}
+      {mode === 'backtest' && (
+        <BacktestPanel
+          draws={draws}
+          range={range}
+          backtest={backtest}
+          backtestNum={backtestNum}
+          setBacktestNum={setBacktestNum}
+        />
+      )}
+
+    </div>
+  )
+}
