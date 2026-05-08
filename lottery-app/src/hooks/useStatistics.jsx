@@ -10,12 +10,8 @@ export const useStatistics = (timeframe = 'all') => {
 
     let targetDraws = draws;
     if (timeframe !== 'all') {
-      // Find the most recent draw date to act as "now" if possible, otherwise use new Date()
-      // Since data is mocked, let's use the most recent published draw date as the baseline
-      // instead of new Date() which would be current real-world date.
       const published = draws.filter(d => d.status === 'published');
       if (published.length > 0) {
-        // Assume published draws are sorted descending, if not sort them
         const sorted = [...published].sort((a,b) => new Date(b.draw_date) - new Date(a.draw_date));
         const latestDate = new Date(sorted[0].draw_date);
         
@@ -31,45 +27,50 @@ export const useStatistics = (timeframe = 'all') => {
       }
     }
 
-    // 1. Hot & Cold Numbers (using 2-digit prizes)
-    const twoDigitFreq = {};
-    // Initialize all 100 numbers (00-99)
+    // Process from oldest to newest
+    const chronologicalDraws = [...targetDraws].reverse();
+    const totalRounds = chronologicalDraws.length;
+
+    // ── Single-pass frequency + lastSeen tracking (O(N)) ──
+    // OPTIMIZED: Previous version had O(100 × N) because it incremented
+    // lastSeen for ALL 100 numbers on every draw. Now we use a round counter
+    // and compute missedRounds = (totalRounds - 1 - lastSeenAtRound).
+    const twoDigitCount = {};
+    const lastSeenAtRound = {};
     for (let i = 0; i < 100; i++) {
       const numStr = i.toString().padStart(2, '0');
-      twoDigitFreq[numStr] = { count: 0, lastSeen: 0 };
+      twoDigitCount[numStr] = 0;
+      lastSeenAtRound[numStr] = -1; // -1 means never seen
     }
 
-    // Process from oldest to newest to correctly calculate 'lastSeen'
-    const chronologicalDraws = [...targetDraws].reverse();
-    
-    chronologicalDraws.forEach(d => {
-      // Every round, increase 'lastSeen' for everyone
-      Object.keys(twoDigitFreq).forEach(key => {
-        twoDigitFreq[key].lastSeen += 1;
-      });
-
+    chronologicalDraws.forEach((d, roundIdx) => {
       const twoDigit = d.results_detail?.find(r => r.prize_type === '2_digits');
-      if (twoDigit && twoDigit.result_value) {
+      if (twoDigit?.result_value) {
         const v = twoDigit.result_value;
-        if (twoDigitFreq[v]) {
-          twoDigitFreq[v].count += 1;
-          twoDigitFreq[v].lastSeen = 0; // Reset lastSeen for the drawn number
+        if (twoDigitCount[v] !== undefined) {
+          twoDigitCount[v]++;
+          lastSeenAtRound[v] = roundIdx;
         }
       }
     });
 
-    const frequencyArray = Object.entries(twoDigitFreq).map(([number, data]) => ({
-      number,
-      count: data.count,
-      missedRounds: data.lastSeen
-    }));
+    const frequencyArray = Object.entries(twoDigitCount).map(([number, count]) => {
+      const lastRound = lastSeenAtRound[number];
+      const missedRounds = lastRound === -1 ? totalRounds : (totalRounds - 1 - lastRound);
+      return { number, count, missedRounds };
+    });
 
-    // Hot: Highest frequency count (break ties with missedRounds to reward recent hotness)
-    const hotNumbers = [...frequencyArray].sort((a, b) => b.count - a.count || a.missedRounds - b.missedRounds).slice(0, 4);
-    // Cold: Highest missedRounds (longest time without showing up)
-    const coldNumbers = [...frequencyArray].sort((a, b) => b.missedRounds - a.missedRounds).slice(0, 3);
+    // Hot: Highest frequency count
+    const hotNumbers = [...frequencyArray]
+      .sort((a, b) => b.count - a.count || a.missedRounds - b.missedRounds)
+      .slice(0, 4);
 
-    // 2. Animal Stats (which animals appeared the most in 2-digit results)
+    // Cold: Longest time without showing up
+    const coldNumbers = [...frequencyArray]
+      .sort((a, b) => b.missedRounds - a.missedRounds)
+      .slice(0, 3);
+
+    // 2. Animal Stats
     const animalFreq = {};
     let totalTwoDigitDraws = 0;
     targetDraws.forEach(d => {
@@ -83,7 +84,6 @@ export const useStatistics = (timeframe = 'all') => {
     const animalStats = animals.map(a => {
       const count = animalFreq[a.animal_id] || 0;
       const pct = totalTwoDigitDraws > 0 ? ((count / totalTwoDigitDraws) * 100).toFixed(0) : 0;
-      
       const constructedUrl = resolveAnimalImage(a);
       
       return {
@@ -96,7 +96,7 @@ export const useStatistics = (timeframe = 'all') => {
       };
     }).sort((a, b) => b.frequencyPercent - a.frequencyPercent);
 
-    // 3. Digit Distribution (from full_result)
+    // 3. Digit Distribution
     const digitCount = Array(10).fill(0);
     let totalDigits = 0;
     targetDraws.forEach(d => {
@@ -116,12 +116,11 @@ export const useStatistics = (timeframe = 'all') => {
       return {
         digit,
         percent: parseFloat(percent),
-        barWidth: Math.min(100, Math.max(0, parseFloat(percent) * 5)), // approx scaling, or just use percent directly
+        barWidth: 0,
         count: count
       };
     }).sort((a, b) => b.percent - a.percent);
 
-    // Normalize barWidth so highest is ~100%
     if (digitDistributions.length > 0) {
       const maxPercent = digitDistributions[0].percent;
       if (maxPercent > 0) {
@@ -134,11 +133,8 @@ export const useStatistics = (timeframe = 'all') => {
     // 4. Consecutive Number Pairs
     const pairsTracker = {};
     for (let i = 0; i < chronologicalDraws.length - 1; i++) {
-      const currentDraw = chronologicalDraws[i];
-      const currentTwoDigit = currentDraw.results_detail?.find(r => r.prize_type === '2_digits');
-      
-      const nextDraw = chronologicalDraws[i+1];
-      const nextTwoDigit = nextDraw.results_detail?.find(r => r.prize_type === '2_digits');
+      const currentTwoDigit = chronologicalDraws[i].results_detail?.find(r => r.prize_type === '2_digits');
+      const nextTwoDigit = chronologicalDraws[i+1].results_detail?.find(r => r.prize_type === '2_digits');
 
       if (currentTwoDigit?.result_value && nextTwoDigit?.result_value) {
         const currentNum = currentTwoDigit.result_value;
@@ -164,7 +160,6 @@ export const useStatistics = (timeframe = 'all') => {
     const hotPairs = allPairs.sort((a, b) => b.count - a.count).slice(0, 10);
 
     // ─── Trend Momentum ───
-    // targetDraws is sorted DESC (newest first)
     const last5 = targetDraws.slice(0, 5);
     const last20 = targetDraws.slice(0, 20);
     const freq5 = {}, freq20 = {};
@@ -191,7 +186,6 @@ export const useStatistics = (timeframe = 'all') => {
     };
 
     // ─── Gap Analysis ───
-    const totalRounds = chronologicalDraws.length;
     const gapAnalysis = frequencyArray.map(({ number, count, missedRounds }) => {
       const expectedGap = count > 0 ? totalRounds / count : totalRounds;
       const overdueRatio = missedRounds / Math.max(expectedGap, 1);
@@ -205,8 +199,8 @@ export const useStatistics = (timeframe = 'all') => {
 
     const doubleNumbers = ['00','11','22','33','44','55','66','77','88','99'].map(n => ({
       number: n,
-      count: twoDigitFreq[n]?.count || 0,
-      pct: totalTwoDigitCount > 0 ? +((twoDigitFreq[n]?.count || 0) / totalTwoDigitCount * 100).toFixed(1) : 0,
+      count: twoDigitCount[n] || 0,
+      pct: totalTwoDigitCount > 0 ? +((twoDigitCount[n] || 0) / totalTwoDigitCount * 100).toFixed(1) : 0,
     })).sort((a, b) => b.count - a.count);
 
     const mirrorSeen = new Set();
@@ -217,8 +211,8 @@ export const useStatistics = (timeframe = 'all') => {
         const n1 = `${a}${b}`, n2 = `${b}${a}`;
         if (mirrorSeen.has(n1)) continue;
         mirrorSeen.add(n1); mirrorSeen.add(n2);
-        const c1 = twoDigitFreq[n1]?.count || 0;
-        const c2 = twoDigitFreq[n2]?.count || 0;
+        const c1 = twoDigitCount[n1] || 0;
+        const c2 = twoDigitCount[n2] || 0;
         if (c1 > 0 || c2 > 0) {
           mirrorPairs.push({ pair: [n1, n2], counts: [c1, c2], total: c1 + c2 });
         }

@@ -71,4 +71,15 @@ CREATE TABLE user_logs (
 -- INDEXES ເພື່ອໃຫ້ Query ສະຖິຕິໄດ້ໄວຂຶ້ນ (Optimization)
 -- ---------------------------------------------------------
 CREATE INDEX idx_draw_date ON lottery_draws(draw_date);
+CREATE INDEX idx_ld_type_date ON lottery_draws(type_id, draw_date DESC);
+CREATE INDEX idx_ld_status_date ON lottery_draws(status, draw_date DESC);
 CREATE INDEX idx_result_value ON draw_results_detail(result_value);
+CREATE INDEX idx_drd_draw_id ON draw_results_detail(draw_id);
+
+-- Visitor stats indexes (high-write table needs indexed reads)
+-- CREATE INDEX idx_vs_visited_at ON visitor_stats(visited_at);
+-- CREATE INDEX idx_vs_session_id ON visitor_stats(session_id);
+
+-- Users index for login lookup
+-- CREATE INDEX idx_users_username ON users(username);
+-- NOTE: username already has UNIQUE constraint which creates an index

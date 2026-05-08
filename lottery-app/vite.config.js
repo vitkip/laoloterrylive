@@ -16,4 +16,28 @@ export default defineConfig(({ command }) => ({
       '/laoloterylive/uploads': { target: 'http://localhost', changeOrigin: true },
     },
   },
+
+  build: {
+    // ── Chunk splitting for optimal caching ──
+    // Vendor libs change rarely → separate chunk = long browser cache
+    // Page-level code splitting handled by React.lazy() in App.jsx
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // React core (~140KB) — cached indefinitely
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-router-dom')) {
+            return 'vendor-react';
+          }
+          // Recharts (~100KB) — only needed on analytics/dashboard pages
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
+            return 'vendor-charts';
+          }
+        },
+      },
+    },
+    // Generate chunk size warnings above 300KB (default is 500KB)
+    chunkSizeWarningLimit: 300,
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+  },
 }))

@@ -114,28 +114,60 @@ $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 switch ($action) {
     case 'animals':
+        // Static data — cache for 5 minutes
+        header('Cache-Control: public, max-age=300');
         $result = $conn->query("SELECT * FROM animals ORDER BY animal_id ASC");
         $data = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode($data);
         break;
 
     case 'draws':
-        // Get draws with their details nested
-        $drawsResult = $conn->query("SELECT * FROM lottery_draws ORDER BY draw_date DESC, draw_number DESC");
-        $draws = [];
-        $detailStmt = $conn->prepare("SELECT * FROM draw_results_detail WHERE draw_id = ?");
-        while ($row = $drawsResult->fetch_assoc()) {
-            $drawId = (int) $row['draw_id'];
-            $detailStmt->bind_param("i", $drawId);
-            $detailStmt->execute();
-            $row['results_detail'] = $detailStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            $draws[] = $row;
+        // Single JOIN query instead of N+1 (was 1 query per draw)
+        $sql = "
+            SELECT d.*, dr.detail_id, dr.prize_type, dr.result_value, dr.animal_id AS detail_animal_id
+            FROM lottery_draws d
+            LEFT JOIN draw_results_detail dr ON dr.draw_id = d.draw_id
+            ORDER BY d.draw_date DESC, d.draw_number DESC, dr.detail_id ASC
+        ";
+        $result = $conn->query($sql);
+        $drawsMap = [];
+        $drawOrder = [];
+        while ($row = $result->fetch_assoc()) {
+            $did = (int) $row['draw_id'];
+            if (!isset($drawsMap[$did])) {
+                $drawsMap[$did] = [
+                    'draw_id' => $row['draw_id'],
+                    'type_id' => $row['type_id'],
+                    'draw_number' => $row['draw_number'],
+                    'draw_date' => $row['draw_date'],
+                    'full_result' => $row['full_result'],
+                    'status' => $row['status'],
+                    'created_by' => $row['created_by'],
+                    'youtube_url' => $row['youtube_url'] ?? null,
+                    'results_detail' => [],
+                ];
+                $drawOrder[] = $did;
+            }
+            if ($row['detail_id'] !== null) {
+                $drawsMap[$did]['results_detail'][] = [
+                    'detail_id' => $row['detail_id'],
+                    'draw_id' => $row['draw_id'],
+                    'prize_type' => $row['prize_type'],
+                    'result_value' => $row['result_value'],
+                    'animal_id' => $row['detail_animal_id'],
+                ];
+            }
         }
-        $detailStmt->close();
+        $draws = [];
+        foreach ($drawOrder as $did) {
+            $draws[] = $drawsMap[$did];
+        }
         echo json_encode($draws);
         break;
 
     case 'types':
+        // Static data — cache for 10 minutes
+        header('Cache-Control: public, max-age=600');
         $result = $conn->query("SELECT * FROM lottery_types");
         $data = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode($data);
@@ -391,7 +423,11 @@ switch ($action) {
         }
 
         // Protect last active admin from being demoted or disabled
-        $currentRow = $conn->query("SELECT role FROM users WHERE user_id={$user_id}")->fetch_assoc();
+        $roleStmt = $conn->prepare("SELECT role FROM users WHERE user_id = ?");
+        $roleStmt->bind_param("i", $user_id);
+        $roleStmt->execute();
+        $currentRow = $roleStmt->get_result()->fetch_assoc();
+        $roleStmt->close();
         if ($currentRow && $currentRow['role'] === 'admin') {
             if ($role !== 'admin' || $is_active === 0) {
                 $adminCount = (int) $conn->query("SELECT COUNT(*) AS cnt FROM users WHERE role='admin' AND is_active=1")->fetch_assoc()['cnt'];
@@ -429,8 +465,13 @@ switch ($action) {
             echo json_encode(["error" => "ບໍ່ສາມາດລຶບຕົນເອງໄດ້"]);
             break;
         }
-        // Protect last active admin
-        $targetRole = $conn->query("SELECT role FROM users WHERE user_id={$user_id}")->fetch_assoc()['role'] ?? '';
+        // Protect last active admin (prepared statement to prevent SQL injection)
+        $roleStmt = $conn->prepare("SELECT role FROM users WHERE user_id = ?");
+        $roleStmt->bind_param("i", $user_id);
+        $roleStmt->execute();
+        $roleRow = $roleStmt->get_result()->fetch_assoc();
+        $roleStmt->close();
+        $targetRole = $roleRow['role'] ?? '';
         if ($targetRole === 'admin') {
             $adminCount = (int) $conn->query("SELECT COUNT(*) AS cnt FROM users WHERE role='admin' AND is_active=1")->fetch_assoc()['cnt'];
             if ($adminCount <= 1) {
@@ -549,21 +590,17 @@ switch ($action) {
     case 'visitor_stats':
         requireAuth('admin');
 
-        // Total visits all time
-        $total = $conn->query("SELECT COUNT(*) AS cnt FROM visitor_stats")->fetch_assoc()['cnt'];
-
-        // Unique sessions all time
-        $unique = $conn->query("SELECT COUNT(DISTINCT session_id) AS cnt FROM visitor_stats WHERE session_id != ''")->fetch_assoc()['cnt'];
-
-        // Today
-        $today = $conn->query("SELECT COUNT(*) AS cnt FROM visitor_stats WHERE DATE(visited_at) = CURDATE()")->fetch_assoc()['cnt'];
-        $today_unique = $conn->query("SELECT COUNT(DISTINCT session_id) AS cnt FROM visitor_stats WHERE DATE(visited_at) = CURDATE() AND session_id != ''")->fetch_assoc()['cnt'];
-
-        // This week
-        $week = $conn->query("SELECT COUNT(*) AS cnt FROM visitor_stats WHERE visited_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)")->fetch_assoc()['cnt'];
-
-        // This month
-        $month = $conn->query("SELECT COUNT(*) AS cnt FROM visitor_stats WHERE YEAR(visited_at)=YEAR(CURDATE()) AND MONTH(visited_at)=MONTH(CURDATE())")->fetch_assoc()['cnt'];
+        // Consolidated: 6 COUNT queries → 1 query with conditional aggregation
+        $summaryRow = $conn->query("
+            SELECT
+                COUNT(*) AS total,
+                COUNT(DISTINCT CASE WHEN session_id != '' THEN session_id END) AS unique_sessions,
+                SUM(CASE WHEN DATE(visited_at) = CURDATE() THEN 1 ELSE 0 END) AS today,
+                COUNT(DISTINCT CASE WHEN DATE(visited_at) = CURDATE() AND session_id != '' THEN session_id END) AS today_unique,
+                SUM(CASE WHEN visited_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) AS this_week,
+                SUM(CASE WHEN YEAR(visited_at) = YEAR(CURDATE()) AND MONTH(visited_at) = MONTH(CURDATE()) THEN 1 ELSE 0 END) AS this_month
+            FROM visitor_stats
+        ")->fetch_assoc();
 
         // Last 7 days daily breakdown
         $daily_res = $conn->query("
@@ -590,12 +627,12 @@ switch ($action) {
         while ($row = $pages_res->fetch_assoc()) $top_pages[] = $row;
 
         echo json_encode([
-            "total" => (int)$total,
-            "unique_sessions" => (int)$unique,
-            "today" => (int)$today,
-            "today_unique" => (int)$today_unique,
-            "this_week" => (int)$week,
-            "this_month" => (int)$month,
+            "total" => (int)$summaryRow['total'],
+            "unique_sessions" => (int)$summaryRow['unique_sessions'],
+            "today" => (int)$summaryRow['today'],
+            "today_unique" => (int)$summaryRow['today_unique'],
+            "this_week" => (int)$summaryRow['this_week'],
+            "this_month" => (int)$summaryRow['this_month'],
             "daily" => $daily,
             "top_pages" => $top_pages,
         ]);

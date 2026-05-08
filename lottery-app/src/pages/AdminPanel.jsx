@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { API, resolveAnimalImage } from '../utils/api';
@@ -91,7 +91,8 @@ export default function AdminPanel() {
     return Math.max(...inYear.map(d => parseInt(d.draw_number) || 0)) + 1;
   };
 
-  useMemo(() => {
+  // Auto-populate draw number (useEffect for side effects, NOT useMemo)
+  useEffect(() => {
     if (!isEditing && !formData.draw_number && draws.length) {
       setFormData(f => ({ ...f, draw_number: getNextDrawNumber(f.draw_date).toString() }));
     }
