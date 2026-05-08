@@ -72,8 +72,15 @@ function computeAnalytics(draws, range) {
     const momentumScore = Math.max(Math.min((momentum + 0.1) / 0.2, 1), 0) * 30
     const aiScore       = +Math.min(freqScore + gapScore + momentumScore, 100).toFixed(1)
 
+    // Decision Score: 0–3 signals passed
+    const sig1 = overdue >= 1.0 ? 1 : 0   // ຊ້ານານກວ່າສະເລ່ຍ
+    const sig2 = momentum > 0 ? 1 : 0      // momentum ຂຶ້ນ
+    const sig3 = aiScore >= 60 ? 1 : 0     // AI score ສູງ
+    const decisionScore = sig1 + sig2 + sig3
+
     return { num, freq: f, gap, avgGap: Math.round(avgGap), overdue: +overdue.toFixed(2),
-             pct: +((f / Math.max(n, 1)) * 100).toFixed(1), r10, r30, momentum, aiScore, heatIntensity }
+             pct: +((f / Math.max(n, 1)) * 100).toFixed(1), r10, r30, momentum, aiScore, heatIntensity,
+             decisionScore, sig1, sig2, sig3 }
   })
 
   // Time-series (last 50, newest-first → reverse for chart)
@@ -93,7 +100,10 @@ function computeAnalytics(draws, range) {
     aiTop:   [...scores].sort((a, b) => b.aiScore - a.aiScore).slice(0, 10),
     rising:  [...scores].filter(s => s.momentum > 0).sort((a, b) => b.momentum - a.momentum).slice(0, 8),
     falling: [...scores].filter(s => s.momentum < 0).sort((a, b) => a.momentum - b.momentum).slice(0, 8),
-    overdue: [...scores].filter(s => s.overdue >= 1.0).sort((a, b) => b.overdue - a.overdue).slice(0, 12),
+    overdue:     [...scores].filter(s => s.overdue >= 1.0).sort((a, b) => b.overdue - a.overdue).slice(0, 12),
+    decisionTop: [...scores].filter(s => s.decisionScore > 0)
+                            .sort((a, b) => b.decisionScore - a.decisionScore || b.aiScore - a.aiScore)
+                            .slice(0, 20),
   }
 }
 
@@ -108,19 +118,18 @@ function computeAIBacktest(draws, trials) {
     if (training.length < 5) continue
     const analytics = computeAnalytics(training, 'all')
     if (!analytics) continue
-    const top5 = analytics.aiTop.slice(0, 5).map(s => s.num)
-    const top3 = top5.slice(0, 3)
-    const top1 = top5[0]
+    const top10 = analytics.aiTop.slice(0, 10).map(s => s.num)
+    const top5  = top10.slice(0, 5)
+    const top1  = top10[0]
     results.push({
       drawNum: draw.draw_number,
       date: draw.draw_date,
       predicted: top1,
-      top3,
-      top5,
+      top10,
       actual,
-      hit1: top1 === actual,
-      hit3: top3.includes(actual),
-      hit5: top5.includes(actual),
+      hit1:  top1 === actual,
+      hit5:  top5.includes(actual),
+      hit10: top10.includes(actual),
       aiScore: analytics.aiTop[0]?.aiScore,
     })
   }
@@ -128,9 +137,9 @@ function computeAIBacktest(draws, trials) {
   return {
     results,
     trials: t,
-    hits1: results.filter(r => r.hit1).length,
-    hits3: results.filter(r => r.hit3).length,
-    hits5: results.filter(r => r.hit5).length,
+    hits1:  results.filter(r => r.hit1).length,
+    hits5:  results.filter(r => r.hit5).length,
+    hits10: results.filter(r => r.hit10).length,
   }
 }
 
@@ -177,11 +186,12 @@ const RANGE_OPTIONS = [
 ]
 
 const MODES = [
-  { value: 'heatmap', label: 'Heatmap',   icon: 'grid_view' },
-  { value: 'charts',  label: 'Charts',    icon: 'show_chart' },
-  { value: 'trend',   label: 'Trend',     icon: 'trending_up' },
-  { value: 'ai',      label: 'AI Engine', icon: 'psychology' },
-  { value: 'backtest',label: 'Backtest',  icon: 'science' },
+  { value: 'heatmap',  label: 'Heatmap',    icon: 'grid_view' },
+  { value: 'charts',   label: 'Charts',     icon: 'show_chart' },
+  { value: 'trend',    label: 'Trend',      icon: 'trending_up' },
+  { value: 'ai',       label: 'AI Engine',  icon: 'psychology' },
+  { value: 'decision', label: 'ຕັດສິນໃຈ',  icon: 'stars' },
+  { value: 'backtest', label: 'Backtest',   icon: 'science' },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -378,7 +388,7 @@ export default function AnalyticsPage() {
   )
   if (!analytics) return <div className="text-center py-20 text-[#94a3b8]">ບໍ່ມີຂໍ້ມູນ</div>
 
-  const { n, scores, series, freqBars, hot, cold, aiTop, rising, falling, overdue } = analytics
+  const { n, scores, series, freqBars, hot, cold, aiTop, rising, falling, overdue, decisionTop } = analytics
 
   return (
     <div className="space-y-5">
@@ -752,9 +762,9 @@ export default function AnalyticsPage() {
                 {/* Summary cards */}
                 <div className="grid grid-cols-3 gap-3 mb-5">
                   {[
-                    { label: 'Top 1 ຖືກ', hits: aiBacktest.hits1, color: '#fbbf24', sublabel: 'ເລກດຽວ' },
-                    { label: 'Top 3 ຖືກ', hits: aiBacktest.hits3, color: '#818cf8', sublabel: 'ໃນ 3 ເລກ' },
-                    { label: 'Top 5 ຖືກ', hits: aiBacktest.hits5, color: '#6cf8bb', sublabel: 'ໃນ 5 ເລກ' },
+                    { label: 'Top 1 ຖືກ',  hits: aiBacktest.hits1,  color: '#fbbf24', sublabel: 'ເລກດຽວ' },
+                    { label: 'Top 5 ຖືກ',  hits: aiBacktest.hits5,  color: '#818cf8', sublabel: 'ໃນ 5 ເລກ' },
+                    { label: 'Top 10 ຖືກ', hits: aiBacktest.hits10, color: '#6cf8bb', sublabel: 'ໃນ 10 ເລກ' },
                   ].map(({ label, hits, color, sublabel }) => {
                     const pct = Math.round((hits / aiBacktest.trials) * 100)
                     return (
@@ -776,15 +786,15 @@ export default function AnalyticsPage() {
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#475569] mb-3">ລາຍລະອຽດແຕ່ລະງວດ</p>
                   {aiBacktest.results.map((r, i) => (
-                    <div key={i} className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm
-                      ${r.hit1 ? 'bg-[#fbbf24]/10 border border-[#fbbf24]/25' : r.hit3 ? 'bg-[#818cf8]/10 border border-[#818cf8]/20' : r.hit5 ? 'bg-[#6cf8bb]/10 border border-[#6cf8bb]/15' : 'bg-[#0d1829] border border-[#1e2d4a]'}`}
+                    <div key={i} className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm flex-wrap
+                      ${r.hit1 ? 'bg-[#fbbf24]/10 border border-[#fbbf24]/25' : r.hit5 ? 'bg-[#818cf8]/10 border border-[#818cf8]/20' : r.hit10 ? 'bg-[#6cf8bb]/10 border border-[#6cf8bb]/15' : 'bg-[#0d1829] border border-[#1e2d4a]'}`}
                     >
                       <span className="text-[10px] text-[#475569] w-4 shrink-0">{i + 1}</span>
-                      <span className="text-[10px] text-[#475569] shrink-0 w-20">#{r.drawNum}</span>
+                      <span className="text-[10px] text-[#475569] shrink-0 w-16">#{r.drawNum}</span>
                       <span className="text-[10px] text-[#475569] shrink-0 w-20">{r.date?.slice(0, 10)}</span>
-                      <div className="flex gap-1 flex-1">
-                        {r.top5.map((num, j) => (
-                          <span key={j} className={`font-black font-mono text-xs px-2 py-0.5 rounded-lg
+                      <div className="flex gap-1 flex-wrap flex-1 min-w-0">
+                        {r.top10.map((num, j) => (
+                          <span key={j} className={`font-black font-mono text-[11px] px-1.5 py-0.5 rounded-md
                             ${num === r.actual ? 'bg-[#fbbf24] text-black' : j === 0 ? 'bg-[#1e2d4a] text-[#818cf8]' : 'bg-[#1e2d4a] text-[#475569]'}`}
                           >
                             {num}
@@ -792,10 +802,10 @@ export default function AnalyticsPage() {
                         ))}
                       </div>
                       <span className="font-black font-mono text-base text-white shrink-0 w-8 text-right">{r.actual}</span>
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 w-14 text-center
-                        ${r.hit1 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : r.hit3 ? 'bg-[#818cf8]/20 text-[#818cf8]' : r.hit5 ? 'bg-[#6cf8bb]/20 text-[#6cf8bb]' : 'bg-[#1e2d4a] text-[#475569]'}`}
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 w-16 text-center
+                        ${r.hit1 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : r.hit5 ? 'bg-[#818cf8]/20 text-[#818cf8]' : r.hit10 ? 'bg-[#6cf8bb]/20 text-[#6cf8bb]' : 'bg-[#1e2d4a] text-[#475569]'}`}
                       >
-                        {r.hit1 ? '✓ #1' : r.hit3 ? '✓ Top3' : r.hit5 ? '✓ Top5' : '✗ Miss'}
+                        {r.hit1 ? '✓ #1' : r.hit5 ? '✓ Top5' : r.hit10 ? '✓ Top10' : '✗ Miss'}
                       </span>
                     </div>
                   ))}
@@ -803,6 +813,105 @@ export default function AnalyticsPage() {
               </>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── TAB: DECISION ───────────────────────────────────────────────────── */}
+      {mode === 'decision' && (
+        <div className="space-y-5">
+          {/* Header */}
+          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#0d1829] to-[#070d1a] border border-[#1a2540] p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#fbbf24] to-[#f97316] flex items-center justify-center shadow-lg">
+                <span className="material-symbols-outlined text-white text-[22px]">stars</span>
+              </div>
+              <div>
+                <h3 className="font-black text-white text-xl">Decision Score</h3>
+                <p className="text-xs text-[#64748b]">ນັບ Signal ທີ່ຜ່ານ — ★★★ = ສັນຍານທຸກຢ່າງຊ້ອນກັນ</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { sig: '★ Signal 1', label: 'Overdue ≥ 1.0×', desc: 'ຊ້ານານກວ່າສະເລ່ຍ', color: '#fbbf24' },
+                { sig: '★ Signal 2', label: 'Momentum ↑',      desc: 'ອອກ 10 ງວດ > 30 ງວດ', color: '#6cf8bb' },
+                { sig: '★ Signal 3', label: 'AI Score ≥ 60',   desc: 'Composite score HIGH', color: '#818cf8' },
+              ].map(({ sig, label, desc, color }) => (
+                <div key={sig} className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <p className="text-[10px] font-black mb-1" style={{ color }}>{sig}</p>
+                  <p className="text-sm font-black text-white">{label}</p>
+                  <p className="text-[10px] text-[#475569] mt-0.5">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="flex gap-3 flex-wrap">
+            {[
+              { stars: 3, label: '★★★ ສັນຍານຄົບ 3', bg: 'bg-[#fbbf24]/15 border-[#fbbf24]/40 text-[#fbbf24]', badge: 'ຊື້ໄດ້' },
+              { stars: 2, label: '★★☆ ສັນຍານ 2/3',   bg: 'bg-[#818cf8]/15 border-[#818cf8]/40 text-[#818cf8]', badge: 'ເຝົ້າລໍ' },
+              { stars: 1, label: '★☆☆ ສັນຍານ 1/3',   bg: 'bg-[#475569]/15 border-[#475569]/40 text-[#94a3b8]', badge: 'ອ່ອນ' },
+            ].map(({ stars, label, bg, badge }) => (
+              <div key={stars} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold ${bg}`}>
+                <span>{label}</span>
+                <span className="text-[10px] opacity-70">— {badge}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Numbers list */}
+          {decisionTop.length === 0 ? (
+            <p className="text-center text-[#475569] py-10">ບໍ່ມີຕົວເລກທີ່ຜ່ານ signal ໃດ</p>
+          ) : (
+            <div className="space-y-2.5">
+              {decisionTop.map((s, i) => {
+                const is3 = s.decisionScore === 3
+                const is2 = s.decisionScore === 2
+                return (
+                  <div key={s.num} className={`rounded-2xl p-4 border flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap transition-all
+                    ${is3 ? 'bg-[#fbbf24]/10 border-[#fbbf24]/30' : is2 ? 'bg-[#818cf8]/10 border-[#818cf8]/20' : 'bg-[#0d1829] border-[#1e2d4a]'}`}
+                  >
+                    {/* Rank */}
+                    <span className="text-[10px] text-[#475569] w-4 shrink-0 text-right">{i + 1}</span>
+
+                    {/* Number */}
+                    <span className={`font-black font-mono text-3xl w-14 text-center shrink-0
+                      ${is3 ? 'text-[#fbbf24]' : is2 ? 'text-[#818cf8]' : 'text-[#94a3b8]'}`}
+                    >{s.num}</span>
+
+                    {/* Stars */}
+                    <div className="flex gap-1 shrink-0">
+                      {[0, 1, 2].map(j => (
+                        <span key={j} className={`text-lg ${j < s.decisionScore ? (is3 ? 'text-[#fbbf24]' : is2 ? 'text-[#818cf8]' : 'text-[#94a3b8]') : 'text-[#1e2d4a]'}`}>★</span>
+                      ))}
+                    </div>
+
+                    {/* Signal badges */}
+                    <div className="flex gap-1.5 flex-wrap flex-1">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border
+                        ${s.sig1 ? 'bg-[#fbbf24]/15 border-[#fbbf24]/30 text-[#fbbf24]' : 'bg-transparent border-[#1e2d4a] text-[#334155]'}`}>
+                        Overdue {s.overdue}×
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border
+                        ${s.sig2 ? 'bg-[#6cf8bb]/15 border-[#6cf8bb]/30 text-[#6cf8bb]' : 'bg-transparent border-[#1e2d4a] text-[#334155]'}`}>
+                        {s.momentum > 0 ? '↑' : '↓'} Momentum {s.r10}×/10ງວດ
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border
+                        ${s.sig3 ? 'bg-[#818cf8]/15 border-[#818cf8]/30 text-[#818cf8]' : 'bg-transparent border-[#1e2d4a] text-[#334155]'}`}>
+                        AI {s.aiScore} pts
+                      </span>
+                    </div>
+
+                    {/* Verdict */}
+                    <span className={`text-xs font-black px-3 py-1 rounded-full shrink-0
+                      ${is3 ? 'bg-[#fbbf24] text-black' : is2 ? 'bg-[#818cf8]/20 text-[#818cf8]' : 'bg-[#1e2d4a] text-[#475569]'}`}>
+                      {is3 ? '✓ ຊື້ໄດ້' : is2 ? 'ເຝົ້າລໍ' : 'ອ່ອນ'}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 
