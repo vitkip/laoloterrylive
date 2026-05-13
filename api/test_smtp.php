@@ -84,7 +84,7 @@ echo "=== Sending test email ===\n";
 
 $mail = new PHPMailer(true);
 try {
-    $mail->SMTPDebug  = SMTP::DEBUG_SERVER;
+    $mail->SMTPDebug   = SMTP::DEBUG_SERVER;
     $mail->Debugoutput = 'echo';
     $mail->isSMTP();
     $mail->Host       = SMTP_HOST;
@@ -96,17 +96,20 @@ try {
         : PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port       = SMTP_PORT;
     $mail->CharSet    = 'UTF-8';
+    // Disable SSL peer verification (cPanel self-signed cert)
+    $mail->SMTPOptions = [
+        'ssl' => [
+            'verify_peer'       => false,
+            'verify_peer_name'  => false,
+            'allow_self_signed' => true,
+        ],
+    ];
     $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
     $mail->addAddress($to);
     $mail->Subject = 'SMTP Test - Lao Lottery Live';
     $mail->Body    = "SMTP test successful!\nSent from: " . SMTP_FROM . "\nTime: " . date('Y-m-d H:i:s');
     $mail->send();
-    echo "\n[SUCCESS] Email sent to $to\n";
+    echo "\n[SUCCESS] Email sent to $to — ກວດ inbox (ແລະ spam folder)\n";
 } catch (\Exception $e) {
     echo "\n[FAIL] " . $mail->ErrorInfo . "\n";
-    echo "\nCommon fixes:\n";
-    echo "1. Check SMTP_PASS in config.php\n";
-    echo "2. Make sure noreply@laolots.com exists in cPanel Email Accounts\n";
-    echo "3. Try changing SMTP_PORT: 465 <-> 587\n";
-    echo "4. Try SMTP_HOST: localhost (no auth needed if sending from same server)\n";
 }

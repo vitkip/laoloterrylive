@@ -79,6 +79,14 @@ function createMailer()
         : PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port       = SMTP_PORT;
     $mail->CharSet    = 'UTF-8';
+    // cPanel uses self-signed SSL cert — disable peer verification
+    $mail->SMTPOptions = [
+        'ssl' => [
+            'verify_peer'       => false,
+            'verify_peer_name'  => false,
+            'allow_self_signed' => true,
+        ],
+    ];
     $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
     return $mail;
 }
