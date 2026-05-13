@@ -357,80 +357,316 @@ switch ($action) {
         break;
 
     case 'list_users':
-        $userPayload = requireAuth('admin');
-        $res = $conn->query("SELECT user_id, username, full_name, role, is_active, created_at FROM users");
-        if (!$res) {
-            http_response_code(500);
-            echo json_encode(["error" => $conn->error]);
-            break;
+        requireAuth('staff');
+
+        $search   = trim($_GET['search'] ?? '');
+        $roleF    = $_GET['role'] ?? '';
+        $activeF  = $_GET['is_active'] ?? '';
+        $page     = max(1, (int)($_GET['page'] ?? 1));
+        $perPage  = min(100, max(5, (int)($_GET['per_page'] ?? 20)));
+        $sortBy   = in_array($_GET['sort'] ?? '', ['username','full_name','role','created_at','is_active']) ? $_GET['sort'] : 'created_at';
+        $sortDir  = strtoupper($_GET['dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+        $offset   = ($page - 1) * $perPage;
+
+        $where  = [];
+        $params = [];
+        $types  = '';
+
+        if ($search !== '') {
+            $where[]  = "(username LIKE ? OR full_name LIKE ? OR email LIKE ?)";
+            $like     = '%' . $search . '%';
+            $params   = array_merge($params, [$like, $like, $like]);
+            $types   .= 'sss';
         }
-        echo json_encode($res->fetch_all(MYSQLI_ASSOC));
+        if ($roleF !== '' && in_array($roleF, ['admin','staff','member'], true)) {
+            $where[]  = "role = ?";
+            $params[] = $roleF;
+            $types   .= 's';
+        }
+        if ($activeF !== '') {
+            $where[]  = "is_active = ?";
+            $params[] = (int)$activeF;
+            $types   .= 'i';
+        }
+
+        $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+        $orderSql = "ORDER BY {$sortBy} {$sortDir}";
+
+        // Count total
+        $countSql  = "SELECT COUNT(*) AS total FROM users {$whereSql}";
+        $countStmt = $conn->prepare($countSql);
+        if ($types && $params) {
+            $countStmt->bind_param($types, ...$params);
+        }
+        $countStmt->execute();
+        $total = (int)$countStmt->get_result()->fetch_assoc()['total'];
+        $countStmt->close();
+
+        // Fetch page
+        $sql  = "SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users {$whereSql} {$orderSql} LIMIT ? OFFSET ?";
+        $stmt = $conn->prepare($sql);
+        if ($types && $params) {
+            $allTypes  = $types . 'ii';
+            $allParams = array_merge($params, [$perPage, $offset]);
+            $stmt->bind_param($allTypes, ...$allParams);
+        } else {
+            $stmt->bind_param('ii', $perPage, $offset);
+        }
+        $stmt->execute();
+        $users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        echo json_encode([
+            'data'        => $users,
+            'total'       => $total,
+            'page'        => $page,
+            'per_page'    => $perPage,
+            'total_pages' => (int)ceil($total / $perPage),
+        ]);
+        break;
+
+    case 'get_user':
+        requireAuth('staff');
+        $uid = (int)($_GET['user_id'] ?? 0);
+        if ($uid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid user_id"]); break; }
+        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users WHERE user_id = ?");
+        $stmt->bind_param("i", $uid);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$row) { http_response_code(404); echo json_encode(["error" => "User not found"]); break; }
+
+        // Last login from logs
+        $logStmt = $conn->prepare("SELECT created_at, ip_address FROM user_logs WHERE user_id = ? AND action = 'Login success' ORDER BY created_at DESC LIMIT 1");
+        $logStmt->bind_param("i", $uid);
+        $logStmt->execute();
+        $lastLogin = $logStmt->get_result()->fetch_assoc();
+        $logStmt->close();
+        $row['last_login'] = $lastLogin;
+        echo json_encode($row);
+        break;
+
+    case 'user_stats':
+        requireAuth('staff');
+        $row = $conn->query("
+            SELECT
+                COUNT(*) AS total_users,
+                SUM(is_active = 1) AS active_users,
+                SUM(is_active = 0) AS inactive_users,
+                SUM(role = 'admin') AS admin_count,
+                SUM(role = 'staff') AS staff_count,
+                SUM(role = 'member') AS member_count
+            FROM users
+        ")->fetch_assoc();
+
+        $recent = $conn->query("
+            SELECT u.user_id, u.username, u.full_name, u.role, l.created_at AS logged_at, l.ip_address
+            FROM user_logs l
+            JOIN users u ON u.user_id = l.user_id
+            WHERE l.action = 'Login success'
+            ORDER BY l.created_at DESC
+            LIMIT 5
+        ")->fetch_all(MYSQLI_ASSOC);
+
+        $newUsers = $conn->query("
+            SELECT user_id, username, full_name, role, created_at
+            FROM users
+            ORDER BY created_at DESC
+            LIMIT 5
+        ")->fetch_all(MYSQLI_ASSOC);
+
+        echo json_encode([
+            'total_users'   => (int)$row['total_users'],
+            'active_users'  => (int)$row['active_users'],
+            'inactive_users'=> (int)$row['inactive_users'],
+            'admin_count'   => (int)$row['admin_count'],
+            'staff_count'   => (int)$row['staff_count'],
+            'member_count'  => (int)$row['member_count'],
+            'recent_logins' => $recent,
+            'new_users'     => $newUsers,
+        ]);
+        break;
+
+    case 'user_logs_list':
+        requireAuth('staff');
+        $search   = trim($_GET['search'] ?? '');
+        $actionF  = trim($_GET['action'] ?? '');
+        $dateFrom = trim($_GET['date_from'] ?? '');
+        $dateTo   = trim($_GET['date_to'] ?? '');
+        $page     = max(1, (int)($_GET['page'] ?? 1));
+        $perPage  = min(100, max(5, (int)($_GET['per_page'] ?? 20)));
+        $offset   = ($page - 1) * $perPage;
+
+        $where  = [];
+        $params = [];
+        $types  = '';
+
+        if ($search !== '') {
+            $like     = '%' . $search . '%';
+            $where[]  = "(u.username LIKE ? OR l.action LIKE ? OR l.ip_address LIKE ?)";
+            $params   = array_merge($params, [$like, $like, $like]);
+            $types   .= 'sss';
+        }
+        if ($actionF !== '') {
+            $where[]  = "l.action LIKE ?";
+            $params[] = '%' . $actionF . '%';
+            $types   .= 's';
+        }
+        if ($dateFrom !== '') {
+            $where[]  = "DATE(l.created_at) >= ?";
+            $params[] = $dateFrom;
+            $types   .= 's';
+        }
+        if ($dateTo !== '') {
+            $where[]  = "DATE(l.created_at) <= ?";
+            $params[] = $dateTo;
+            $types   .= 's';
+        }
+
+        $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        $countSql  = "SELECT COUNT(*) AS total FROM user_logs l LEFT JOIN users u ON u.user_id = l.user_id {$whereSql}";
+        $countStmt = $conn->prepare($countSql);
+        if ($types && $params) $countStmt->bind_param($types, ...$params);
+        $countStmt->execute();
+        $total = (int)$countStmt->get_result()->fetch_assoc()['total'];
+        $countStmt->close();
+
+        $sql  = "SELECT l.log_id, l.user_id, u.username, u.full_name, u.role, l.action, l.ip_address, l.created_at
+                 FROM user_logs l LEFT JOIN users u ON u.user_id = l.user_id
+                 {$whereSql} ORDER BY l.created_at DESC LIMIT ? OFFSET ?";
+        $stmt = $conn->prepare($sql);
+        if ($types && $params) {
+            $stmt->bind_param($types . 'ii', ...[...$params, $perPage, $offset]);
+        } else {
+            $stmt->bind_param('ii', $perPage, $offset);
+        }
+        $stmt->execute();
+        $logs = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        echo json_encode([
+            'data'        => $logs,
+            'total'       => $total,
+            'page'        => $page,
+            'per_page'    => $perPage,
+            'total_pages' => (int)ceil($total / $perPage),
+        ]);
+        break;
+
+    case 'get_profile':
+        $p = requireAuth();
+        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users WHERE user_id = ?");
+        $stmt->bind_param("i", $p['user_id']);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$row) { http_response_code(404); echo json_encode(["error" => "User not found"]); break; }
+        // Last 5 activity logs
+        $logStmt = $conn->prepare("SELECT log_id, action, ip_address, created_at FROM user_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 10");
+        $logStmt->bind_param("i", $p['user_id']);
+        $logStmt->execute();
+        $row['recent_activity'] = $logStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $logStmt->close();
+        echo json_encode($row);
+        break;
+
+    case 'update_profile':
+        $p          = requireAuth();
+        $input      = json_decode(file_get_contents('php://input'), true);
+        $full_name  = trim($input['full_name'] ?? '');
+        $email      = trim($input['email'] ?? '');
+        $phone      = trim($input['phone_number'] ?? '');
+
+        if ($full_name === '') { http_response_code(400); echo json_encode(["error" => "ຊື່ເຕັມຫ້າງຫວ່າງ"]); break; }
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400); echo json_encode(["error" => "Email ບໍ່ຖືກຕ້ອງ"]); break;
+        }
+
+        $stmt = $conn->prepare("UPDATE users SET full_name=?, email=?, phone_number=? WHERE user_id=?");
+        $stmt->bind_param("sssi", $full_name, $email, $phone, $p['user_id']);
+        if ($stmt->execute()) {
+            $ip = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+            $act = 'Update profile';
+            $logStmt = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?,?,?)");
+            $logStmt->bind_param("iss", $p['user_id'], $act, $ip);
+            $logStmt->execute();
+            $logStmt->close();
+            echo json_encode(["success" => true]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => $conn->error]);
+        }
+        $stmt->close();
         break;
 
     case 'create_user':
-        requireAuth('admin');
+        $creator = requireAuth('admin');
         $input = json_decode(file_get_contents('php://input'), true);
         $username  = trim($input['username'] ?? '');
         $password  = $input['password'] ?? '';
         $full_name = trim($input['full_name'] ?? '');
+        $email     = trim($input['email'] ?? '');
+        $phone     = trim($input['phone_number'] ?? '');
         $role      = $input['role'] ?? 'staff';
 
-        if (!in_array($role, ['admin', 'staff'], true)) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid role"]);
-            break;
+        if (!in_array($role, ['admin', 'staff', 'member'], true)) {
+            http_response_code(400); echo json_encode(["error" => "Invalid role"]); break;
         }
         if (strlen($username) < 4) {
-            http_response_code(400);
-            echo json_encode(["error" => "Username must be at least 4 characters"]);
-            break;
+            http_response_code(400); echo json_encode(["error" => "Username ຕ້ອງມີຢ່າງໜ້ອຍ 4 ຕົວ"]); break;
         }
         if (strlen($password) < 6) {
-            http_response_code(400);
-            echo json_encode(["error" => "Password must be at least 6 characters"]);
-            break;
+            http_response_code(400); echo json_encode(["error" => "Password ຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວ"]); break;
+        }
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400); echo json_encode(["error" => "Email ບໍ່ຖືກຕ້ອງ"]); break;
         }
 
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("INSERT INTO users (username, password_hash, full_name, role) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $username, $password_hash, $full_name, $role);
-        if ($stmt->execute())
-            echo json_encode(["success" => true]);
-        else {
+        $stmt = $conn->prepare("INSERT INTO users (username, password_hash, full_name, role, email, phone_number) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $username, $password_hash, $full_name, $role, $email, $phone);
+        if ($stmt->execute()) {
+            $newId = $conn->insert_id;
+            $ip    = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+            $act   = "Create user: {$username}";
+            $logS  = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?,?,?)");
+            $logS->bind_param("iss", $creator['user_id'], $act, $ip);
+            $logS->execute(); $logS->close();
+            echo json_encode(["success" => true, "user_id" => $newId]);
+        } else {
             http_response_code(500);
-            echo json_encode(["error" => "Username already exists or database error"]);
+            echo json_encode(["error" => "Username ນີ້ມີຢູ່ແລ້ວ ຫຼື ເກີດຂໍ້ຜິດພາດ"]);
         }
         $stmt->close();
         break;
 
     case 'update_user':
-        $userPayload = requireAuth('admin');
+        $editor    = requireAuth('admin');
         $input     = json_decode(file_get_contents('php://input'), true);
-        $user_id   = (int) ($input['user_id'] ?? 0);
+        $user_id   = (int)($input['user_id'] ?? 0);
         $full_name = trim($input['full_name'] ?? '');
+        $email     = trim($input['email'] ?? '');
+        $phone     = trim($input['phone_number'] ?? '');
         $role      = $input['role'] ?? 'staff';
-        $is_active = (int) ($input['is_active'] ?? 1);
+        $is_active = (int)($input['is_active'] ?? 1);
 
-        if ($user_id <= 0) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid user_id"]);
-            break;
+        if ($user_id <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid user_id"]); break; }
+        if (!in_array($role, ['admin', 'staff', 'member'], true)) {
+            http_response_code(400); echo json_encode(["error" => "Invalid role"]); break;
         }
-        if (!in_array($role, ['admin', 'staff'], true)) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid role"]);
-            break;
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400); echo json_encode(["error" => "Email ບໍ່ຖືກຕ້ອງ"]); break;
         }
 
         // Protect last active admin from being demoted or disabled
-        $roleStmt = $conn->prepare("SELECT role FROM users WHERE user_id = ?");
+        $roleStmt = $conn->prepare("SELECT role, username FROM users WHERE user_id = ?");
         $roleStmt->bind_param("i", $user_id);
         $roleStmt->execute();
         $currentRow = $roleStmt->get_result()->fetch_assoc();
         $roleStmt->close();
         if ($currentRow && $currentRow['role'] === 'admin') {
             if ($role !== 'admin' || $is_active === 0) {
-                $adminCount = (int) $conn->query("SELECT COUNT(*) AS cnt FROM users WHERE role='admin' AND is_active=1")->fetch_assoc()['cnt'];
+                $adminCount = (int)$conn->query("SELECT COUNT(*) AS cnt FROM users WHERE role='admin' AND is_active=1")->fetch_assoc()['cnt'];
                 if ($adminCount <= 1) {
                     http_response_code(400);
                     echo json_encode(["error" => "ບໍ່ສາມາດ demote/disable Admin ຄົນສຸດທ້າຍໄດ້"]);
@@ -439,14 +675,18 @@ switch ($action) {
             }
         }
 
-        $sql = "UPDATE users SET full_name=?, role=?, is_active=? WHERE user_id=?";
+        $sql  = "UPDATE users SET full_name=?, role=?, is_active=?, email=?, phone_number=? WHERE user_id=?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssii", $full_name, $role, $is_active, $user_id);
-        if ($stmt->execute())
+        $stmt->bind_param("ssissi", $full_name, $role, $is_active, $email, $phone, $user_id);
+        if ($stmt->execute()) {
+            $ip  = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+            $act = "Update user: " . ($currentRow['username'] ?? $user_id);
+            $logS = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?,?,?)");
+            $logS->bind_param("iss", $editor['user_id'], $act, $ip);
+            $logS->execute(); $logS->close();
             echo json_encode(["success" => true]);
-        else {
-            http_response_code(500);
-            echo json_encode(["error" => $conn->error]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => $conn->error]);
         }
         $stmt->close();
         break;
@@ -480,11 +720,24 @@ switch ($action) {
                 break;
             }
         }
+        // Fetch username for log before deleting
+        $nameStmt = $conn->prepare("SELECT username FROM users WHERE user_id=?");
+        $nameStmt->bind_param("i", $user_id);
+        $nameStmt->execute();
+        $nameRow = $nameStmt->get_result()->fetch_assoc();
+        $nameStmt->close();
+        $deletedUsername = $nameRow['username'] ?? $user_id;
+
         $stmt = $conn->prepare("DELETE FROM users WHERE user_id=?");
         $stmt->bind_param("i", $user_id);
-        if ($stmt->execute())
+        if ($stmt->execute()) {
+            $ip  = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+            $act = "Delete user: {$deletedUsername}";
+            $logS = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?,?,?)");
+            $logS->bind_param("iss", $userPayload['user_id'], $act, $ip);
+            $logS->execute(); $logS->close();
             echo json_encode(["success" => true]);
-        else {
+        } else {
             http_response_code(500);
             echo json_encode(["error" => $conn->error]);
         }

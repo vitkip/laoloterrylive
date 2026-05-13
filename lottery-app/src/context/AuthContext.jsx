@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
       tokenRef.current = data.token;
       localStorage.setItem('lao_lottery_user', JSON.stringify(data.user));
       localStorage.setItem('lao_lottery_token', data.token);
-      return { success: true };
+      return { success: true, role: data.user.role };
     }
     return { success: false, error: data.error || 'Login failed' };
   };

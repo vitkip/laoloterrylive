@@ -103,6 +103,35 @@ switch ($action) {
         }
         break;
 
+    case 'logout':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        // Verify token to log the user
+        $authHeader = '';
+        if (function_exists('apache_request_headers')) {
+            foreach (apache_request_headers() as $k => $v) {
+                if (strtolower($k) === 'authorization') { $authHeader = $v; break; }
+            }
+        }
+        if (!$authHeader) $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        if ($authHeader && preg_match('/Bearer\s(\S+)/i', $authHeader, $m)) {
+            $parts = explode('.', $m[1]);
+            if (count($parts) === 3) {
+                $payload = json_decode(base64_decode(str_replace(['-','_'],['+','/'], $parts[1])), true);
+                if (is_array($payload) && !empty($payload['user_id'])) {
+                    $uid = (int)$payload['user_id'];
+                    $ip  = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+                    $act = 'Logout';
+                    $logS = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?,?,?)");
+                    $logS->bind_param("iss", $uid, $act, $ip);
+                    $logS->execute(); $logS->close();
+                }
+            }
+        }
+        echo json_encode(["success" => true]);
+        break;
+
     default:
         http_response_code(404);
         echo json_encode(["error" => "Unknown action"]);

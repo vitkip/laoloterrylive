@@ -1,78 +1,166 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+
+function getDefaultRedirect(role) {
+  if (role === 'admin' || role === 'staff') return '/admin';
+  return '/';
+}
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+
+  const { login, user, loading: authLoading } = useAuth();
+  const navigate        = useNavigate();
+  const [searchParams]  = useSearchParams();
+  const fromPath        = searchParams.get('from');
+
+  // If already logged in, redirect away immediately
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate(fromPath || getDefaultRedirect(user.role), { replace: true });
+    }
+  }, [user, authLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     const result = await login(username, password);
     if (result.success) {
-      navigate('/admin');
+      // Redirect: honour ?from param, else default by role
+      const dest = fromPath || getDefaultRedirect(result.role ?? 'member');
+      navigate(dest, { replace: true });
     } else {
       setError(result.error);
     }
     setLoading(false);
   };
 
+  if (authLoading) return null;
+
   return (
-    <div className="max-w-md mx-auto mt-16 bg-white dark:bg-[#152033] p-8 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
-      <div className="flex flex-col items-center mb-8">
-        <span className="material-symbols-outlined text-[#003fb1] text-5xl mb-4">lock_person</span>
-        <h2 className="text-2xl font-bold text-[#121c2a] dark:text-white">ເຂົ້າສູ່ລະບົບແອດມິນ</h2>
-        <p className="text-sm text-[#737686] dark:text-[#94a3b8] mt-2 text-center">
-          ກະລຸນາປ້ອນຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານເພື່ອຈັດການລະບົບ
-        </p>
+    <div className="min-h-[70vh] flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        {/* Card */}
+        <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-xl border border-[#dee9fd] dark:border-[#2b3a54] overflow-hidden">
+          {/* Header strip */}
+          <div className="bg-gradient-to-r from-[#001d6e] to-[#1a56db] px-8 py-8 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border border-white/20">
+              <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>lock_person</span>
+            </div>
+            <h1 className="text-2xl font-black text-white">ເຂົ້າສູ່ລະບົບ</h1>
+            <p className="text-white/60 text-sm mt-1">Lao Lottery Live System</p>
+          </div>
+
+          {/* Form */}
+          <div className="px-8 py-7">
+            {/* Hint when redirected from protected page */}
+            {fromPath && !error && (
+              <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl px-3 py-2.5 mb-5">
+                <span className="material-symbols-outlined text-amber-600 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-400">ກະລຸນາ login ກ່ອນເຂົ້າໃຊ້ໜ້ານີ້</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-xl px-3 py-2.5 mb-5">
+                <span className="material-symbols-outlined text-red-600 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>
+                <p className="text-xs font-bold text-red-700 dark:text-red-400">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+                  ຊື່ຜູ້ໃຊ້ (Username)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#737686]">person</span>
+                  <input
+                    type="text"
+                    autoComplete="username"
+                    placeholder="ປ້ອນ username"
+                    required
+                    className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-4 py-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+                  ລະຫັດຜ່ານ (Password)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#737686]">lock</span>
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    required
+                    className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-10 py-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#003fb1] transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">{showPass ? 'visibility_off' : 'visibility'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-[#003fb1] to-[#1a56db] text-white py-3.5 rounded-xl font-bold text-sm hover:opacity-95 hover:-translate-y-0.5 transition-all duration-200 shadow-md shadow-[#003fb1]/20 disabled:opacity-50 disabled:transform-none flex items-center justify-center gap-2 mt-2"
+              >
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ກຳລັງເຂົ້າລະບົບ...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">login</span>
+                    ເຂົ້າສູ່ລະບົບ
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Back to home */}
+            <div className="mt-6 text-center">
+              <Link to="/" className="text-xs text-[#737686] hover:text-[#003fb1] transition-colors font-medium">
+                ← ກັບໄປໜ້າຫຼັກ
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Role hints */}
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          {[
+            { role: 'Admin', icon: 'admin_panel_settings', desc: 'ຈັດການລະບົບທັງໝົດ' },
+            { role: 'Staff', icon: 'badge', desc: 'ຈັດການຂໍ້ມູນ' },
+            { role: 'Member', icon: 'person', desc: 'ເບິ່ງສະຖິຕິ' },
+          ].map(r => (
+            <div key={r.role} className="bg-white/60 dark:bg-[#152033]/60 rounded-xl p-2.5 border border-[#dee9fd] dark:border-[#2b3a54]">
+              <span className="material-symbols-outlined text-[#003fb1] text-[16px] block mb-0.5">{r.icon}</span>
+              <p className="text-[10px] font-black text-[#121c2a] dark:text-white">{r.role}</p>
+              <p className="text-[9px] text-[#737686] dark:text-[#94a3b8]">{r.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
-
-      {error && (
-        <div className="bg-[#ffdad6]/30 text-[#ba1a1a] p-3 rounded-lg text-sm font-bold mb-6 text-center">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ຊື່ຜູ້ໃຊ້ (Username)</label>
-          <input
-            type="text"
-            className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
-            placeholder="admin"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ລະຫັດຜ່ານ (Password)</label>
-          <input
-            type="password"
-            className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-[#003fb1] text-white py-3.5 rounded-xl font-bold hover:bg-[#1a56db] transition-colors mt-4 disabled:opacity-50"
-        >
-          {loading ? 'ກຳລັງເຂົ້າລະບົບ...' : 'ເຂົ້າສູ່ລະບົບ'}
-        </button>
-      </form>
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import ArchiveTable from '../components/ArchiveTable';
 import { formatLaoDate } from '../utils/date';
 import { API, resolveAnimalImage } from '../utils/api';
+import UserAvatar from '../components/UserAvatar';
+import RoleBadge from '../components/RoleBadge';
 
 // ── Shared primitives ────────────────────────────────────────────
 
@@ -247,6 +250,96 @@ function VisitorStats() {
   );
 }
 
+// ── User Stats Section ────────────────────────────────────────────
+
+function UserStats() {
+  const { token, authFetch } = useAuth();
+  const [stats, setStats]   = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+    authFetch(`${API}/index.php?action=user_stats`)
+      .then(({ ok, data }) => { if (ok) setStats(data); })
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  if (loading) return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] animate-pulse h-24" />
+      ))}
+    </div>
+  );
+  if (!stats) return null;
+
+  function fmtDt(str) {
+    if (!str) return '—';
+    return new Date(str).toLocaleString('lo-LA', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'ທັງໝົດ',   value: stats.total_users,   icon: 'group',               accent: '#003fb1', bg: '#eff3ff' },
+          { label: 'ໃຊ້ງານ',   value: stats.active_users,  icon: 'check_circle',         accent: '#006c49', bg: '#edfdf5' },
+          { label: 'Admin',     value: stats.admin_count,   icon: 'admin_panel_settings', accent: '#ba1a1a', bg: '#ffdad6' },
+          { label: 'Staff',     value: stats.staff_count,   icon: 'badge',                accent: '#1a56db', bg: '#dbeafe' },
+        ].map(c => (
+          <KpiCard key={c.label} icon={c.icon} label={c.label} value={c.value} accent={c.accent} bg={c.bg} />
+        ))}
+      </div>
+
+      {/* Recent logins + new users */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Recent logins */}
+        <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-extrabold text-[#121c2a] dark:text-white">ເຂົ້າລະບົບລ່າສຸດ</h3>
+            <Link to="/admin/logs" className="text-[11px] font-bold text-[#003fb1] hover:underline">ເບິ່ງທັງໝົດ →</Link>
+          </div>
+          {stats.recent_logins?.length === 0
+            ? <p className="text-xs text-[#737686] text-center py-4">ຍັງບໍ່ມີ login</p>
+            : stats.recent_logins?.map((l, i) => (
+              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[#e8edf8] dark:border-[#2b3a54] last:border-0">
+                <UserAvatar name={l.full_name} username={l.username} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-[#121c2a] dark:text-white truncate">@{l.username}</p>
+                  <p className="text-[10px] text-[#737686]">{fmtDt(l.logged_at)}</p>
+                </div>
+                <RoleBadge role={l.role} size="xs" />
+              </div>
+            ))
+          }
+        </div>
+
+        {/* New users */}
+        <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-extrabold text-[#121c2a] dark:text-white">ຜູ້ໃຊ້ໃໝ່</h3>
+            <Link to="/admin/users" className="text-[11px] font-bold text-[#003fb1] hover:underline">ຈັດການ →</Link>
+          </div>
+          {stats.new_users?.length === 0
+            ? <p className="text-xs text-[#737686] text-center py-4">ຍັງບໍ່ມີ user</p>
+            : stats.new_users?.map(u => (
+              <div key={u.user_id} className="flex items-center gap-3 py-2.5 border-b border-[#e8edf8] dark:border-[#2b3a54] last:border-0">
+                <UserAvatar name={u.full_name} username={u.username} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-[#121c2a] dark:text-white truncate">{u.full_name || u.username}</p>
+                  <p className="text-[10px] text-[#737686]">{fmtDt(u.created_at)}</p>
+                </div>
+                <RoleBadge role={u.role} size="xs" />
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────
 
 export default function AdminOverview() {
@@ -361,6 +454,12 @@ export default function AdminOverview() {
           </div>
         </div>
       )}
+
+      {/* ─── User Stats ─── */}
+      <div>
+        <SectionLabel icon="manage_accounts" label="ສະຖິຕິຜູ້ໃຊ້ລະບົບ" accent="#003fb1" />
+        <UserStats />
+      </div>
 
       {/* ─── Visitor Analytics ─── */}
       <div>
