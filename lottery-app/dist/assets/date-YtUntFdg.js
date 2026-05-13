@@ -1,0 +1,1 @@
+var e=[`ມັງກອນ`,`ກຸມພາ`,`ມີນາ`,`ເມສາ`,`ພຶດສະພາ`,`ມິຖຸນາ`,`ກໍລະກົດ`,`ສິງຫາ`,`ກັນຍາ`,`ຕຸລາ`,`ພະຈິກ`,`ທັນວາ`];function t(t,n=!0){if(!t)return``;let r=new Date(t);if(isNaN(r.getTime()))return t;let i=r.getDate(),a=e[r.getMonth()],o=r.getFullYear();return n?`ວັນທີ ${i} ເດືອນ${a} ປີ ${o}`:`${String(i).padStart(2,`0`)}/${String(r.getMonth()+1).padStart(2,`0`)}/${o}`}export{t};
