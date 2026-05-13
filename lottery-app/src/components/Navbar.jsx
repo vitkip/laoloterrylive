@@ -5,16 +5,16 @@ import { useAuth } from '../context/AuthContext'
 // ── Nav links by auth tier ─────────────────────────────────────────
 
 const GUEST_LINKS = [
-  { label: 'ຜົນຫວຍລ່າສຸດ', href: '/',        icon: 'home' },
+  { label: 'ຜົນຫວຍລ່າສຸດ', href: '/', icon: 'home' },
   { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history', icon: 'history' },
 ]
 
 const MEMBER_LINKS = [
-  { label: 'ຜົນຫວຍລ່າສຸດ', href: '/',           icon: 'home'           },
-  { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history',    icon: 'history'        },
-  { label: 'ສະຖິຕິ',         href: '/statistics',  icon: 'bar_chart'      },
-  { label: 'AI Analytics',   href: '/analytics',   icon: 'psychology'     },
-  { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search',      icon: 'manage_search'  },
+  { label: 'ຜົນຫວຍລ່າສຸດ', href: '/', icon: 'home' },
+  { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history', icon: 'history' },
+  { label: 'ສະຖິຕິ', href: '/statistics', icon: 'bar_chart' },
+  { label: 'AI Analytics', href: '/analytics', icon: 'psychology' },
+  { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search', icon: 'manage_search' },
 ]
 
 function getNavLinks(user) {
@@ -26,8 +26,8 @@ function getNavLinks(user) {
 
 function UserDropdown({ user, onLogout }) {
   const [open, setOpen] = useState(false)
-  const ref             = useRef(null)
-  const navigate        = useNavigate()
+  const ref = useRef(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
@@ -61,11 +61,10 @@ function UserDropdown({ user, onLogout }) {
           <div className="px-4 py-3 border-b border-[#dee9fd] dark:border-[#2b3a54]">
             <p className="text-[12px] font-black text-[#121c2a] dark:text-white truncate">{user.name || user.username}</p>
             <div className="flex items-center gap-1.5 mt-1">
-              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                user.role === 'admin'  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                user.role === 'staff' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-              }`}>
+              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${user.role === 'admin' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                  user.role === 'staff' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                    'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                }`}>
                 <span className="w-1 h-1 rounded-full bg-current" />
                 {user.role}
               </span>
@@ -112,9 +111,9 @@ function UserDropdown({ user, onLogout }) {
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [isDark, setIsDark]     = useState(false)
-  const location                = useLocation()
-  const { user, logout }        = useAuth()
+  const [isDark, setIsDark] = useState(false)
+  const location = useLocation()
+  const { user, logout } = useAuth()
 
   const navLinks = getNavLinks(user)
 
@@ -146,11 +145,10 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-        scrolled
+      <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled
           ? 'bg-white/80 dark:bg-[#0d1829]/85 backdrop-blur-xl shadow-[0_1px_24px_rgba(0,63,177,0.10)] border-b border-[#e8edf8]/80 dark:border-[#2b3a54]/60'
           : 'bg-white dark:bg-[#0d1829] border-b border-[#e8edf8] dark:border-[#2b3a54]/50'
-      }`}>
+        }`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 h-[60px]">
 
           {/* Logo */}
@@ -169,11 +167,10 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
-                  isActive(link.href)
+                className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 ${isActive(link.href)
                     ? 'bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#003fb1] dark:text-[#93b4ff]'
                     : 'text-[#555870] dark:text-[#94a3b8] hover:bg-[#f5f7ff] dark:hover:bg-[#1a2640] hover:text-[#003fb1] dark:hover:text-white'
-                }`}
+                  }`}
               >
                 <span className="material-symbols-outlined text-[16px]">{link.icon}</span>
                 {link.label}
@@ -187,7 +184,7 @@ export default function Navbar() {
             {!user && (
               <span className="hidden lg:flex items-center gap-1.5 ml-1 text-[11px] text-[#003fb1]/50 bg-[#eff3ff] dark:bg-[#1e2d4a] px-2.5 py-1.5 rounded-xl border border-[#003fb1]/10">
                 <span className="material-symbols-outlined text-[13px]">lock</span>
-                Login ເພື່ອໃຊ້ສະຖິຕິ
+                ເຂົ້າສູ່ລະບົບ  ເພື່ອເບີ່ງສະຖິຕິ AI ແລະຄົ້ນຫາເບີຫວຍ
               </span>
             )}
           </nav>
@@ -245,11 +242,10 @@ export default function Navbar() {
                 key={link.href}
                 to={link.href}
                 onClick={() => setMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  isActive(link.href)
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive(link.href)
                     ? 'bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#003fb1] dark:text-[#93b4ff]'
                     : 'text-[#555870] dark:text-[#94a3b8] hover:bg-[#f5f7ff] dark:hover:bg-[#1a2640]'
-                }`}
+                  }`}
               >
                 <span className="material-symbols-outlined text-[18px]">{link.icon}</span>
                 {link.label}
@@ -271,11 +267,10 @@ export default function Navbar() {
                 <Link
                   to={user.role === 'admin' || user.role === 'staff' ? '/admin/profile' : '/member/profile'}
                   onClick={() => setMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                    isActive('/member/profile') || isActive('/admin/profile')
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive('/member/profile') || isActive('/admin/profile')
                       ? 'bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#003fb1] dark:text-[#93b4ff]'
                       : 'text-[#555870] dark:text-[#94a3b8] hover:bg-[#f5f7ff] dark:hover:bg-[#1a2640]'
-                  }`}
+                    }`}
                 >
                   <span className="material-symbols-outlined text-[18px]">account_circle</span>
                   ຂໍ້ມູນສ່ວນຕົວ
@@ -285,11 +280,10 @@ export default function Navbar() {
                   <Link
                     to="/admin"
                     onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                      isActive('/admin')
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive('/admin')
                         ? 'bg-[#edfdf5] dark:bg-[#0a2e20] text-[#006c49]'
                         : 'text-[#555870] dark:text-[#94a3b8] hover:bg-[#edfdf5] dark:hover:bg-[#0a2e20] hover:text-[#006c49]'
-                    }`}
+                      }`}
                   >
                     <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
                     ຈັດການລະບົບ (Admin)
