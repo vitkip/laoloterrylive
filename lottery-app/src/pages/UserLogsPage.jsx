@@ -141,7 +141,7 @@ export default function UserLogsPage() {
     const params = new URLSearchParams({
       action: 'user_logs_list', page: p, per_page: pp,
       ...(s  && { search: s }),
-      ...(af && { action: af }),
+      ...(af && { action_filter: af }),
       ...(df && { date_from: df }),
       ...(dt && { date_to: dt }),
     });
@@ -174,7 +174,7 @@ export default function UserLogsPage() {
     const params = new URLSearchParams({
       action: 'user_logs_list', page: 1, per_page: 1000,
       ...(debouncedSearch && { search: debouncedSearch }),
-      ...(actionFilter    && { action: actionFilter }),
+      ...(actionFilter    && { action_filter: actionFilter }),
       ...(dateFrom        && { date_from: dateFrom }),
       ...(dateTo          && { date_to: dateTo }),
     });

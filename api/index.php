@@ -490,7 +490,7 @@ switch ($action) {
     case 'user_logs_list':
         requireAuth('staff');
         $search   = trim($_GET['search'] ?? '');
-        $actionF  = trim($_GET['action'] ?? '');
+        $actionF  = trim($_GET['action_filter'] ?? '');
         $dateFrom = trim($_GET['date_from'] ?? '');
         $dateTo   = trim($_GET['date_to'] ?? '');
         $page     = max(1, (int)($_GET['page'] ?? 1));
