@@ -1,5 +1,12 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/Exception.php';
+require_once __DIR__ . '/lib/PHPMailer.php';
+require_once __DIR__ . '/lib/SMTP.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 
 if (PRODUCTION) {
     error_reporting(0);
@@ -57,35 +64,67 @@ function generateSecureToken()
     return bin2hex(random_bytes(32));
 }
 
-// ── Email helpers (dev: return in response; prod: PHP mail) ────────
+// ── Email helpers (dev: OTP in response; prod: SMTP via PHPMailer) ─
+
+function createMailer()
+{
+    $mail = new PHPMailer(true);
+    $mail->isSMTP();
+    $mail->Host       = SMTP_HOST;
+    $mail->SMTPAuth   = true;
+    $mail->Username   = SMTP_USER;
+    $mail->Password   = SMTP_PASS;
+    $mail->SMTPSecure = (SMTP_PORT === 465)
+        ? PHPMailer::ENCRYPTION_SMTPS
+        : PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port       = SMTP_PORT;
+    $mail->CharSet    = 'UTF-8';
+    $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
+    return $mail;
+}
 
 function sendOTPEmail($email, $fullName, $otp)
 {
-    if (!PRODUCTION) return true; // returned in response for dev
-    $subject = '=?UTF-8?B?' . base64_encode('ລະຫັດ OTP ຢືນຢັນຕົວຕົນ - Lao Lottery Live') . '?=';
-    $msg     = "ສະບາຍດີ $fullName,\n\nລະຫັດ OTP ຂອງທ່ານ: $otp\n\nໝົດອາຍຸ: 10 ນາທີ\n\nLao Lottery Live";
-    $headers = "From: noreply@laolots.com\r\nContent-Type: text/plain; charset=UTF-8";
-    return @mail($email, $subject, $msg, $headers);
+    if (!PRODUCTION) return true;
+    try {
+        $mail = createMailer();
+        $mail->addAddress($email, $fullName);
+        $mail->Subject = 'ລະຫັດ OTP ຢືນຢັນຕົວຕົນ - Lao Lottery Live';
+        $mail->Body    = "ສະບາຍດີ $fullName,\n\nລະຫັດ OTP ຂອງທ່ານ: $otp\n\nໝົດອາຍຸ: 10 ນາທີ\n\nLao Lottery Live";
+        return $mail->send();
+    } catch (\Exception $e) {
+        return false;
+    }
 }
 
 function sendPasswordResetEmail($email, $fullName, $token)
 {
     if (!PRODUCTION) return true;
-    $url     = "https://laolots.com/reset-password?token=$token";
-    $subject = '=?UTF-8?B?' . base64_encode('ລີເຊັດລະຫັດຜ່ານ - Lao Lottery Live') . '?=';
-    $msg     = "ສະບາຍດີ $fullName,\n\nຄລິກລິ້ງດ້ານລຸ່ມ:\n$url\n\nໝົດອາຍຸ: 1 ຊົ່ວໂມງ\n\nLao Lottery Live";
-    $headers = "From: noreply@laolots.com\r\nContent-Type: text/plain; charset=UTF-8";
-    return @mail($email, $subject, $msg, $headers);
+    try {
+        $mail = createMailer();
+        $mail->addAddress($email, $fullName);
+        $mail->Subject = 'ລີເຊັດລະຫັດຜ່ານ - Lao Lottery Live';
+        $url = "https://laolots.com/reset-password?token=$token";
+        $mail->Body    = "ສະບາຍດີ $fullName,\n\nຄລິກລິ້ງດ້ານລຸ່ມ:\n$url\n\nໝົດອາຍຸ: 1 ຊົ່ວໂມງ\n\nLao Lottery Live";
+        return $mail->send();
+    } catch (\Exception $e) {
+        return false;
+    }
 }
 
 function sendVerificationEmail($email, $fullName, $token)
 {
     if (!PRODUCTION) return true;
-    $url     = "https://laolots.com/verify-email?token=$token";
-    $subject = '=?UTF-8?B?' . base64_encode('ຢືນຢັນ Email - Lao Lottery Live') . '?=';
-    $msg     = "ສະບາຍດີ $fullName,\n\nຄລິກລິ້ງດ້ານລຸ່ມ:\n$url\n\nໝົດອາຍຸ: 24 ຊົ່ວໂມງ\n\nLao Lottery Live";
-    $headers = "From: noreply@laolots.com\r\nContent-Type: text/plain; charset=UTF-8";
-    return @mail($email, $subject, $msg, $headers);
+    try {
+        $mail = createMailer();
+        $mail->addAddress($email, $fullName);
+        $mail->Subject = 'ຢືນຢັນ Email - Lao Lottery Live';
+        $url = "https://laolots.com/verify-email?token=$token";
+        $mail->Body    = "ສະບາຍດີ $fullName,\n\nຄລິກລິ້ງດ້ານລຸ່ມ:\n$url\n\nໝົດອາຍຸ: 24 ຊົ່ວໂມງ\n\nLao Lottery Live";
+        return $mail->send();
+    } catch (\Exception $e) {
+        return false;
+    }
 }
 
 // ── Client IP ──────────────────────────────────────────────────────
@@ -105,6 +144,7 @@ function checkIPRateLimit($conn, $action, $ip, $max, $windowSeconds)
     );
     $stmt->bind_param("sss", $action, $ip, $cutoff);
     $stmt->execute();
+    $count = 0;
     $stmt->bind_result($count);
     $stmt->fetch();
     $stmt->close();
