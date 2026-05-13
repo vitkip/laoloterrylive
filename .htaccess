@@ -1,5 +1,8 @@
 Options -Indexes
+DirectoryIndex lottery-app/dist/index.html
+
 RewriteEngine On
+RewriteBase /
 
 # Let real files/folders pass through (api, uploads, lottery-app dist assets)
 RewriteCond %{REQUEST_FILENAME} -f [OR]
