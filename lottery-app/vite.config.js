@@ -24,13 +24,34 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // React core (~140KB) — cached indefinitely
-          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-router-dom')) {
+          // React core + router (~140KB) — cached indefinitely
+          if (
+            id.includes('node_modules/react-dom') ||
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-router-dom') ||
+            id.includes('node_modules/react-hot-toast')
+          ) {
             return 'vendor-react';
           }
-          // Recharts (~100KB) — only needed on analytics/dashboard pages
-          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
+          // Recharts + D3 (~400KB) — analytics pages only
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-')) {
             return 'vendor-charts';
+          }
+          // Lucide icons (~200KB) — large but shared, separate for caching
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-icons';
+          }
+          // Form validation libs — only on register/login pages
+          if (
+            id.includes('node_modules/zod') ||
+            id.includes('node_modules/react-hook-form') ||
+            id.includes('node_modules/@hookform')
+          ) {
+            return 'vendor-forms';
+          }
+          // Image capture — only on share result feature
+          if (id.includes('node_modules/html-to-image')) {
+            return 'vendor-image';
           }
         },
       },

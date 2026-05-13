@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { useData } from '../context/DataContext';
 import { formatLaoDate } from '../utils/date';
 
@@ -27,23 +28,66 @@ function getEmbedUrl(url, source) {
   return '';
 }
 
+function getPreconnectHost(source) {
+  if (source === 'facebook') return ['https://www.facebook.com', 'https://static.xx.fbcdn.net'];
+  return ['https://www.youtube.com', 'https://i.ytimg.com'];
+}
+
+function getThumbnailUrl(url, source) {
+  if (source !== 'youtube') return null;
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+  const match = url?.match(regex);
+  const id = match?.[1] || (/^[a-zA-Z0-9_-]{11}$/.test(url) ? url : null);
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+}
+
 export default function LiveVdoBanner() {
   const { liveSettings, draws } = useData();
+  const [playerLoaded, setPlayerLoaded] = useState(false);
+  const bannerRef = useRef(null);
 
-  if (!liveSettings || liveSettings.is_live !== '1' || !liveSettings.youtube_live_url) {
-    return null;
-  }
+  const source = liveSettings?.live_source || 'youtube';
+  const rawUrl  = liveSettings?.youtube_live_url;
+  const isLive  = liveSettings?.is_live === '1' && rawUrl;
 
-  const source = liveSettings.live_source || 'youtube';
-  const rawUrl = liveSettings.youtube_live_url;
-  const embedUrl = getEmbedUrl(rawUrl, source);
+  // Preconnect to video host when banner scrolls into view
+  useEffect(() => {
+    if (!isLive || playerLoaded) return;
+    const el = bannerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        getPreconnectHost(source).forEach(host => {
+          if (document.querySelector(`link[href="${host}"]`)) return;
+          const link = document.createElement('link');
+          link.rel = 'preconnect';
+          link.href = host;
+          document.head.appendChild(link);
+        });
+        observer.disconnect();
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isLive, playerLoaded, source]);
+
+  if (!isLive) return null;
+
+  const embedUrl    = getEmbedUrl(rawUrl, source);
+  const thumbnailUrl = getThumbnailUrl(rawUrl, source);
 
   const latestDraw = draws?.[0];
   const threeDigits = latestDraw?.results_detail?.find(r => r.prize_type === '3_digits')?.result_value;
   const twoDigits   = latestDraw?.results_detail?.find(r => r.prize_type === '2_digits')?.result_value;
 
   return (
-    <div className="w-full bg-[#121c2a] rounded-3xl overflow-hidden shadow-2xl mb-12 border-4 border-[#ba1a1a]/20 animate-pulse-slow">
+    <div
+      ref={bannerRef}
+      className="w-full bg-[#121c2a] rounded-3xl overflow-hidden shadow-2xl mb-12 border-4 border-[#ba1a1a]/20 animate-pulse-slow"
+    >
       <div className="bg-[#ba1a1a] text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 font-black tracking-widest uppercase">
           <span className="material-symbols-outlined animate-pulse">podcasts</span>
@@ -53,14 +97,13 @@ export default function LiveVdoBanner() {
           <div className="bg-white dark:bg-[#152033]/20 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
             LIVE
           </div>
-       
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-        {/* Video Player Section */}
-        <div className="lg:col-span-2 aspect-video bg-black relative">
-          {embedUrl ? (
+        {/* Video Section — fixed 16:9 to prevent CLS */}
+        <div className="lg:col-span-2 bg-black relative" style={{ aspectRatio: '16/9' }}>
+          {playerLoaded && embedUrl ? (
             <iframe
               className="absolute inset-0 w-full h-full"
               src={embedUrl}
@@ -69,10 +112,11 @@ export default function LiveVdoBanner() {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
-          ) : (
+          ) : playerLoaded && !embedUrl ? (
+            // Can't embed — show direct link
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
               <span className="material-symbols-outlined text-5xl text-white/40">live_tv</span>
-              <p className="text-white/60 text-sm">ບໍ່ສາມາດ embed ໄດ້ — ກົດປຸ່ມດ້ານເທິງເພື່ອເປີດດູ Live</p>
+              <p className="text-white/60 text-sm">ບໍ່ສາມາດ embed ໄດ້</p>
               <a
                 href={rawUrl}
                 target="_blank"
@@ -83,6 +127,35 @@ export default function LiveVdoBanner() {
                 ເບິ່ງ Live ສົດ
               </a>
             </div>
+          ) : (
+            // Placeholder — click to load player
+            <button
+              type="button"
+              onClick={() => setPlayerLoaded(true)}
+              className="absolute inset-0 w-full h-full group"
+              aria-label="ກົດເພື່ອເບິ່ງ Live"
+            >
+              {thumbnailUrl && (
+                <img
+                  src={thumbnailUrl}
+                  alt="Live stream thumbnail"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+              {/* Dark overlay */}
+              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
+              {/* Play button */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                <div className="w-16 h-16 rounded-full bg-[#ba1a1a] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-4xl text-white translate-x-0.5">play_arrow</span>
+                </div>
+                <p className="text-white font-bold text-sm bg-black/50 px-4 py-1 rounded-full">
+                  ກົດເພື່ອເບິ່ງ Live
+                </p>
+              </div>
+            </button>
           )}
         </div>
 
