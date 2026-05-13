@@ -5,13 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/lottery-app/dist/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ສະຖິຕິຫວຍ - laolots.com</title>
-    
+
     <!-- Primary SEO Tags -->
     <meta name="description" content="laolots.com - ສູນລວມຜົນຫວຍພັດທະນາ, ຖ່າຍທອດສົດຫວຍລາວ, ເຊັກສະຖິຕິຫວຍຍ້ອນຫຼັງ, ວິເຄາະຫວຍ, ຈັບຄູ່ນາມສັດ ແລະ ທຳນາຍຝັນ ທີ່ຖືກຕ້ອງແລະວ່ອງໄວທີ່ສຸດ." />
     <meta name="keywords" content="ຫວຍລາວ, ຜົນຫວຍພັດທະນາ, ສະຖິຕິຫວຍ, ຖ່າຍທອດສົດຫວຍ, ຈັບຄູ່ນາມສັດ, ຜົນຫວຍຍ້ອນຫຼັງ, laolots, lao lottery, ເລກເດັດ, ທຳນາຍຝັນ" />
     <meta name="author" content="laolots.com" />
     <meta name="robots" content="index, follow" />
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://laolots.com/" />
@@ -26,21 +26,71 @@
     <meta property="twitter:description" content="ຕິດຕາມຜົນຫວຍພັດທະນາຫຼ້າສຸດ, ຖ່າຍທອດສົດ, ແລະ ເບິ່ງສະຖິຕິເລກທີ່ມັກອອກ, ຈັບຄູ່ນາມສັດ ພ້ອມວິເຄາະຫວຍແບບເຈາະເລິກ." />
     <meta property="twitter:image" content="/favicon.svg" />
 
-    <!-- Fonts: preconnect + single load point (removed duplicate from index.css) -->
+    <!-- Google Fonts: Lao text fonts (display=swap: acceptable for text) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao+Looped:wght@400;600;700;800;900&family=Phetsarath:wght@400;700&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/lottery-app/dist/assets/index-B5VPOizl.js"></script>
+
+    <!-- Material Symbols: loaded from <head> for priority, display=optional prevents icon CLS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional">
+    <script type="module" crossorigin src="/lottery-app/dist/assets/index-bzFkAQ6z.js"></script>
     <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/rolldown-runtime-Dw2cE7zH.js">
     <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/vendor-charts-BGQ9fR0w.js">
     <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/chunk-OE4NN4TA-DVcbNSnz.js">
     <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/vendor-react-CqQThX6u.js">
-    <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/api-IoLN9kLg.js">
-    <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/AuthContext-CMuwkBEr.js">
-    <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/DataContext-CAfe3XA6.js">
-    <link rel="stylesheet" crossorigin href="/lottery-app/dist/assets/index-otJOiYua.css">
+    <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/api-DN9w6qbp.js">
+    <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/AuthContext-D-7RksDM.js">
+    <link rel="modulepreload" crossorigin href="/lottery-app/dist/assets/DataContext-CPnoIL6l.js">
+    <link rel="stylesheet" crossorigin href="/lottery-app/dist/assets/index-CY0wdy6E.css">
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      App Shell: renders instantly (no JS needed) → FCP measured here, not after React loads.
+      React replaces this div entirely when it mounts. Pure inline styles, no external deps.
+    -->
+    <div id="root">
+      <div style="min-height:100vh;background:#f9f9ff;display:flex;flex-direction:column;font-family:system-ui,sans-serif;">
+        <!-- Navbar skeleton -->
+        <div style="height:64px;background:#fff;border-bottom:1px solid #dee9fd;display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;">
+          <div style="width:32px;height:32px;background:#003fb1;border-radius:8px;flex-shrink:0;"></div>
+          <div style="width:110px;height:14px;background:#dee9fd;border-radius:4px;"></div>
+          <div style="flex:1;"></div>
+          <div style="width:56px;height:13px;background:#e8edf8;border-radius:4px;"></div>
+          <div style="width:56px;height:13px;background:#e8edf8;border-radius:4px;margin-left:8px;"></div>
+          <div style="width:80px;height:34px;background:#eff3ff;border-radius:20px;margin-left:16px;"></div>
+        </div>
+        <!-- Page content -->
+        <div style="flex:1;max-width:1280px;margin:0 auto;width:100%;padding:40px 16px;box-sizing:border-box;">
+          <!-- Hero skeleton: same gradient + approx height as real hero -->
+          <div style="border-radius:24px;background:linear-gradient(135deg,#001d6e 0%,#003fb1 50%,#1a56db 100%);padding:56px 48px;margin-bottom:40px;min-height:240px;position:relative;overflow:hidden;">
+            <div style="width:160px;height:12px;background:rgba(255,255,255,0.2);border-radius:20px;margin-bottom:20px;"></div>
+            <div style="width:260px;height:52px;background:rgba(255,255,255,0.15);border-radius:12px;margin-bottom:16px;"></div>
+            <div style="width:320px;height:14px;background:rgba(255,255,255,0.1);border-radius:8px;margin-bottom:32px;"></div>
+            <div style="display:flex;gap:12px;">
+              <div style="width:120px;height:40px;background:#fff;border-radius:20px;opacity:0.9;"></div>
+              <div style="width:130px;height:40px;background:rgba(255,255,255,0.15);border-radius:20px;"></div>
+            </div>
+          </div>
+          <!-- Section header skeleton -->
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+            <div style="width:4px;height:28px;background:#003fb1;border-radius:4px;opacity:0.4;"></div>
+            <div style="width:120px;height:20px;background:#dee9fd;border-radius:8px;"></div>
+          </div>
+          <!-- Result card skeleton -->
+          <div style="background:#fff;border-radius:16px;padding:32px;border:1px solid #dee9fd;margin-bottom:32px;min-height:200px;">
+            <div style="width:180px;height:16px;background:#e8edf8;border-radius:8px;margin-bottom:24px;"></div>
+            <div style="width:220px;height:64px;background:#eff3ff;border-radius:12px;margin-bottom:16px;"></div>
+            <div style="width:160px;height:12px;background:#e8edf8;border-radius:8px;"></div>
+          </div>
+          <!-- Stat cards grid skeleton -->
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:32px;">
+            <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #e8edf8;height:96px;"></div>
+            <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #e8edf8;height:96px;"></div>
+            <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #e8edf8;height:96px;"></div>
+            <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #e8edf8;height:96px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

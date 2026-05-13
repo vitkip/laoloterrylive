@@ -1,0 +1,1 @@
+var e=`/api`,t=`/uploads`;function n(e){if(!e)return``;if(e.image_url&&e.image_url.trim()!==``){let n=e.image_url.trim();return n.startsWith(`/laoloterylive/uploads`)?n.replace(`/laoloterylive/uploads`,t):n.startsWith(`/uploads`)?t+n.slice(8):n}return`/lottery-app/dist/images/animals/${e.animal_id}.png`}export{n,e as t};

@@ -4,6 +4,51 @@ import { useStatistics } from '../hooks/useStatistics'
 import ResultCard from '../components/ResultCard'
 import LiveVdoBanner from '../components/LiveVdoBanner'
 
+function HomePageSkeleton() {
+  const shimmer = "bg-[#e8edf8] dark:bg-[#2b3a54] animate-pulse rounded-lg"
+  return (
+    <div className="space-y-10">
+      {/* Hero skeleton — same gradient + min-height as real hero to prevent CLS */}
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#001d6e] via-[#003fb1] to-[#1a56db] px-8 sm:px-12 py-10 sm:py-14 min-h-[240px]">
+        <div className={`w-40 h-3 mb-5 ${shimmer} opacity-30`} />
+        <div className={`w-64 h-12 mb-4 ${shimmer} opacity-20`} />
+        <div className={`w-72 h-4 mb-8 ${shimmer} opacity-15`} />
+        <div className="flex gap-3">
+          <div className="w-28 h-10 rounded-full bg-white/20 animate-pulse" />
+          <div className="w-32 h-10 rounded-full bg-white/10 animate-pulse" />
+        </div>
+      </div>
+      {/* Section header */}
+      <div className="flex items-center gap-3">
+        <div className="w-1 h-7 rounded-full bg-[#003fb1]/30" />
+        <div className={`w-32 h-6 ${shimmer}`} />
+      </div>
+      {/* Result card skeleton */}
+      <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 sm:p-8 border border-[#dee9fd] dark:border-[#2b3a54] min-h-[220px]">
+        <div className={`w-48 h-5 mb-6 ${shimmer}`} />
+        <div className={`w-52 h-16 mb-4 ${shimmer}`} />
+        <div className={`w-40 h-4 mb-3 ${shimmer}`} />
+        <div className={`w-64 h-4 ${shimmer}`} />
+      </div>
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[0,1,2,3].map(i => (
+          <div key={i} className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] h-24 animate-pulse" />
+        ))}
+      </div>
+      {/* Recent draws */}
+      <div className="space-y-4">
+        <div className={`w-36 h-6 ${shimmer}`} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[0,1,2,3].map(i => (
+            <div key={i} className="bg-white dark:bg-[#152033] rounded-xl p-4 border border-[#dee9fd] dark:border-[#2b3a54] h-[76px] animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const StatCard = ({ icon, label, value, image, accent = '#003fb1', bg = '#eff3ff' }) => (
   <div className="group relative bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
     <div
@@ -32,14 +77,7 @@ export default function HomePage() {
   const { draws } = useData();
   const { stats } = useStatistics();
 
-  if (!draws || draws.length === 0) return (
-    <div className="flex items-center justify-center min-h-[40vh]">
-      <div className="flex flex-col items-center gap-3 text-[#737686]">
-        <span className="material-symbols-outlined text-4xl animate-spin">progress_activity</span>
-        <p className="text-sm font-medium">ກຳລັງໂຫຼດຂໍ້ມູນ...</p>
-      </div>
-    </div>
-  )
+  if (!draws || draws.length === 0) return <HomePageSkeleton />
 
   const latest = draws.find(d => d.status === 'published') || draws[0]
   const recentDraws = draws.filter(d => d.draw_id !== latest.draw_id).slice(0, 4)
