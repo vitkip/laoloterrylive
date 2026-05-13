@@ -64,7 +64,7 @@ function PublicLayout() {
 
 export default function App() {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
+    <Router basename="/">
       <Toaster
         position="top-right"
         toastOptions={{
