@@ -14,6 +14,13 @@ const SearchPage      = lazy(() => import('./pages/SearchPage'))
 const AnalyticsPage   = lazy(() => import('./pages/AnalyticsPage'))
 const MemberProfilePage = lazy(() => import('./pages/MemberProfilePage'))
 
+// ── Auth / Registration pages ─────────────────────────────────────
+const RegisterPage      = lazy(() => import('./features/auth/pages/RegisterPage'))
+const VerifyOTPPage     = lazy(() => import('./features/auth/pages/VerifyOTPPage'))
+const ForgotPasswordPage = lazy(() => import('./features/auth/pages/ForgotPasswordPage'))
+const ResetPasswordPage  = lazy(() => import('./features/auth/pages/ResetPasswordPage'))
+const VerifyEmailPage    = lazy(() => import('./features/auth/pages/VerifyEmailPage'))
+
 // ── Admin pages ───────────────────────────────────────────────────
 const AdminPanel          = lazy(() => import('./pages/AdminPanel'))
 const AdminOverview       = lazy(() => import('./pages/AdminOverview'))
@@ -94,6 +101,13 @@ export default function App() {
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/login"   element={<LoginPage />} />
           </Route>
+
+          {/* ══ TIER 1b: Auth / Registration (full-screen, no Navbar) */}
+          <Route path="/register"         element={<RegisterPage />} />
+          <Route path="/verify-otp"       element={<VerifyOTPPage />} />
+          <Route path="/verify-email"     element={<VerifyEmailPage />} />
+          <Route path="/forgot-password"  element={<ForgotPasswordPage />} />
+          <Route path="/reset-password"   element={<ResetPasswordPage />} />
 
           {/* ══ TIER 2: Requires login (member / staff / admin) ═════
               Guests hitting these routes → /login?from=<path>      */}

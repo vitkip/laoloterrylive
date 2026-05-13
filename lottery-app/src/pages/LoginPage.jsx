@@ -74,7 +74,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div>
                 <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
                   ຊື່ຜູ້ໃຊ້ (Username)
@@ -135,10 +135,29 @@ export default function LoginPage() {
                   </>
                 )}
               </button>
+
+              {/* Forgot password */}
+              <div className="text-right -mt-1">
+                <Link to="/forgot-password" className="text-xs text-[#737686] hover:text-[#003fb1] transition-colors font-medium">
+                  ລືມລະຫັດຜ່ານ?
+                </Link>
+              </div>
             </form>
 
+            {/* Register CTA */}
+            <div className="mt-5 pt-5 border-t border-[#dee9fd] dark:border-[#2b3a54] text-center">
+              <p className="text-xs text-[#737686] mb-3">ຍັງບໍ່ມີບັນຊີ?</p>
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 w-full justify-center border-2 border-[#003fb1] text-[#003fb1] dark:text-[#b5c4ff] dark:border-[#b5c4ff]/50 py-3 rounded-xl font-bold text-sm hover:bg-[#003fb1] hover:text-white dark:hover:bg-[#b5c4ff]/10 transition-all duration-200"
+              >
+                <span className="material-symbols-outlined text-[18px]">person_add</span>
+                ສ້າງບັນຊີໃໝ່ ຟຣີ
+              </Link>
+            </div>
+
             {/* Back to home */}
-            <div className="mt-6 text-center">
+            <div className="mt-4 text-center">
               <Link to="/" className="text-xs text-[#737686] hover:text-[#003fb1] transition-colors font-medium">
                 ← ກັບໄປໜ້າຫຼັກ
               </Link>
