@@ -28,7 +28,7 @@ export default function VerifyOTPPage() {
   if (!userId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#001d6e] via-[#003fb1] to-[#1a56db] flex items-center justify-center px-4">
-        <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-2xl p-10 text-center max-w-sm w-full">
+        <div className="bg-card rounded-3xl shadow-2xl p-10 text-center max-w-sm w-full">
           <span className="material-symbols-outlined text-[#737686] text-5xl block mb-4">
             hourglass_disabled
           </span>
@@ -120,7 +120,7 @@ export default function VerifyOTPPage() {
       </div>
 
       <div className="w-full max-w-md relative">
-        <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+        <div className="bg-card rounded-3xl shadow-2xl overflow-hidden border border-white/10">
 
           {/* Header */}
           <div className="relative bg-gradient-to-br from-[#001d6e] to-[#1a56db] px-8 py-8 text-center overflow-hidden">
@@ -167,7 +167,7 @@ export default function VerifyOTPPage() {
             )}
 
             {/* Timer row */}
-            <div className="flex items-center justify-between bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl px-4 py-3">
+            <div className="flex items-center justify-between bg-accent rounded-xl px-4 py-3">
               <p className="text-xs font-medium text-[#737686]">OTP ໝົດອາຍຸໃນ:</p>
               {expired ? (
                 <span className="text-xs font-black text-red-500 flex items-center gap-1">
@@ -199,7 +199,7 @@ export default function VerifyOTPPage() {
                   {Array.from({ length: MAX_ATTEMPTS }).map((_, i) => (
                     <div
                       key={i}
-                      className={`w-2 h-2 rounded-full transition-colors ${i < attempts ? 'bg-red-400' : 'bg-[#dee9fd] dark:bg-[#2b3a54]'}`}
+                      className={`w-2 h-2 rounded-full transition-colors ${i < attempts ? 'bg-red-400' : 'bg-border'}`}
                     />
                   ))}
                 </div>
@@ -234,7 +234,7 @@ export default function VerifyOTPPage() {
               <button
                 onClick={handleResend}
                 disabled={resending || !canResend}
-                className="inline-flex items-center gap-1.5 text-sm text-[#003fb1] dark:text-[#b5c4ff]
+                className="inline-flex items-center gap-1.5 text-sm text-primary
                   font-bold hover:underline disabled:opacity-40 disabled:no-underline transition-all"
               >
                 {resending ? (

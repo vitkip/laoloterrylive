@@ -228,17 +228,17 @@ function FreqTip({ active, payload }) {
 function RankTable({ title, accent, data, field, unit }) {
   const max = data[0]?.[field] ?? 1
   return (
-    <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
-      <h3 className="font-black text-[#121c2a] dark:text-white text-sm mb-4">{title}</h3>
+    <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
+      <h3 className="font-black text-foreground text-sm mb-4">{title}</h3>
       <div className="space-y-2.5">
         {data.map((s, i) => (
           <div key={s.num} className="flex items-center gap-2 text-sm">
             <span className="text-[10px] text-[#94a3b8] w-4 text-right">{i + 1}</span>
-            <span className="font-black font-mono text-[#121c2a] dark:text-white w-8 text-center">{s.num}</span>
-            <div className="flex-1 h-3 bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-full overflow-hidden">
+            <span className="font-black font-mono text-foreground w-8 text-center">{s.num}</span>
+            <div className="flex-1 h-3 bg-accent rounded-full overflow-hidden">
               <div className="h-full rounded-full transition-all" style={{ width: `${(s[field] / Math.max(max, 1)) * 100}%`, background: accent }} />
             </div>
-            <span className="text-[11px] font-bold text-[#737686] dark:text-[#94a3b8] w-16 text-right shrink-0">{s[field]} {unit}</span>
+            <span className="text-[11px] font-bold text-muted-foreground w-16 text-right shrink-0">{s[field]} {unit}</span>
           </div>
         ))}
       </div>
@@ -249,14 +249,14 @@ function RankTable({ title, accent, data, field, unit }) {
 function TrendList({ title, accent, data, field, fieldLabel }) {
   const max = Math.max(...data.map(s => Math.abs(s[field])), 0.001)
   return (
-    <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
-      <h3 className="font-black text-[#121c2a] dark:text-white text-sm mb-4">{title}</h3>
+    <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
+      <h3 className="font-black text-foreground text-sm mb-4">{title}</h3>
       <div className="space-y-2.5">
         {data.length === 0 && <p className="text-xs text-[#94a3b8]">ບໍ່ມີຂໍ້ມູນ</p>}
         {data.map(s => (
           <div key={s.num} className="flex items-center gap-3">
-            <span className="font-black font-mono text-[#121c2a] dark:text-white text-sm w-8 text-center">{s.num}</span>
-            <div className="flex-1 h-3 bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-full overflow-hidden">
+            <span className="font-black font-mono text-foreground text-sm w-8 text-center">{s.num}</span>
+            <div className="flex-1 h-3 bg-accent rounded-full overflow-hidden">
               <div className="h-full rounded-full transition-all" style={{ width: `${(Math.abs(s[field]) / max) * 100}%`, background: accent }} />
             </div>
             <span className="text-[11px] font-bold w-14 text-right shrink-0" style={{ color: accent }}>
@@ -273,15 +273,15 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
   const nums = Array.from({ length: 100 }, (_, i) => i.toString().padStart(2, '0'))
   return (
     <div className="space-y-5">
-      <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
-        <h3 className="font-black text-[#121c2a] dark:text-white text-lg mb-1">Simulation / Backtest</h3>
-        <p className="text-xs text-[#737686] dark:text-[#94a3b8] mb-5">ທົດສອບຕົວເລກໃດໜຶ່ງໃນຂໍ້ມູນຍ້ອນຫຼັງ</p>
+      <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+        <h3 className="font-black text-foreground text-lg mb-1">Simulation / Backtest</h3>
+        <p className="text-xs text-muted-foreground mb-5">ທົດສອບຕົວເລກໃດໜຶ່ງໃນຂໍ້ມູນຍ້ອນຫຼັງ</p>
         <div className="flex gap-3 items-center flex-wrap">
-          <label className="text-sm font-bold text-[#434654] dark:text-[#c7d2fe]">ເລືອກຕົວເລກ (00–99):</label>
+          <label className="text-sm font-bold text-muted-foreground">ເລືອກຕົວເລກ (00–99):</label>
           <select
             value={backtestNum}
             onChange={e => setBacktestNum(e.target.value)}
-            className="bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-xl px-5 py-2.5 text-[#121c2a] dark:text-white font-black text-2xl focus:ring-2 focus:ring-[#003fb1] font-mono"
+            className="bg-secondary border-none rounded-xl px-5 py-2.5 text-foreground font-black text-2xl focus:ring-2 focus:ring-[#003fb1] font-mono"
           >
             <option value="">-- ເລືອກ --</option>
             {nums.map(n => <option key={n} value={n}>{n}</option>)}
@@ -305,16 +305,16 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
               { label: 'Avg Gap',       val: backtest.avgGap,          sub: 'ງວດ ຕໍ່ ຄັ້ງ',            c: '#fbbf24' },
               { label: 'ຫ່າງສູງສຸດ',   val: backtest.maxGap,          sub: 'max gap (ງວດ)',           c: '#f87171' },
             ].map(({ label, val, sub, c }) => (
-              <div key={label} className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] text-center">
+              <div key={label} className="bg-card rounded-2xl p-5 border border-border text-center">
                 <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: c + 'aa' }}>{label}</p>
-                <p className="text-3xl font-black text-[#121c2a] dark:text-white">{val}</p>
+                <p className="text-3xl font-black text-foreground">{val}</p>
                 <p className="text-[10px] mt-0.5" style={{ color: c + '80' }}>{sub}</p>
               </div>
             ))}
           </div>
 
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54]">
-            <h3 className="font-black text-[#121c2a] dark:text-white mb-4 text-sm">Hit/Miss Timeline (50 ງວດລ່າສຸດ)</h3>
+          <div className="bg-card rounded-2xl p-6 border border-border">
+            <h3 className="font-black text-foreground mb-4 text-sm">Hit/Miss Timeline (50 ງວດລ່າສຸດ)</h3>
             <ResponsiveContainer width="100%" height={110}>
               <BarChart data={backtest.timeline} margin={{ top: 5, right: 5, bottom: 0, left: -30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e2d4a" vertical={false} />
@@ -344,8 +344,8 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
           </div>
 
           {backtest.hits.length > 0 && (
-            <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54]">
-              <h3 className="font-black text-[#121c2a] dark:text-white mb-4 text-sm">
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <h3 className="font-black text-foreground mb-4 text-sm">
                 ປະຫວັດທີ່ອອກ ({backtest.hits.length} ຄັ້ງ)
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -438,7 +438,7 @@ export default function AnalyticsPage() {
       {/* ── Control Panel ───────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
         {/* Range */}
-        <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-[#e8edf8] dark:border-[#2b3a54]">
+        <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-border">
           <span className="text-[10px] font-bold text-[#94a3b8] px-2 uppercase tracking-widest">ງວດ</span>
           {RANGE_OPTIONS.map(({ value, label }) => (
             <button
@@ -447,7 +447,7 @@ export default function AnalyticsPage() {
               className={`px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all
                 ${range === value
                   ? 'bg-[#003fb1] text-white shadow-sm'
-                  : 'text-[#737686] dark:text-[#94a3b8] hover:text-[#003fb1] dark:hover:text-white'}`}
+                  : 'text-muted-foreground hover:text-primary'}`}
             >
               {label}
             </button>
@@ -455,15 +455,15 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Mode tabs */}
-        <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-[#e8edf8] dark:border-[#2b3a54] overflow-x-auto">
+        <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-border overflow-x-auto">
           {MODES.map(({ value, label, icon }) => (
             <button
               key={value}
               onClick={() => setMode(value)}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[12px] font-bold whitespace-nowrap transition-all
                 ${mode === value
-                  ? 'bg-white dark:bg-[#152033] text-[#003fb1] dark:text-[#93b4ff] shadow-sm'
-                  : 'text-[#737686] dark:text-[#94a3b8] hover:text-[#003fb1] dark:hover:text-white'}`}
+                  ? 'bg-card text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-primary'}`}
             >
               <span className="material-symbols-outlined text-[14px]">{icon}</span>
               {label}
@@ -475,11 +475,11 @@ export default function AnalyticsPage() {
       {/* ── TAB: HEATMAP ────────────────────────────────────────────────────── */}
       {mode === 'heatmap' && (
         <div className="space-y-5">
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
             <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
               <div>
-                <h3 className="font-black text-[#121c2a] dark:text-white text-lg">Frequency Heatmap 00–99</h3>
-                <p className="text-xs text-[#737686] dark:text-[#94a3b8] mt-0.5">
+                <h3 className="font-black text-foreground text-lg">Frequency Heatmap 00–99</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Hover ເພື່ອເບິ່ງລາຍລະອຽດ · ສີແດງ = ອອກຫຼາຍ · ສີນ້ຳເງິນ = ອອກໜ້ອຍ
                 </p>
               </div>
@@ -489,7 +489,7 @@ export default function AnalyticsPage() {
                     key={v}
                     onClick={() => setHeatMode(v)}
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all
-                      ${heatMode === v ? 'bg-[#003fb1] text-white' : 'bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#434654] dark:text-[#c7d2fe]'}`}
+                      ${heatMode === v ? 'bg-[#003fb1] text-white' : 'bg-secondary text-muted-foreground'}`}
                   >
                     {label}
                   </button>
@@ -503,13 +503,13 @@ export default function AnalyticsPage() {
                 const s = scores.find(x => x.num === hoveredNum)
                 if (!s) return null
                 return (
-                  <div className="p-3 bg-[#eff3ff] dark:bg-[#1e2d4a] rounded-xl flex items-center gap-5 flex-wrap text-sm">
-                    <span className="text-3xl font-black text-[#003fb1] dark:text-[#93b4ff] font-mono w-12">{s.num}</span>
-                    <span className="text-[#434654] dark:text-[#c7d2fe]">ອອກ <b className="text-[#121c2a] dark:text-white">{s.freq}</b> ຄັ້ງ ({s.pct}%)</span>
-                    <span className="text-[#434654] dark:text-[#c7d2fe]">ຫ່າງ <b className="text-[#121c2a] dark:text-white">{s.gap}</b> ງວດ</span>
-                    <span className="text-[#434654] dark:text-[#c7d2fe]">Avg Gap <b className="text-[#121c2a] dark:text-white">{s.avgGap}</b></span>
-                    <span className="text-[#434654] dark:text-[#c7d2fe]">Overdue <b className={s.overdue >= 2 ? 'text-[#ef4444]' : s.overdue >= 1.5 ? 'text-[#f97316]' : 'text-[#121c2a] dark:text-white'}>{s.overdue}x</b></span>
-                    <span className="text-[#434654] dark:text-[#c7d2fe]">AI Score <b className="text-[#818cf8]">{s.aiScore}</b></span>
+                  <div className="p-3 bg-secondary rounded-xl flex items-center gap-5 flex-wrap text-sm">
+                    <span className="text-3xl font-black text-primary font-mono w-12">{s.num}</span>
+                    <span className="text-muted-foreground">ອອກ <b className="text-foreground">{s.freq}</b> ຄັ້ງ ({s.pct}%)</span>
+                    <span className="text-muted-foreground">ຫ່າງ <b className="text-foreground">{s.gap}</b> ງວດ</span>
+                    <span className="text-muted-foreground">Avg Gap <b className="text-foreground">{s.avgGap}</b></span>
+                    <span className="text-muted-foreground">Overdue <b className={s.overdue >= 2 ? 'text-[#ef4444]' : s.overdue >= 1.5 ? 'text-[#f97316]' : 'text-foreground'}>{s.overdue}x</b></span>
+                    <span className="text-muted-foreground">AI Score <b className="text-[#818cf8]">{s.aiScore}</b></span>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.momentum > 0 ? 'bg-[#6cf8bb]/20 text-[#059669]' : 'bg-[#f87171]/20 text-[#dc2626]'}`}>
                       {s.momentum > 0 ? '↑ Rising' : '↓ Falling'}
                     </span>
@@ -563,9 +563,9 @@ export default function AnalyticsPage() {
       {/* ── TAB: CHARTS ─────────────────────────────────────────────────────── */}
       {mode === 'charts' && (
         <div className="space-y-5">
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
-            <h3 className="font-black text-[#121c2a] dark:text-white text-lg mb-1">Time-Series: ຕົວເລກ 2 ໂຕ ຕາມງວດ</h3>
-            <p className="text-xs text-[#737686] dark:text-[#94a3b8] mb-5">ແກນ Y = ຕົວເລກ 00–99 · ສະແດງ {series.length} ງວດລ່າສຸດ</p>
+          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+            <h3 className="font-black text-foreground text-lg mb-1">Time-Series: ຕົວເລກ 2 ໂຕ ຕາມງວດ</h3>
+            <p className="text-xs text-muted-foreground mb-5">ແກນ Y = ຕົວເລກ 00–99 · ສະແດງ {series.length} ງວດລ່າສຸດ</p>
             <ResponsiveContainer width="100%" height={290}>
               <LineChart data={series} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(43,58,84,0.5)" vertical={false} />
@@ -580,8 +580,8 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
-            <h3 className="font-black text-[#121c2a] dark:text-white text-lg mb-5">Top 20 ຄວາມຖີ່</h3>
+          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+            <h3 className="font-black text-foreground text-lg mb-5">Top 20 ຄວາມຖີ່</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={freqBars} margin={{ top: 0, right: 10, bottom: 0, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(43,58,84,0.5)" vertical={false} />
@@ -607,14 +607,14 @@ export default function AnalyticsPage() {
             <TrendList title="📉 ກຳລັງລົງ (Falling)"  accent="#f87171" data={falling} field="momentum" fieldLabel="r10" />
           </div>
 
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#d97706] to-[#f59e0b] flex items-center justify-center shadow-sm">
                 <span className="material-symbols-outlined text-white text-[18px]">hourglass_top</span>
               </div>
               <div>
-                <h3 className="font-black text-[#121c2a] dark:text-white">ເລກທີ່ຊ້ານານ (Overdue Numbers)</h3>
-                <p className="text-xs text-[#737686] dark:text-[#94a3b8]">Overdue ≥ 1.0× = ເກີນຄ່າສະເລ່ຍ — ສູງ = ຄາດວ່າຈະອອກ</p>
+                <h3 className="font-black text-foreground">ເລກທີ່ຊ້ານານ (Overdue Numbers)</h3>
+                <p className="text-xs text-muted-foreground">Overdue ≥ 1.0× = ເກີນຄ່າສະເລ່ຍ — ສູງ = ຄາດວ່າຈະອອກ</p>
               </div>
             </div>
             <div className="space-y-2.5 mt-5">
@@ -709,21 +709,21 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Score model explanation */}
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
-            <h3 className="font-black text-[#121c2a] dark:text-white mb-5">ສູດຄຳນວນ AI Score</h3>
+          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+            <h3 className="font-black text-foreground mb-5">ສູດຄຳນວນ AI Score</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 { name: 'Frequency Score', weight: '35 pts', icon: 'equalizer',   color: '#818cf8', desc: '(ຈຳນວນຄັ້ງ / max) × 35 — ອອກຫຼາຍ = ຄະແນນສູງ' },
                 { name: 'Gap Score',       weight: '35 pts', icon: 'timer',        color: '#fbbf24', desc: '(Overdue ÷ 3) × 35 — ຊ້ານານ = ຄາດອອກ' },
                 { name: 'Momentum',        weight: '30 pts', icon: 'trending_up',  color: '#6cf8bb', desc: '(Rate 10ງວດ vs 30ງວດ) × 30 — ຂຶ້ນໃຫ້ຫຼາຍ' },
               ].map(({ name, weight, icon, color, desc }) => (
-                <div key={name} className="bg-[#eff3ff] dark:bg-[#1e2d4a] rounded-2xl p-5">
+                <div key={name} className="bg-secondary rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined text-[20px]" style={{ color }}>{icon}</span>
-                    <span className="font-black text-[#121c2a] dark:text-white text-sm">{name}</span>
+                    <span className="font-black text-foreground text-sm">{name}</span>
                   </div>
                   <p className="text-3xl font-black mb-2" style={{ color }}>{weight}</p>
-                  <p className="text-xs text-[#737686] dark:text-[#94a3b8] leading-relaxed">{desc}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
                 </div>
               ))}
             </div>

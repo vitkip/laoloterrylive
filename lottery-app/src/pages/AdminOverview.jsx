@@ -16,7 +16,7 @@ function SectionLabel({ icon, label, accent = '#003fb1' }) {
       <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${accent}18` }}>
         <span className="material-symbols-outlined text-[15px]" style={{ color: accent }}>{icon}</span>
       </div>
-      <h2 className="text-[11px] font-extrabold text-[#121c2a] dark:text-white uppercase tracking-widest">{label}</h2>
+      <h2 className="text-[11px] font-extrabold text-foreground uppercase tracking-widest">{label}</h2>
       <div className="flex-1 h-px bg-gradient-to-r from-[#e8edf8] to-transparent dark:from-[#2b3a54]" />
     </div>
   );
@@ -51,11 +51,11 @@ function DigitRow({ result }) {
 
 function KpiCard({ icon, label, value, sub, accent = '#003fb1', bg = '#eff3ff', trend }) {
   return (
-    <div className="group relative bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
+    <div className="group relative bg-card rounded-2xl p-5 border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
       <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-[0.06] -translate-y-4 translate-x-4 pointer-events-none" style={{ background: accent }} />
       <div className="relative z-10 flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-widest mb-2">{label}</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">{label}</p>
           <p className="text-3xl font-black leading-none mb-1.5" style={{ color: accent }}>
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
@@ -101,11 +101,11 @@ function VisitorStats() {
   }, [token]);
 
   if (loading) return (
-    <div className="bg-white dark:bg-[#152033] rounded-2xl border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm p-8 flex items-center gap-4">
-      <div className="w-10 h-10 rounded-xl bg-[#eff3ff] dark:bg-[#1e2d4a] flex items-center justify-center">
+    <div className="bg-card rounded-2xl border border-border shadow-sm p-8 flex items-center gap-4">
+      <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
         <span className="material-symbols-outlined text-[#003fb1] text-[20px] animate-spin">progress_activity</span>
       </div>
-      <p className="text-sm text-[#737686] dark:text-[#94a3b8] font-medium">ກຳລັງໂຫຼດສະຖິຕິຜູ້ເຂົ້າຊົມ...</p>
+      <p className="text-sm text-muted-foreground font-medium">ກຳລັງໂຫຼດສະຖິຕິຜູ້ເຂົ້າຊົມ...</p>
     </div>
   );
 
@@ -114,7 +114,7 @@ function VisitorStats() {
       <span className="w-8 h-8 rounded-xl bg-[#ba1a1a]/10 flex items-center justify-center shrink-0">
         <span className="material-symbols-outlined text-[#ba1a1a] text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>
       </span>
-      <p className="text-sm text-[#737686] dark:text-[#94a3b8]">
+      <p className="text-sm text-muted-foreground">
         ສະຖິຕິ: <span className="text-[#ba1a1a] font-bold">{errMsg}</span>
       </p>
     </div>
@@ -149,11 +149,11 @@ function VisitorStats() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
         {/* Bar chart */}
-        <div className="lg:col-span-3 bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+        <div className="lg:col-span-3 bg-card rounded-2xl p-6 border border-border shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="text-sm font-extrabold text-[#121c2a] dark:text-white">ກາຟການເຂົ້າຊົມ</h3>
-              <p className="text-[11px] text-[#737686] dark:text-[#94a3b8]">7 ວັນທີ່ຜ່ານມາ</p>
+              <h3 className="text-sm font-extrabold text-foreground">ກາຟການເຂົ້າຊົມ</h3>
+              <p className="text-[11px] text-muted-foreground">7 ວັນທີ່ຜ່ານມາ</p>
             </div>
             <div className="text-right">
               <p className="text-xs font-bold text-[#003fb1]">{stats.this_week.toLocaleString()}</p>
@@ -187,7 +187,7 @@ function VisitorStats() {
                     {visits > 0 ? visits : ''}
                   </span>
                   {/* Bar background */}
-                  <div className="w-full rounded-t-xl overflow-hidden flex-1 relative bg-[#f0f4ff] dark:bg-[#1e2d4a]" style={{ minHeight: 16 }}>
+                  <div className="w-full rounded-t-xl overflow-hidden flex-1 relative bg-accent" style={{ minHeight: 16 }}>
                     <div
                       className={`absolute bottom-0 w-full rounded-t-xl transition-all duration-500
                         ${isToday
@@ -202,7 +202,7 @@ function VisitorStats() {
                       <div className="absolute inset-x-0 top-0 h-0.5 bg-[#4f7ef8] rounded-full opacity-60" />
                     )}
                   </div>
-                  <span className={`text-[10px] font-bold ${isToday ? 'text-[#003fb1] dark:text-[#93b4ff]' : 'text-[#a0a3bd] dark:text-[#555870]'}`}>
+                  <span className={`text-[10px] font-bold ${isToday ? 'text-primary' : 'text-[#a0a3bd] dark:text-[#555870]'}`}>
                     {dayNames[d.getDay()]}
                   </span>
                 </div>
@@ -213,10 +213,10 @@ function VisitorStats() {
 
         {/* Top pages */}
         {stats.top_pages?.length > 0 && (
-          <div className="lg:col-span-2 bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+          <div className="lg:col-span-2 bg-card rounded-2xl p-6 border border-border shadow-sm">
             <div className="mb-5">
-              <h3 className="text-sm font-extrabold text-[#121c2a] dark:text-white">ໜ້າທີ່ນິຍົມ</h3>
-              <p className="text-[11px] text-[#737686] dark:text-[#94a3b8]">Top pages by visits</p>
+              <h3 className="text-sm font-extrabold text-foreground">ໜ້າທີ່ນິຍົມ</h3>
+              <p className="text-[11px] text-muted-foreground">Top pages by visits</p>
             </div>
             <div className="space-y-3.5">
               {stats.top_pages.slice(0, 6).map((p, i) => {
@@ -226,14 +226,14 @@ function VisitorStats() {
                 return (
                   <div key={p.page_path}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] font-mono font-medium text-[#434654] dark:text-[#c7d2fe] truncate max-w-[70%]">
+                      <span className="text-[11px] font-mono font-medium text-muted-foreground truncate max-w-[70%]">
                         {p.page_path || '/'}
                       </span>
                       <span className="text-[11px] font-black shrink-0 ml-2" style={{ color: accent }}>
                         {p.visits.toLocaleString()}
                       </span>
                     </div>
-                    <div className="h-1.5 w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-accent rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-700"
                         style={{ width: `${barPct}%`, background: accent }}
@@ -267,7 +267,7 @@ function UserStats() {
   if (loading) return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] animate-pulse h-24" />
+        <div key={i} className="bg-card rounded-2xl p-5 border border-border animate-pulse h-24" />
       ))}
     </div>
   );
@@ -295,18 +295,18 @@ function UserStats() {
       {/* Recent logins + new users */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recent logins */}
-        <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+        <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-extrabold text-[#121c2a] dark:text-white">ເຂົ້າລະບົບລ່າສຸດ</h3>
+            <h3 className="text-sm font-extrabold text-foreground">ເຂົ້າລະບົບລ່າສຸດ</h3>
             <Link to="/admin/logs" className="text-[11px] font-bold text-[#003fb1] hover:underline">ເບິ່ງທັງໝົດ →</Link>
           </div>
           {stats.recent_logins?.length === 0
             ? <p className="text-xs text-[#737686] text-center py-4">ຍັງບໍ່ມີ login</p>
             : stats.recent_logins?.map((l, i) => (
-              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[#e8edf8] dark:border-[#2b3a54] last:border-0">
+              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
                 <UserAvatar name={l.full_name} username={l.username} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-[#121c2a] dark:text-white truncate">@{l.username}</p>
+                  <p className="text-sm font-bold text-foreground truncate">@{l.username}</p>
                   <p className="text-[10px] text-[#737686]">{fmtDt(l.logged_at)}</p>
                 </div>
                 <RoleBadge role={l.role} size="xs" />
@@ -316,18 +316,18 @@ function UserStats() {
         </div>
 
         {/* New users */}
-        <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+        <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-extrabold text-[#121c2a] dark:text-white">ຜູ້ໃຊ້ໃໝ່</h3>
+            <h3 className="text-sm font-extrabold text-foreground">ຜູ້ໃຊ້ໃໝ່</h3>
             <Link to="/admin/users" className="text-[11px] font-bold text-[#003fb1] hover:underline">ຈັດການ →</Link>
           </div>
           {stats.new_users?.length === 0
             ? <p className="text-xs text-[#737686] text-center py-4">ຍັງບໍ່ມີ user</p>
             : stats.new_users?.map(u => (
-              <div key={u.user_id} className="flex items-center gap-3 py-2.5 border-b border-[#e8edf8] dark:border-[#2b3a54] last:border-0">
+              <div key={u.user_id} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
                 <UserAvatar name={u.full_name} username={u.username} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-[#121c2a] dark:text-white truncate">{u.full_name || u.username}</p>
+                  <p className="text-sm font-bold text-foreground truncate">{u.full_name || u.username}</p>
                   <p className="text-[10px] text-[#737686]">{fmtDt(u.created_at)}</p>
                 </div>
                 <RoleBadge role={u.role} size="xs" />
@@ -440,7 +440,7 @@ export default function AdminOverview() {
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-[#006c49]/60 dark:text-[#4ade80]/60 uppercase tracking-wider mb-0.5">ນາມສັດ</p>
-                    <p className="text-xl font-black text-[#052e16] dark:text-white leading-tight">{animal.animal_name_lao}</p>
+                    <p className="text-xl font-black text-foreground leading-tight">{animal.animal_name_lao}</p>
                     <p className="text-sm font-bold text-[#006c49] dark:text-[#4ade80] mt-0.5">ເລກ: {twoDigitResult?.result_value}</p>
                   </div>
                 </div>
@@ -470,7 +470,7 @@ export default function AdminOverview() {
       {/* ─── Recent History ─── */}
       <div>
         <SectionLabel icon="history" label="ປະຫວັດການປ້ອນລ່າສຸດ" accent="#555870" />
-        <div className="bg-white dark:bg-[#152033] rounded-2xl border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           <ArchiveTable compact />
         </div>
       </div>

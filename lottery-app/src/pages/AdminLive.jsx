@@ -75,8 +75,8 @@ export default function AdminLive() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="bg-white dark:bg-[#152033] p-8 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
-        <h2 className="text-2xl font-bold text-[#121c2a] dark:text-white mb-6 flex items-center gap-2">
+      <div className="bg-card p-8 rounded-2xl shadow-sm border border-border">
+        <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
           <span className="material-symbols-outlined text-[#ba1a1a]">podcasts</span>
           ຈັດການຖ່າຍທອດສົດ (Live Stream)
         </h2>
@@ -90,7 +90,7 @@ export default function AdminLive() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Source Type Selector */}
           <div>
-            <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-3">ເລືອກແຫຼ່ງ Live</label>
+            <label className="block text-sm font-bold text-muted-foreground mb-3">ເລືອກແຫຼ່ງ Live</label>
             <div className="grid grid-cols-3 gap-3">
               {SOURCE_OPTIONS.map(opt => (
                 <label
@@ -98,7 +98,7 @@ export default function AdminLive() {
                   className={`flex flex-col items-center gap-2 cursor-pointer p-4 rounded-xl border-2 transition-all
                     ${formData.live_source === opt.value
                       ? 'border-[#003fb1] bg-[#003fb1]/10 dark:bg-[#003fb1]/20'
-                      : 'border-transparent bg-[#eff3ff] dark:bg-[#1e2d4a] hover:border-[#003fb1]/40'}`}
+                      : 'border-transparent bg-secondary hover:border-[#003fb1]/40'}`}
                 >
                   <input
                     type="radio"
@@ -108,10 +108,10 @@ export default function AdminLive() {
                     onChange={(e) => setFormData({ ...formData, live_source: e.target.value })}
                     className="sr-only"
                   />
-                  <span className={`material-symbols-outlined text-2xl ${formData.live_source === opt.value ? 'text-[#003fb1]' : 'text-[#434654] dark:text-[#c7d2fe]'}`}>
+                  <span className={`material-symbols-outlined text-2xl ${formData.live_source === opt.value ? 'text-[#003fb1]' : 'text-muted-foreground'}`}>
                     {opt.icon}
                   </span>
-                  <span className={`text-xs font-bold text-center ${formData.live_source === opt.value ? 'text-[#003fb1]' : 'text-[#434654] dark:text-[#c7d2fe]'}`}>
+                  <span className={`text-xs font-bold text-center ${formData.live_source === opt.value ? 'text-[#003fb1]' : 'text-muted-foreground'}`}>
                     {opt.label}
                   </span>
                 </label>
@@ -121,12 +121,12 @@ export default function AdminLive() {
 
           {/* URL Input */}
           <div>
-            <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">
+            <label className="block text-sm font-bold text-muted-foreground mb-2">
               ລິ້ງ {currentSource.label}
             </label>
             <input
               type="text"
-              className="w-full bg-[#eff3ff] dark:bg-[#1e2d4a] border-none rounded-lg p-3 text-[#121c2a] dark:text-white focus:ring-2 focus:ring-[#003fb1]"
+              className="w-full bg-secondary border-none rounded-lg p-3 text-foreground focus:ring-2 focus:ring-[#003fb1]"
               placeholder={currentSource.placeholder}
               value={formData.youtube_live_url}
               onChange={(e) => setFormData({ ...formData, youtube_live_url: e.target.value })}
@@ -145,9 +145,9 @@ export default function AdminLive() {
 
           {/* Live Status */}
           <div>
-            <label className="block text-sm font-bold text-[#434654] dark:text-[#c7d2fe] mb-2">ສະຖານະຖ່າຍທອດສົດ</label>
+            <label className="block text-sm font-bold text-muted-foreground mb-2">ສະຖານະຖ່າຍທອດສົດ</label>
             <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer bg-[#eff3ff] dark:bg-[#1e2d4a] px-4 py-3 rounded-xl flex-1 border-2 border-transparent has-[:checked]:border-[#ba1a1a] has-[:checked]:bg-[#ffdad6]/30 transition-all">
+              <label className="flex items-center gap-2 cursor-pointer bg-secondary px-4 py-3 rounded-xl flex-1 border-2 border-transparent has-[:checked]:border-[#ba1a1a] has-[:checked]:bg-[#ffdad6]/30 transition-all">
                 <input
                   type="radio"
                   name="is_live"
@@ -161,16 +161,16 @@ export default function AdminLive() {
                   ກຳລັງ Live ສົດ!
                 </span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer bg-[#eff3ff] dark:bg-[#1e2d4a] px-4 py-3 rounded-xl flex-1 border-2 border-transparent has-[:checked]:border-[#434654] has-[:checked]:bg-[#e3e2e6] transition-all">
+              <label className="flex items-center gap-2 cursor-pointer bg-secondary px-4 py-3 rounded-xl flex-1 border-2 border-transparent has-[:checked]:border-[#434654] has-[:checked]:bg-[#e3e2e6] transition-all">
                 <input
                   type="radio"
                   name="is_live"
                   value="0"
                   checked={formData.is_live === '0'}
                   onChange={(e) => setFormData({ ...formData, is_live: e.target.value })}
-                  className="w-4 h-4 text-[#434654] dark:text-[#c7d2fe] focus:ring-[#434654]"
+                  className="w-4 h-4 text-muted-foreground focus:ring-[#434654]"
                 />
-                <span className="font-bold text-[#434654] dark:text-[#c7d2fe]">ປິດການຖ່າຍທອດສົດ</span>
+                <span className="font-bold text-muted-foreground">ປິດການຖ່າຍທອດສົດ</span>
               </label>
             </div>
           </div>
@@ -187,9 +187,9 @@ export default function AdminLive() {
 
       {/* Preview */}
       {formData.youtube_live_url && previewUrl && (
-        <div className="bg-white dark:bg-[#152033] p-6 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+        <div className="bg-card p-6 rounded-2xl shadow-sm border border-border">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-[#434654] dark:text-[#c7d2fe] uppercase tracking-widest">ຕົວຢ່າງ (Preview)</h3>
+            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">ຕົວຢ່າງ (Preview)</h3>
             <a
               href={formData.youtube_live_url}
               target="_blank"
@@ -216,9 +216,9 @@ export default function AdminLive() {
 
       {/* URL entered but can't embed */}
       {formData.youtube_live_url && !previewUrl && (
-        <div className="bg-white dark:bg-[#152033] p-6 rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54] text-center">
-          <span className="material-symbols-outlined text-4xl text-[#434654] dark:text-[#c7d2fe] mb-2 block">link_off</span>
-          <p className="text-sm text-[#434654] dark:text-[#c7d2fe]">ບໍ່ສາມາດ Preview URL ນີ້ໄດ້ — ກວດສອບໃຫ້ຖືກຕ້ອງ</p>
+        <div className="bg-card p-6 rounded-2xl shadow-sm border border-border text-center">
+          <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">link_off</span>
+          <p className="text-sm text-muted-foreground">ບໍ່ສາມາດ Preview URL ນີ້ໄດ້ — ກວດສອບໃຫ້ຖືກຕ້ອງ</p>
         </div>
       )}
     </div>

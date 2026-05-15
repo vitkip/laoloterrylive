@@ -8,7 +8,7 @@ import { formatLaoDate } from '../utils/date';
 
 function FieldLabel({ children, icon }) {
   return (
-    <label className="flex items-center gap-1.5 text-[11px] font-bold text-[#555870] dark:text-[#94a3b8] uppercase tracking-wider mb-2.5">
+    <label className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">
       {icon && <span className="material-symbols-outlined text-[14px]">{icon}</span>}
       {children}
     </label>
@@ -17,7 +17,7 @@ function FieldLabel({ children, icon }) {
 
 function FieldBox({ children }) {
   return (
-    <div className="bg-[#f5f7ff] dark:bg-[#1a2844] border border-[#e8edf8] dark:border-[#2b3a54] rounded-xl overflow-hidden focus-within:border-[#003fb1] focus-within:ring-2 focus-within:ring-[#003fb1]/15 transition-all duration-200">
+    <div className="bg-[#f5f7ff] dark:bg-[#1a2844] border border-border rounded-xl overflow-hidden focus-within:border-[#003fb1] focus-within:ring-2 focus-within:ring-[#003fb1]/15 transition-all duration-200">
       {children}
     </div>
   );
@@ -26,10 +26,10 @@ function FieldBox({ children }) {
 function SectionDivider({ icon, label }) {
   return (
     <div className="flex items-center gap-3 py-1">
-      <div className="w-6 h-6 rounded-lg bg-[#eff3ff] dark:bg-[#1e2d4a] flex items-center justify-center shrink-0">
+      <div className="w-6 h-6 rounded-lg bg-secondary flex items-center justify-center shrink-0">
         <span className="material-symbols-outlined text-[#003fb1] text-[13px]">{icon}</span>
       </div>
-      <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-widest shrink-0">{label}</p>
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">{label}</p>
       <div className="flex-1 h-px bg-gradient-to-r from-[#e8edf8] to-transparent dark:from-[#2b3a54]" />
     </div>
   );
@@ -226,7 +226,7 @@ export default function AdminPanel() {
     });
   };
 
-  const inputCls = 'w-full bg-transparent px-3.5 py-3 text-[#121c2a] dark:text-white text-sm font-medium placeholder:text-[#a0a3bd] outline-none';
+  const inputCls = 'w-full bg-transparent px-3.5 py-3 text-foreground text-sm font-medium placeholder:text-[#a0a3bd] outline-none';
   const selectedAnimalObj = animals.find(a => a.animal_id == formData.animal_id)
     || (suggestedAnimals[0] && !formData.animal_id ? suggestedAnimals[0] : null);
 
@@ -289,7 +289,7 @@ export default function AdminPanel() {
 
       {/* ─── Form Card ─── */}
       <form onSubmit={handleSubmit}>
-        <div className="bg-white dark:bg-[#152033] rounded-3xl border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm overflow-hidden">
+        <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
 
           {/* Edit indicator stripe */}
           {isEditing && (
@@ -345,7 +345,7 @@ export default function AdminPanel() {
                   <FieldBox>
                     <input
                       type="number"
-                      className={inputCls + ' font-black text-[#003fb1] dark:text-[#93b4ff]'}
+                      className={inputCls + ' font-black text-primary'}
                       placeholder="1"
                       value={formData.draw_number}
                       onChange={e => setFormData({ ...formData, draw_number: e.target.value })}
@@ -377,8 +377,8 @@ export default function AdminPanel() {
                           onPaste={i === 0 ? handleDigitPaste : undefined}
                           className={`w-12 h-14 sm:w-14 sm:h-16 rounded-2xl text-center text-xl sm:text-2xl font-black border-2 outline-none transition-all duration-200 cursor-text
                             ${formData.full_result[i]
-                              ? 'border-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#003fb1] dark:text-[#93b4ff] shadow-sm'
-                              : 'border-[#e8edf8] dark:border-[#2b3a54] bg-[#f5f7ff] dark:bg-[#1a2844] text-transparent'
+                              ? 'border-[#003fb1] bg-secondary text-primary shadow-sm'
+                              : 'border-border bg-[#f5f7ff] dark:bg-[#1a2844] text-transparent'
                             }
                             focus:border-[#003fb1] focus:ring-4 focus:ring-[#003fb1]/15 focus:bg-[#eff3ff] dark:focus:bg-[#1e2d4a]`}
                         />
@@ -395,8 +395,8 @@ export default function AdminPanel() {
 
                 {/* Live preview */}
                 {formData.full_result.length > 0 && (
-                  <div className="flex items-center gap-4 bg-[#f5f7ff] dark:bg-[#1a2844] rounded-2xl px-5 py-4 border border-[#e8edf8] dark:border-[#2b3a54]">
-                    <span className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider shrink-0">Preview</span>
+                  <div className="flex items-center gap-4 bg-[#f5f7ff] dark:bg-[#1a2844] rounded-2xl px-5 py-4 border border-border">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">Preview</span>
                     <ResultDigits result={formData.full_result} />
                     {formData.full_result.length === 6 && (
                       <span className="ml-auto text-[10px] font-bold text-[#006c49] dark:text-[#4ade80] bg-[#edfdf5] dark:bg-[#052e16] px-2.5 py-1 rounded-full border border-[#6cf8bb]/30">
@@ -435,7 +435,7 @@ export default function AdminPanel() {
                             className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border-2 text-sm font-bold transition-all duration-200
                               ${selected
                                 ? 'border-[#006c49] bg-[#edfdf5] dark:bg-[#052e16] text-[#006c49] dark:text-[#4ade80] shadow-sm'
-                                : 'border-[#e8edf8] dark:border-[#2b3a54] bg-[#f5f7ff] dark:bg-[#1a2844] text-[#555870] dark:text-[#94a3b8] hover:border-[#006c49]/40'
+                                : 'border-border bg-[#f5f7ff] dark:bg-[#1a2844] text-muted-foreground hover:border-[#006c49]/40'
                               }`}
                           >
                             {imgSrc
@@ -457,7 +457,7 @@ export default function AdminPanel() {
                 {/* Manual select */}
                 <div>
                   {suggestedAnimals.length > 0 && (
-                    <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider mb-2.5">ຫຼື ເລືອກດ້ວຍຕົນເອງ</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">ຫຼື ເລືອກດ້ວຍຕົນເອງ</p>
                   )}
                   <FieldBox>
                     <select
@@ -518,7 +518,7 @@ export default function AdminPanel() {
                 <button
                   type="button"
                   onClick={cancelEdit}
-                  className="flex-none flex items-center gap-2 px-5 py-3.5 rounded-xl border border-[#e8edf8] dark:border-[#2b3a54] bg-[#f5f7ff] dark:bg-[#1a2844] text-[#555870] dark:text-[#94a3b8] text-sm font-bold hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] transition-all duration-200"
+                  className="flex-none flex items-center gap-2 px-5 py-3.5 rounded-xl border border-border bg-[#f5f7ff] dark:bg-[#1a2844] text-muted-foreground text-sm font-bold hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] transition-all duration-200"
                 >
                   <span className="material-symbols-outlined text-[16px]">close</span>
                   ຍົກເລີກ
@@ -552,20 +552,20 @@ export default function AdminPanel() {
       </form>
 
       {/* ─── Recent Draws ─── */}
-      <div className="bg-white dark:bg-[#152033] rounded-3xl border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm overflow-hidden">
+      <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
 
         {/* Card header */}
-        <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-[#e8edf8] dark:border-[#2b3a54]">
+        <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#eff3ff] dark:bg-[#1e2d4a] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center">
               <span className="material-symbols-outlined text-[#003fb1] text-[18px]">history</span>
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-[#121c2a] dark:text-white">ຜົນລ່າສຸດ</h3>
-              <p className="text-[10px] text-[#737686] dark:text-[#94a3b8]">10 ງວດຫຼ້າສຸດ</p>
+              <h3 className="text-sm font-extrabold text-foreground">ຜົນລ່າສຸດ</h3>
+              <p className="text-[10px] text-muted-foreground">10 ງວດຫຼ້າສຸດ</p>
             </div>
           </div>
-          <span className="text-[10px] font-bold text-[#003fb1] dark:text-[#93b4ff] bg-[#eff3ff] dark:bg-[#1e2d4a] px-3 py-1 rounded-full">
+          <span className="text-[10px] font-bold text-primary bg-secondary px-3 py-1 rounded-full">
             {draws?.length ?? 0} ງວດທັງໝົດ
           </span>
         </div>
@@ -575,7 +575,7 @@ export default function AdminPanel() {
           ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <span className="material-symbols-outlined text-4xl text-[#c3c5d7]">inbox</span>
-              <p className="text-sm text-[#737686] dark:text-[#94a3b8]">ຍັງບໍ່ມີຂໍ້ມູນ</p>
+              <p className="text-sm text-muted-foreground">ຍັງບໍ່ມີຂໍ້ມູນ</p>
             </div>
           )
           : (
@@ -599,14 +599,14 @@ export default function AdminPanel() {
                     <div className="flex items-center gap-2.5 shrink-0">
                       <span className="text-[11px] font-black text-[#c3c5d7] dark:text-[#2b3a54] w-4 text-center">{idx + 1}</span>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-sm
-                        ${isCurrentEdit ? 'bg-gradient-to-br from-[#d97706] to-[#f59e0b] text-white' : 'bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#003fb1] dark:text-[#93b4ff]'}`}>
+                        ${isCurrentEdit ? 'bg-gradient-to-br from-[#d97706] to-[#f59e0b] text-white' : 'bg-secondary text-primary'}`}>
                         {d.draw_number}
                       </div>
                     </div>
 
                     {/* Date */}
                     <div className="shrink-0 hidden sm:block">
-                      <p className="text-xs font-bold text-[#121c2a] dark:text-white leading-tight">
+                      <p className="text-xs font-bold text-foreground leading-tight">
                         {formatLaoDate(d.draw_date, true)}
                       </p>
                       <p className="text-[10px] text-[#a0a3bd] dark:text-[#555870]">{d.draw_date}</p>
@@ -624,7 +624,7 @@ export default function AdminPanel() {
                           ? <img src={resolveAnimalImage(animalForDraw)} alt={animalForDraw.animal_name_lao} className="w-7 h-7 rounded-lg object-cover" />
                           : <span className="material-symbols-outlined text-[#006c49] text-[18px]">pets</span>
                         }
-                        <span className="text-xs text-[#555870] dark:text-[#94a3b8] font-medium">{animalForDraw.animal_name_lao}</span>
+                        <span className="text-xs text-muted-foreground font-medium">{animalForDraw.animal_name_lao}</span>
                       </div>
                     )}
 
@@ -634,7 +634,7 @@ export default function AdminPanel() {
                       className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200
                         ${isCurrentEdit
                           ? 'bg-[#fcd34d]/30 text-[#92400e] dark:text-[#fcd34d]'
-                          : 'bg-[#f5f7ff] dark:bg-[#1a2844] text-[#555870] dark:text-[#94a3b8] opacity-0 group-hover:opacity-100 hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] hover:text-[#003fb1] dark:hover:text-[#93b4ff]'
+                          : 'bg-[#f5f7ff] dark:bg-[#1a2844] text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] hover:text-primary'
                         }`}
                     >
                       <span className="material-symbols-outlined text-[14px]">{isCurrentEdit ? 'edit_square' : 'edit'}</span>

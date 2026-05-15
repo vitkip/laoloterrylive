@@ -39,13 +39,13 @@ export default function ResetPasswordPage() {
   if (!token) {
     return (
       <BgCard>
-        <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-2xl p-10 text-center border border-white/10">
+        <div className="bg-card rounded-3xl shadow-2xl p-10 text-center border border-white/10">
           <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
             <span className="material-symbols-outlined text-red-500 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
               link_off
             </span>
           </div>
-          <h2 className="text-xl font-black text-[#121c2a] dark:text-white mb-2">Token ບໍ່ຖືກຕ້ອງ</h2>
+          <h2 className="text-xl font-black text-foreground mb-2">Token ບໍ່ຖືກຕ້ອງ</h2>
           <p className="text-sm text-[#737686] mb-6 leading-relaxed">
             ລິ້ງນີ້ໃຊ້ງານບໍ່ໄດ້ ຫຼື ໝົດອາຍຸແລ້ວ<br />ກະລຸນາຂໍ Reset ໃໝ່
           </p>
@@ -66,14 +66,14 @@ export default function ResetPasswordPage() {
   if (success) {
     return (
       <BgCard>
-        <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-2xl p-10 text-center border border-white/10 space-y-5">
+        <div className="bg-card rounded-3xl shadow-2xl p-10 text-center border border-white/10 space-y-5">
           <div className="w-20 h-20 rounded-full bg-[#e8f5e9] dark:bg-[#006c49]/20 flex items-center justify-center mx-auto">
             <span className="material-symbols-outlined text-[#006c49] text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>
               check_circle
             </span>
           </div>
           <div>
-            <h2 className="text-2xl font-black text-[#121c2a] dark:text-white">ສຳເລັດ!</h2>
+            <h2 className="text-2xl font-black text-foreground">ສຳເລັດ!</h2>
             <p className="text-sm text-[#737686] mt-2">ລະຫັດຜ່ານໃໝ່ຖືກຕັ້ງຄ່າສຳເລັດແລ້ວ</p>
           </div>
           <button
@@ -104,7 +104,7 @@ export default function ResetPasswordPage() {
 
   return (
     <BgCard>
-      <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+      <div className="bg-card rounded-3xl shadow-2xl overflow-hidden border border-white/10">
 
         {/* Header */}
         <div className="relative bg-gradient-to-br from-[#001d6e] to-[#1a56db] px-8 py-8 text-center overflow-hidden">

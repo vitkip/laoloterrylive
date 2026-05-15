@@ -26,7 +26,7 @@ export default function TrendMomentum({ timeframe }) {
             <p className={`text-[11px] font-bold ${isRising ? 'text-[#006c49] dark:text-[#4ade80]' : 'text-[#ba1a1a] dark:text-[#f87171]'}`}>
               {isRising ? '▲ ກຳລັງຂຶ້ນ' : '▼ ກຳລັງລົງ'}
             </p>
-            <p className="text-[10px] text-[#737686] dark:text-[#94a3b8]">
+            <p className="text-[10px] text-muted-foreground">
               {item.recentCount}/5 vs {item.baselineCount}/20
             </p>
           </div>
@@ -40,7 +40,7 @@ export default function TrendMomentum({ timeframe }) {
   };
 
   return (
-    <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 sm:p-8 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm overflow-hidden relative">
+    <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm overflow-hidden relative">
       <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-[#6cf8bb]/5 blur-3xl pointer-events-none" />
 
       {/* Header */}
@@ -51,8 +51,8 @@ export default function TrendMomentum({ timeframe }) {
           </span>
         </div>
         <div>
-          <h2 className="text-base font-extrabold text-[#121c2a] dark:text-white tracking-tight">Trend Momentum</h2>
-          <p className="text-[11px] text-[#737686] dark:text-[#94a3b8] font-medium">5 ງວດຫຼ້າສຸດ vs 20 ງວດ</p>
+          <h2 className="text-base font-extrabold text-foreground tracking-tight">Trend Momentum</h2>
+          <p className="text-[11px] text-muted-foreground font-medium">5 ງວດຫຼ້າສຸດ vs 20 ງວດ</p>
         </div>
       </div>
 
@@ -61,7 +61,7 @@ export default function TrendMomentum({ timeframe }) {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <span className="w-2 h-2 rounded-full bg-[#00a36c]" />
-            <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               🔺 ເລກກຳລັງຂຶ້ນ ({rising.length})
             </p>
           </div>
@@ -77,7 +77,7 @@ export default function TrendMomentum({ timeframe }) {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <span className="w-2 h-2 rounded-full bg-[#dc2626]" />
-            <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               🔻 ເລກກຳລັງລົງ ({falling.length})
             </p>
           </div>

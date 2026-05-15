@@ -28,7 +28,7 @@ export default function HotNumbers({ timeframe }) {
             </span>
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-[#431407] dark:text-white tracking-tight">
+            <h2 className="text-base font-extrabold text-foreground tracking-tight">
               ເລກເດັ່ນ
             </h2>
             <p className="text-[11px] text-[#9a3412] dark:text-[#fdba74] font-medium">Hot Numbers</p>
@@ -61,7 +61,7 @@ export default function HotNumbers({ timeframe }) {
 
               {/* Count */}
               <div className="text-center">
-                <p className="text-[13px] font-extrabold text-[#431407] dark:text-white">{count} ຄັ້ງ</p>
+                <p className="text-[13px] font-extrabold text-foreground">{count} ຄັ້ງ</p>
               </div>
 
               {/* Progress bar */}
@@ -79,7 +79,7 @@ export default function HotNumbers({ timeframe }) {
       {/* Footer */}
       <div className="mt-6 pt-5 border-t border-[#fed7aa]/30 dark:border-[#7c2d12]/30 flex items-center justify-between relative z-10">
         <p className="text-xs text-[#9a3412] dark:text-[#fdba74]">
-          ຄ່າສູງສຸດ: <span className="font-black text-[#431407] dark:text-white">{hotNumbers[0]?.count}</span> ຄັ້ງ
+          ຄ່າສູງສຸດ: <span className="font-black text-foreground">{hotNumbers[0]?.count}</span> ຄັ້ງ
         </p>
         <div className="flex items-center gap-1.5 text-[10px] text-[#9a3412] dark:text-[#fdba74]">
           <span className="material-symbols-outlined text-[12px]">info</span>

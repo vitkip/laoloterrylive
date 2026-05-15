@@ -47,7 +47,7 @@ export default function LoginPage() {
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Card */}
-        <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-xl border border-[#dee9fd] dark:border-[#2b3a54] overflow-hidden">
+        <div className="bg-card rounded-3xl shadow-xl border border-border overflow-hidden">
           {/* Header strip */}
           <div className="bg-gradient-to-r from-[#001d6e] to-[#1a56db] px-8 py-8 text-center">
             <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border border-white/20">
@@ -76,7 +76,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div>
-                <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">
                   ຊື່ຜູ້ໃຊ້ (Username)
                 </label>
                 <div className="relative">
@@ -86,7 +86,7 @@ export default function LoginPage() {
                     autoComplete="username"
                     placeholder="ປ້ອນ username"
                     required
-                    className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-4 py-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                    className="w-full bg-accent rounded-xl pl-9 pr-4 py-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
                   />
@@ -94,7 +94,7 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">
                   ລະຫັດຜ່ານ (Password)
                 </label>
                 <div className="relative">
@@ -104,7 +104,7 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     placeholder="••••••••"
                     required
-                    className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-10 py-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                    className="w-full bg-accent rounded-xl pl-9 pr-10 py-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                   />
@@ -145,11 +145,11 @@ export default function LoginPage() {
             </form>
 
             {/* Register CTA */}
-            <div className="mt-5 pt-5 border-t border-[#dee9fd] dark:border-[#2b3a54] text-center">
+            <div className="mt-5 pt-5 border-t border-border text-center">
               <p className="text-xs text-[#737686] mb-3">ຍັງບໍ່ມີບັນຊີ?</p>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 w-full justify-center border-2 border-[#003fb1] text-[#003fb1] dark:text-[#b5c4ff] dark:border-[#b5c4ff]/50 py-3 rounded-xl font-bold text-sm hover:bg-[#003fb1] hover:text-white dark:hover:bg-[#b5c4ff]/10 transition-all duration-200"
+                className="inline-flex items-center gap-2 w-full justify-center border-2 border-[#003fb1] text-primary dark:border-[#b5c4ff]/50 py-3 rounded-xl font-bold text-sm hover:bg-[#003fb1] hover:text-white dark:hover:bg-[#b5c4ff]/10 transition-all duration-200"
               >
                 <span className="material-symbols-outlined text-[18px]">person_add</span>
                 ສ້າງບັນຊີໃໝ່ ຟຣີ
@@ -172,10 +172,10 @@ export default function LoginPage() {
             { role: 'Staff', icon: 'badge', desc: 'ຈັດການຂໍ້ມູນ' },
             { role: 'Member', icon: 'person', desc: 'ເບິ່ງສະຖິຕິ' },
           ].map(r => (
-            <div key={r.role} className="bg-white/60 dark:bg-[#152033]/60 rounded-xl p-2.5 border border-[#dee9fd] dark:border-[#2b3a54]">
+            <div key={r.role} className="bg-white/60 dark:bg-[#152033]/60 rounded-xl p-2.5 border border-border">
               <span className="material-symbols-outlined text-[#003fb1] text-[16px] block mb-0.5">{r.icon}</span>
-              <p className="text-[10px] font-black text-[#121c2a] dark:text-white">{r.role}</p>
-              <p className="text-[9px] text-[#737686] dark:text-[#94a3b8]">{r.desc}</p>
+              <p className="text-[10px] font-black text-foreground">{r.role}</p>
+              <p className="text-[9px] text-muted-foreground">{r.desc}</p>
             </div>
           ))}
         </div>

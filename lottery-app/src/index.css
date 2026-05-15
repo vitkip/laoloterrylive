@@ -1,12 +1,12 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ─── Brand + M3 color tokens (keep for existing components) ─── */
 @theme {
-  /* Colors */
+  /* M3 Color System */
   --color-error: #ba1a1a;
-  --color-secondary: #006c49;
-  --color-background: #f9f9ff;
   --color-surface-container-lowest: #ffffff;
   --color-primary-fixed-dim: #b5c4ff;
   --color-on-secondary-fixed: #002113;
@@ -25,7 +25,6 @@
   --color-inverse-surface: #273140;
   --color-surface-container-highest: #d9e3f7;
   --color-surface-variant: #d9e3f7;
-  --color-primary: #003fb1;
   --color-on-surface-variant: #434654;
   --color-surface-dim: #d0daef;
   --color-on-tertiary: #ffffff;
@@ -64,6 +63,78 @@
   --font-label: 'Noto Sans Lao Looped', sans-serif;
 }
 
+/* ─── shadcn/ui CSS variables — light mode ─── */
+:root {
+  --background: #f9f9ff;
+  --foreground: #121c2a;
+  --card: #ffffff;
+  --card-foreground: #121c2a;
+  --popover: #ffffff;
+  --popover-foreground: #121c2a;
+  --primary: #003fb1;
+  --primary-foreground: #ffffff;
+  --secondary: #eff3ff;
+  --secondary-foreground: #003fb1;
+  --muted: #f5f7ff;
+  --muted-foreground: #737686;
+  --accent: #eff3ff;
+  --accent-foreground: #003fb1;
+  --destructive: #ba1a1a;
+  --destructive-foreground: #ffffff;
+  --border: #dee9fd;
+  --input: #dee9fd;
+  --ring: #003fb1;
+  --radius: 0.75rem;
+  --color-green-success: #6cf8bb;
+}
+
+/* ─── shadcn/ui CSS variables — dark mode ─── */
+.dark {
+  --background: #0b1120;
+  --foreground: #f8fafc;
+  --card: #152033;
+  --card-foreground: #f8fafc;
+  --popover: #152033;
+  --popover-foreground: #f8fafc;
+  --primary: #93b4ff;
+  --primary-foreground: #00174d;
+  --secondary: #1e2d4a;
+  --secondary-foreground: #c7d2fe;
+  --muted: #1e2d4a;
+  --muted-foreground: #94a3b8;
+  --accent: #1e2d4a;
+  --accent-foreground: #c7d2fe;
+  --destructive: #ff6b6b;
+  --destructive-foreground: #ffffff;
+  --border: #2b3a54;
+  --input: #2b3a54;
+  --ring: #93b4ff;
+}
+
+/* ─── Map CSS variables → Tailwind v4 utilities (override M3 values above) ─── */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* ─── Material Symbols icon font ─── */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   font-family: 'Material Symbols Outlined';
@@ -76,7 +147,6 @@
   word-wrap: normal;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
-  /* Reserve icon space so fallback text doesn't cause CLS when font loads */
   width: 1em;
   height: 1em;
   overflow: hidden;
@@ -91,7 +161,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Dark mode basic overrides */
 .dark body {
   background-color: #0b1120;
   color: #f8fafc;

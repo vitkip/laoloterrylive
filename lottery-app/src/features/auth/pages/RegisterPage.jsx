@@ -139,7 +139,7 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-lg relative">
         {/* Card */}
-        <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+        <div className="bg-card rounded-3xl shadow-2xl overflow-hidden border border-white/10">
 
           {/* ── Header ───────────────────────────────────────────── */}
           <div className="relative bg-gradient-to-br from-[#001d6e] to-[#1a56db] px-8 py-8 text-center overflow-hidden">
@@ -161,7 +161,7 @@ export default function RegisterPage() {
 
             {/* Username */}
             <div>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">
                 Username <span className="text-red-500 normal-case font-normal text-[11px]">* 4-20 ຕົວ a-z 0-9 _</span>
               </label>
               <div className="relative">
@@ -173,8 +173,8 @@ export default function RegisterPage() {
                   placeholder="ປ້ອນ username"
                   autoComplete="username"
                   spellCheck={false}
-                  className={`w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-10 py-3 text-sm font-medium
-                    text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 transition-all
+                  className={`w-full bg-accent rounded-xl pl-9 pr-10 py-3 text-sm font-medium
+                    text-foreground focus:outline-none focus:ring-2 transition-all
                     ${errors.username
                       ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10'
                       : 'focus:ring-[#003fb1]/40'
@@ -189,7 +189,7 @@ export default function RegisterPage() {
 
             {/* Full name */}
             <div>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">
                 ຊື່-ນາມສະກຸນ <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -200,8 +200,8 @@ export default function RegisterPage() {
                   {...register('full_name')}
                   placeholder="ປ້ອນຊື່ ແລະ ນາມສະກຸນ"
                   autoComplete="name"
-                  className={`w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-4 py-3 text-sm font-medium
-                    text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 transition-all
+                  className={`w-full bg-accent rounded-xl pl-9 pr-4 py-3 text-sm font-medium
+                    text-foreground focus:outline-none focus:ring-2 transition-all
                     ${errors.full_name ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10' : 'focus:ring-[#003fb1]/40'}`}
                 />
               </div>
@@ -215,7 +215,7 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">
                 Email <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -227,8 +227,8 @@ export default function RegisterPage() {
                   type="email"
                   placeholder="example@email.com"
                   autoComplete="email"
-                  className={`w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-10 py-3 text-sm font-medium
-                    text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 transition-all
+                  className={`w-full bg-accent rounded-xl pl-9 pr-10 py-3 text-sm font-medium
+                    text-foreground focus:outline-none focus:ring-2 transition-all
                     ${errors.email
                       ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10'
                       : 'focus:ring-[#003fb1]/40'
@@ -243,7 +243,7 @@ export default function RegisterPage() {
 
             {/* Phone */}
             <div>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">
                 ເບີໂທ{' '}
                 <span className="normal-case font-normal text-[#737686] text-[11px]">(ບໍ່ບັງຄັບ)</span>
               </label>
@@ -256,8 +256,8 @@ export default function RegisterPage() {
                   type="tel"
                   placeholder="020XXXXXXXX"
                   autoComplete="tel"
-                  className={`w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-4 py-3 text-sm font-medium
-                    text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 transition-all
+                  className={`w-full bg-accent rounded-xl pl-9 pr-4 py-3 text-sm font-medium
+                    text-foreground focus:outline-none focus:ring-2 transition-all
                     ${errors.phone_number ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10' : 'focus:ring-[#003fb1]/40'}`}
                 />
               </div>
@@ -314,7 +314,7 @@ export default function RegisterPage() {
 
             <p className="text-center text-sm text-[#737686] pt-1">
               ມີບັນຊີແລ້ວ?{' '}
-              <Link to="/login" className="text-[#003fb1] dark:text-[#b5c4ff] font-bold hover:underline">
+              <Link to="/login" className="text-primary font-bold hover:underline">
                 ເຂົ້າສູ່ລະບົບ
               </Link>
             </p>

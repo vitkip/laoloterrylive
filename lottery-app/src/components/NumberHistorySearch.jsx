@@ -23,7 +23,7 @@ function HighlightResult({ full_result, searchStr }) {
                 className={`w-7 h-8 flex items-center justify-center rounded-lg text-sm font-black
                   ${highlighted
                     ? 'bg-[#003fb1] text-white shadow-sm'
-                    : 'bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#003fb1] dark:text-[#93b4ff]'
+                    : 'bg-secondary text-primary'
                   }`}
               >
                 {d}
@@ -80,7 +80,7 @@ export default function NumberHistorySearch() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#006c49] to-[#00a36c] flex items-center justify-center shadow-sm mb-4">
             <span className="material-symbols-outlined text-white text-[20px]">manage_search</span>
           </div>
-          <h2 className="text-lg font-extrabold text-[#052e16] dark:text-white mb-1.5">ຄົ້ນຫາຍ້ອນຫຼັງ</h2>
+          <h2 className="text-lg font-extrabold text-foreground mb-1.5">ຄົ້ນຫາຍ້ອນຫຼັງ</h2>
           <p className="text-xs text-[#166534] dark:text-[#6cf8bb] leading-relaxed">
             ພິມຕົວເລກ 2–6 ຕົວ ເພື່ອເບິ່ງວ່າມັນເຄີຍອອກງວດໃດ
           </p>
@@ -97,7 +97,7 @@ export default function NumberHistorySearch() {
             placeholder="ຕົວຢ່າງ: 99 ຫຼື 374268"
             value={searchNumber}
             onChange={e => setSearchNumber(e.target.value.replace(/\D/g, ''))}
-            className="w-full bg-white dark:bg-[#152033] pl-12 pr-10 py-3.5 rounded-xl border border-[#6cf8bb]/40 dark:border-[#166534]/40 focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20 outline-none text-xl font-black tracking-[0.25em] text-[#121c2a] dark:text-white placeholder:text-[#6cf8bb]/50 placeholder:font-normal placeholder:tracking-normal placeholder:text-sm shadow-sm transition-all"
+            className="w-full bg-card pl-12 pr-10 py-3.5 rounded-xl border border-[#6cf8bb]/40 dark:border-[#166534]/40 focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20 outline-none text-xl font-black tracking-[0.25em] text-foreground placeholder:text-[#6cf8bb]/50 placeholder:font-normal placeholder:tracking-normal placeholder:text-sm shadow-sm transition-all"
           />
           {searchNumber && (
             <button
@@ -111,7 +111,7 @@ export default function NumberHistorySearch() {
 
         {/* Digit keypad */}
         <div>
-          <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider mb-2">ປ່ຽງຕົວເລກ</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">ປ່ຽງຕົວເລກ</p>
           <div className="grid grid-cols-5 gap-1.5">
             {digitButtons.map(d => (
               <button
@@ -133,7 +133,7 @@ export default function NumberHistorySearch() {
             </button>
             <button
               onClick={() => setSearchNumber('')}
-              className="h-9 rounded-xl bg-[#f5f7ff] dark:bg-[#1e2d4a] text-[#555870] dark:text-[#94a3b8] text-xs font-bold border border-[#e8edf8] dark:border-[#2b3a54] hover:bg-[#eff3ff] transition-all flex items-center justify-center gap-1"
+              className="h-9 rounded-xl bg-muted text-muted-foreground text-xs font-bold border border-border hover:bg-[#eff3ff] transition-all flex items-center justify-center gap-1"
             >
               <span className="material-symbols-outlined text-[15px]">clear_all</span>
               ລ້າງ
@@ -143,16 +143,16 @@ export default function NumberHistorySearch() {
 
         {/* Stats summary */}
         {stats && (
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-4 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm space-y-3">
-            <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider">ສະຫຼຸບ "{searchNumber}"</p>
+          <div className="bg-card rounded-2xl p-4 border border-border shadow-sm space-y-3">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">ສະຫຼຸບ "{searchNumber}"</p>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: 'ອອກທັງໝົດ', value: `${stats.count} ງວດ`, color: 'text-[#006c49]' },
                 { label: 'ຄວາມຖີ່', value: `${stats.pct}%`, color: 'text-[#003fb1]' },
-                { label: 'ອອກລ່າສຸດ', value: formatLaoDate(stats.latest, true), color: 'text-[#121c2a] dark:text-white' },
+                { label: 'ອອກລ່າສຸດ', value: formatLaoDate(stats.latest, true), color: 'text-foreground' },
                 { label: 'ຜ່ານມາ', value: `${stats.daysSinceLast} ວັນ`, color: 'text-[#737686]' },
               ].map(({ label, value, color }) => (
-                <div key={label} className="bg-[#f5f7ff] dark:bg-[#1e2d4a] rounded-xl p-2.5">
+                <div key={label} className="bg-muted rounded-xl p-2.5">
                   <p className="text-[9px] text-[#a0a3bd] uppercase tracking-wider mb-0.5">{label}</p>
                   <p className={`text-sm font-extrabold ${color} leading-tight`}>{value}</p>
                 </div>
@@ -186,7 +186,7 @@ export default function NumberHistorySearch() {
                 <span className="material-symbols-outlined text-[28px] text-[#006c49]">123</span>
               </div>
               <div className="text-center">
-                <p className="font-bold text-[#555870] dark:text-[#94a3b8] mb-1">ພິມຕົວເລກ</p>
+                <p className="font-bold text-muted-foreground mb-1">ພິມຕົວເລກ</p>
                 <p className="text-xs text-[#a0a3bd] dark:text-[#555870]">ໃຊ້ປ່ຽງຕົວເລກ ຫຼື ພິມໂດຍກົງ</p>
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function NumberHistorySearch() {
                 <span className="material-symbols-outlined text-[26px] text-[#ba1a1a]">block</span>
               </div>
               <div className="text-center">
-                <p className="font-bold text-[#555870] dark:text-[#94a3b8] mb-1">ບໍ່ເຄີຍອອກ</p>
+                <p className="font-bold text-muted-foreground mb-1">ບໍ່ເຄີຍອອກ</p>
                 <p className="text-xs text-[#a0a3bd] dark:text-[#555870]">ເລກ "{searchNumber}" ຍັງບໍ່ໄດ້ອອກໃນຖານຂໍ້ມູນ</p>
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function NumberHistorySearch() {
           {results.map((d, idx) => (
             <div
               key={d.draw_id}
-              className="group bg-white dark:bg-[#152033] rounded-2xl p-4 sm:p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm hover:shadow-md hover:border-[#006c49]/30 hover:-translate-y-0.5 transition-all duration-200"
+              className="group bg-card rounded-2xl p-4 sm:p-5 border border-border shadow-sm hover:shadow-md hover:border-[#006c49]/30 hover:-translate-y-0.5 transition-all duration-200"
             >
               <div className="flex items-center justify-between gap-4">
                 {/* Meta */}
@@ -218,7 +218,7 @@ export default function NumberHistorySearch() {
                     <span className="text-xs font-black text-[#006c49]">#{idx + 1}</span>
                   </div>
                   <div>
-                    <p className="text-sm font-extrabold text-[#121c2a] dark:text-white leading-tight">
+                    <p className="text-sm font-extrabold text-foreground leading-tight">
                       {formatLaoDate(d.draw_date, true)}
                     </p>
                     <p className="text-[11px] text-[#a0a3bd] dark:text-[#555870] font-medium mt-0.5">

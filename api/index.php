@@ -891,6 +891,143 @@ switch ($action) {
         ]);
         break;
 
+    // ══════════════════════════════════════════════
+    // ── LOTTERY TYPE MANAGEMENT (CRUD) ────────────
+    // ══════════════════════════════════════════════
+
+    case 'list_types':
+        requireAuth('staff');
+        $result = $conn->query("SELECT * FROM lottery_types ORDER BY type_id ASC");
+        $data = $result->fetch_all(MYSQLI_ASSOC);
+        // Attach draw count for each type
+        foreach ($data as &$row) {
+            $tid = (int)$row['type_id'];
+            $cnt = $conn->query("SELECT COUNT(*) AS c FROM lottery_draws WHERE type_id=$tid")->fetch_assoc()['c'];
+            $row['draw_count'] = (int)$cnt;
+        }
+        unset($row);
+        echo json_encode($data);
+        break;
+
+    case 'get_type':
+        requireAuth('staff');
+        $tid = (int)($_GET['type_id'] ?? 0);
+        if ($tid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid type_id"]); break; }
+        $stmt = $conn->prepare("SELECT * FROM lottery_types WHERE type_id = ?");
+        $stmt->bind_param("i", $tid);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$row) { http_response_code(404); echo json_encode(["error" => "ບໍ່ພົບປະເພດຫວຍ"]); break; }
+        // Also attach draw count
+        $cnt = $conn->query("SELECT COUNT(*) AS c FROM lottery_draws WHERE type_id=$tid")->fetch_assoc()['c'];
+        $row['draw_count'] = (int)$cnt;
+        echo json_encode($row);
+        break;
+
+    case 'create_type':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        requireAuth('admin');
+        $input     = json_decode(file_get_contents('php://input'), true);
+        $type_name = trim($input['type_name'] ?? '');
+        $schedule  = trim($input['schedule']  ?? '');
+        $color     = trim($input['color']     ?? '#003fb1');
+        $is_active = isset($input['is_active']) ? (int)$input['is_active'] : 1;
+
+        if (strlen($type_name) < 2) {
+            http_response_code(400); echo json_encode(["error" => "ຊື່ປະເພດຫວຍຕ້ອງມີຢ່າງໜ້ອຍ 2 ຕົວອັກສອນ"]); break;
+        }
+        // Check duplicate name
+        $chk = $conn->prepare("SELECT type_id FROM lottery_types WHERE type_name = ?");
+        $chk->bind_param("s", $type_name);
+        $chk->execute();
+        if ($chk->get_result()->num_rows > 0) {
+            http_response_code(400); echo json_encode(["error" => "ຊື່ປະເພດຫວຍນີ້ມີຢູ່ແລ້ວ"]); break;
+        }
+        $chk->close();
+
+        $stmt = $conn->prepare("INSERT INTO lottery_types (type_name, schedule, color, is_active) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("sssi", $type_name, $schedule, $color, $is_active);
+        if ($stmt->execute()) {
+            $newId = $conn->insert_id;
+            echo json_encode(["success" => true, "type_id" => $newId, "message" => "ເພີ່ມປະເພດຫວຍສຳເລັດ"]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ: " . $conn->error]);
+        }
+        $stmt->close();
+        break;
+
+    case 'update_type':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        requireAuth('admin');
+        $input     = json_decode(file_get_contents('php://input'), true);
+        $tid       = (int)($input['type_id']  ?? 0);
+        $type_name = trim($input['type_name'] ?? '');
+        $schedule  = trim($input['schedule']  ?? '');
+        $color     = trim($input['color']     ?? '#003fb1');
+        $is_active = isset($input['is_active']) ? (int)$input['is_active'] : 1;
+
+        if ($tid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid type_id"]); break; }
+        if (strlen($type_name) < 2) {
+            http_response_code(400); echo json_encode(["error" => "ຊື່ປະເພດຫວຍຕ້ອງມີຢ່າງໜ້ອຍ 2 ຕົວອັກສອນ"]); break;
+        }
+        // Check duplicate name (exclude self)
+        $chk = $conn->prepare("SELECT type_id FROM lottery_types WHERE type_name = ? AND type_id != ?");
+        $chk->bind_param("si", $type_name, $tid);
+        $chk->execute();
+        if ($chk->get_result()->num_rows > 0) {
+            http_response_code(400); echo json_encode(["error" => "ຊື່ປະເພດຫວຍນີ້ມີຢູ່ແລ້ວ"]); break;
+        }
+        $chk->close();
+
+        $stmt = $conn->prepare("UPDATE lottery_types SET type_name=?, schedule=?, color=?, is_active=? WHERE type_id=?");
+        $stmt->bind_param("sssii", $type_name, $schedule, $color, $is_active, $tid);
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "message" => "ອັບເດດປະເພດຫວຍສຳເລັດ"]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => "ເກີດຂໍ້ຜິດພາດ: " . $conn->error]);
+        }
+        $stmt->close();
+        break;
+
+    case 'delete_type':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        requireAuth('admin');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $tid   = (int)($input['type_id'] ?? 0);
+        if ($tid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid type_id"]); break; }
+
+        // Prevent deleting if draws exist for this type
+        $cntRow = $conn->query("SELECT COUNT(*) AS c FROM lottery_draws WHERE type_id=$tid")->fetch_assoc();
+        if ((int)$cntRow['c'] > 0) {
+            http_response_code(400);
+            echo json_encode(["error" => "ບໍ່ສາມາດລຶບໄດ້ — ມີງວດຫວຍ {$cntRow['c']} ງວດຢູ່ໃນປະເພດນີ້"]);
+            break;
+        }
+        // Prevent deleting the last type
+        $totalTypes = (int)$conn->query("SELECT COUNT(*) AS c FROM lottery_types")->fetch_assoc()['c'];
+        if ($totalTypes <= 1) {
+            http_response_code(400);
+            echo json_encode(["error" => "ບໍ່ສາມາດລຶບໄດ້ — ຕ້ອງມີຢ່າງໜ້ອຍ 1 ປະເພດຫວຍ"]);
+            break;
+        }
+
+        $stmt = $conn->prepare("DELETE FROM lottery_types WHERE type_id=?");
+        $stmt->bind_param("i", $tid);
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "message" => "ລຶບປະເພດຫວຍສຳເລັດ"]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => "ເກີດຂໍ້ຜິດພາດ: " . $conn->error]);
+        }
+        $stmt->close();
+        break;
+
     default:
         http_response_code(400);
         echo json_encode(["error" => "Unknown action"]);

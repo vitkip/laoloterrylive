@@ -49,15 +49,15 @@ export default function SearchPage() {
       </div>
 
       {/* ─── Tab Switcher ─── */}
-      <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1e2d4a] p-1.5 rounded-2xl border border-[#e8edf8] dark:border-[#2b3a54] w-full">
+      <div className="flex items-center gap-1 bg-accent p-1.5 rounded-2xl border border-border w-full">
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-[12px] font-bold transition-all duration-200
               ${activeTab === tab.id
-                ? 'bg-white dark:bg-[#152033] shadow-sm'
-                : 'text-[#737686] dark:text-[#94a3b8] hover:text-[#121c2a] dark:hover:text-white'
+                ? 'bg-card shadow-sm'
+                : 'text-muted-foreground hover:text-[#121c2a] dark:hover:text-primary-foreground'
               }`}
             style={activeTab === tab.id ? { color: tab.color } : {}}
           >

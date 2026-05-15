@@ -1,8 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig(({ command }) => ({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   plugins: [react(), tailwindcss()],
 
   // ໃນ dev mode: base = '/' ເພື່ອໃຫ້ app ເຮັດວຽກທີ່ localhost:5173/
@@ -52,6 +61,16 @@ export default defineConfig(({ command }) => ({
           // Image capture — only on share result feature
           if (id.includes('node_modules/html-to-image')) {
             return 'vendor-image';
+          }
+          // shadcn/ui utilities + Radix UI primitives — shared UI layer
+          if (
+            id.includes('node_modules/@radix-ui') ||
+            id.includes('node_modules/clsx') ||
+            id.includes('node_modules/tailwind-merge') ||
+            id.includes('node_modules/class-variance-authority') ||
+            id.includes('node_modules/tw-animate-css')
+          ) {
+            return 'vendor-ui';
           }
         },
       },

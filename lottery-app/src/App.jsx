@@ -29,6 +29,7 @@ const AdminUsers          = lazy(() => import('./pages/AdminUsers'))
 const AdminLive           = lazy(() => import('./pages/AdminLive'))
 const UserLogsPage        = lazy(() => import('./pages/UserLogsPage'))
 const ProfilePage         = lazy(() => import('./pages/ProfilePage'))
+const AdminLotteryTypes   = lazy(() => import('./pages/AdminLotteryTypes'))
 
 // ── Error pages ───────────────────────────────────────────────────
 const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'))
@@ -57,7 +58,7 @@ function PageLoader() {
 function PublicLayout() {
   useVisitorTrack();
   return (
-    <div className="flex flex-col min-h-screen bg-[#f9f9ff] dark:bg-[#0d1627] text-[#121c2a] dark:text-white">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar />
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-12">
         <Suspense fallback={<PageLoader />}>
@@ -127,6 +128,7 @@ export default function App() {
               <Route path="/admin"         element={<AdminOverview />} />
               <Route path="/admin/live"    element={<AdminLive />} />
               <Route path="/admin/draws"   element={<AdminPanel />} />
+              <Route path="/admin/types"   element={<AdminLotteryTypes />} />
               <Route path="/admin/animals" element={<AnimalImageManager />} />
               <Route path="/admin/users"   element={<AdminUsers />} />
               <Route path="/admin/profile" element={<ProfilePage />} />

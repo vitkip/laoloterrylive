@@ -65,27 +65,27 @@ export default function WeekdayStats({ timeframe }) {
   }, [draws, animals, timeframe, selectedDay]);
 
   return (
-    <div className="bg-white dark:bg-[#152033] rounded-3xl p-6 sm:p-8 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+    <div className="bg-card rounded-3xl p-6 sm:p-8 shadow-sm border border-border">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h2 className="text-2xl font-black text-[#121c2a] dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-black text-foreground flex items-center gap-2">
             <span className="material-symbols-outlined text-[#003fb1]">calendar_month</span>
             ສະຖິຕິຕາມມື້ອອກຫວຍ
           </h2>
-          <p className="text-[#737686] dark:text-[#94a3b8] text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             ເລກຫຍັງມັກອອກໃນມື້ນີ້? ຈາກທັງໝົດ {stats.totalDraws} ງວດ
           </p>
         </div>
         
-        <div className="flex bg-[#eff3ff] dark:bg-[#1e2d4a] p-1 rounded-xl w-full sm:w-auto">
+        <div className="flex bg-secondary p-1 rounded-xl w-full sm:w-auto">
           {[1, 3, 5].map(day => (
             <button
               key={day}
               onClick={() => setSelectedDay(day)}
               className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-sm transition-colors ${
                 selectedDay === day 
-                  ? 'bg-white dark:bg-[#152033] text-[#003fb1] shadow-sm' 
-                  : 'text-[#434654] dark:text-[#c7d2fe] hover:text-[#003fb1]'
+                  ? 'bg-card text-[#003fb1] shadow-sm' 
+                  : 'text-muted-foreground hover:text-[#003fb1]'
               }`}
             >
               {dayLabels[day]}
@@ -96,23 +96,23 @@ export default function WeekdayStats({ timeframe }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Top Two Digits */}
-        <div className="bg-[#f9f9ff] dark:bg-[#0d1627] rounded-2xl p-6">
-          <h3 className="text-[#434654] dark:text-[#c7d2fe] font-bold mb-4 flex items-center gap-2">
+        <div className="bg-background rounded-2xl p-6">
+          <h3 className="text-muted-foreground font-bold mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-[#003fb1] text-[20px]">123</span>
             ເລກ 2 ຕົວ ທີ່ມັກອອກວັນ{dayLabels[selectedDay].replace('ວັນ', '')}
           </h3>
           <div className="space-y-3">
             {stats.topTwoDigits.length > 0 ? stats.topTwoDigits.map(([num, count], index) => (
-              <div key={num} className="flex items-center justify-between bg-white dark:bg-[#152033] px-4 py-3 rounded-xl border border-[#dee9fd] dark:border-[#2b3a54] shadow-sm">
+              <div key={num} className="flex items-center justify-between bg-card px-4 py-3 rounded-xl border border-border shadow-sm">
                 <div className="flex items-center gap-3">
                   <span className="text-[#b5c4ff] font-black text-lg w-6">{index + 1}</span>
                   <span className="text-2xl font-black text-[#003fb1]">{num}</span>
                 </div>
-                <span className="text-sm font-bold text-[#737686] dark:text-[#94a3b8] bg-[#eff3ff] dark:bg-[#1e2d4a] px-3 py-1 rounded-lg">
+                <span className="text-sm font-bold text-muted-foreground bg-secondary px-3 py-1 rounded-lg">
                   {count} ຄັ້ງ
                 </span>
               </div>
-            )) : <p className="text-[#737686] dark:text-[#94a3b8] text-center py-4">ບໍ່ມີຂໍ້ມູນພຽງພໍ</p>}
+            )) : <p className="text-muted-foreground text-center py-4">ບໍ່ມີຂໍ້ມູນພຽງພໍ</p>}
           </div>
         </div>
 

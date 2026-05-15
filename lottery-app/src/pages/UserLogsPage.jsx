@@ -32,7 +32,7 @@ function actionConfig(action = '') {
   for (const [key, cfg] of Object.entries(ACTION_CONFIG)) {
     if (action.toLowerCase().startsWith(key.toLowerCase())) return cfg;
   }
-  return { icon: 'info', color: 'text-[#737686]', bg: 'bg-[#f0f4ff] dark:bg-[#1e2d4a]' };
+  return { icon: 'info', color: 'text-[#737686]', bg: 'bg-accent' };
 }
 
 function ActionBadge({ action }) {
@@ -52,11 +52,11 @@ function Paginator({ page, totalPages, total, perPage, onPage, onPerPage }) {
   const from = (page - 1) * perPage + 1;
   const to   = Math.min(page * perPage, total);
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-[#dee9fd] dark:border-[#2b3a54]">
-      <div className="flex items-center gap-2 text-xs text-[#737686] dark:text-[#94a3b8]">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-border">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>ສະແດງ {from}–{to} ຈາກ {total} logs</span>
         <select value={perPage} onChange={e => onPerPage(+e.target.value)}
-          className="bg-[#f0f4ff] dark:bg-[#1e2d4a] border-none rounded-lg px-2 py-1 text-xs font-bold">
+          className="bg-accent border-none rounded-lg px-2 py-1 text-xs font-bold">
           {[20, 50, 100].map(n => <option key={n} value={n}>{n} / ໜ້າ</option>)}
         </select>
       </div>
@@ -66,7 +66,7 @@ function Paginator({ page, totalPages, total, perPage, onPage, onPerPage }) {
           { icon: 'chevron_left', action: () => onPage(page - 1), disabled: page === 1 },
         ].map(({ icon, action, disabled }) => (
           <button key={icon} onClick={action} disabled={disabled}
-            className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] transition-colors">
+            className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-accent transition-colors">
             <span className="material-symbols-outlined text-[16px]">{icon}</span>
           </button>
         ))}
@@ -74,7 +74,7 @@ function Paginator({ page, totalPages, total, perPage, onPage, onPerPage }) {
           let p = totalPages <= 5 ? i + 1 : page <= 3 ? i + 1 : page >= totalPages - 2 ? totalPages - 4 + i : page - 2 + i;
           return (
             <button key={p} onClick={() => onPage(p)}
-              className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${p === page ? 'bg-[#003fb1] text-white' : 'hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] text-[#434654] dark:text-[#94a3b8]'}`}>
+              className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${p === page ? 'bg-[#003fb1] text-white' : 'hover:bg-accent text-muted-foreground'}`}>
               {p}
             </button>
           );
@@ -84,7 +84,7 @@ function Paginator({ page, totalPages, total, perPage, onPage, onPerPage }) {
           { icon: 'last_page', action: () => onPage(totalPages), disabled: page === totalPages },
         ].map(({ icon, action, disabled }) => (
           <button key={icon} onClick={action} disabled={disabled}
-            className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] transition-colors">
+            className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-accent transition-colors">
             <span className="material-symbols-outlined text-[16px]">{icon}</span>
           </button>
         ))}
@@ -190,21 +190,21 @@ export default function UserLogsPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+      <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
           <div className="flex-1">
-            <h1 className="text-xl font-black text-[#121c2a] dark:text-white flex items-center gap-2">
+            <h1 className="text-xl font-black text-foreground flex items-center gap-2">
               <span className="material-symbols-outlined text-[#003fb1]" style={{ fontVariationSettings: "'FILL' 1" }}>history</span>
               ປະຫວັດການໃຊ້ງານ (Audit Logs)
             </h1>
-            <p className="text-xs text-[#737686] dark:text-[#94a3b8] mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               ທຸກກິດຈະກຳໃນລະບົບ · ທັງໝົດ {total.toLocaleString()} entries
             </p>
           </div>
           <div className="flex items-center gap-2">
             {hasFilters && (
               <button onClick={clearFilters}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[#737686] hover:text-[#003fb1] bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl transition-colors">
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[#737686] hover:text-[#003fb1] bg-accent rounded-xl transition-colors">
                 <span className="material-symbols-outlined text-[15px]">filter_alt_off</span>ລ້າງ filter
               </button>
             )}
@@ -224,7 +224,7 @@ export default function UserLogsPage() {
           <div className="lg:col-span-2 relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#737686]">search</span>
             <input type="text" placeholder="ຄົ້ນຫາ username, action, IP..."
-              className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-4 py-2.5 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+              className="w-full bg-accent rounded-xl pl-9 pr-4 py-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
               value={search} onChange={e => setSearch(e.target.value)} />
             {search && (
               <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737686]">
@@ -234,28 +234,28 @@ export default function UserLogsPage() {
           </div>
           {/* Action filter */}
           <select value={actionFilter} onChange={e => setActionFilter(e.target.value)}
-            className="bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl px-3 py-2.5 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all">
+            className="bg-accent rounded-xl px-3 py-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all">
             <option value="">ທຸກ Action</option>
             {Object.keys(ACTION_CONFIG).map(k => <option key={k} value={k}>{k}</option>)}
           </select>
           {/* Date range */}
           <div className="flex gap-2">
             <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-              className="flex-1 min-w-0 bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl px-3 py-2.5 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all" />
+              className="flex-1 min-w-0 bg-accent rounded-xl px-3 py-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all" />
             <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-              className="flex-1 min-w-0 bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl px-3 py-2.5 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all" />
+              className="flex-1 min-w-0 bg-accent rounded-xl px-3 py-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all" />
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-[#152033] rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54] overflow-hidden">
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#f0f4ff] dark:bg-[#1e2d4a] sticky top-0 z-10">
+            <thead className="bg-accent sticky top-0 z-10">
               <tr>
                 {['ຜູ້ໃຊ້', 'ກິດຈະກຳ', 'IP Address', 'ວັນ-ເວລາ'].map(h => (
-                  <th key={h} className="px-5 py-4 text-left text-[11px] font-extrabold uppercase tracking-widest text-[#434654] dark:text-[#94a3b8]">{h}</th>
+                  <th key={h} className="px-5 py-4 text-left text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -273,7 +273,7 @@ export default function UserLogsPage() {
                       <div className="flex items-center gap-2.5">
                         <UserAvatar name={l.full_name} username={l.username} size="sm" />
                         <div>
-                          <p className="text-sm font-bold text-[#121c2a] dark:text-white">@{l.username}</p>
+                          <p className="text-sm font-bold text-foreground">@{l.username}</p>
                           <div className="mt-0.5"><RoleBadge role={l.role} size="xs" /></div>
                         </div>
                       </div>
@@ -286,10 +286,10 @@ export default function UserLogsPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     {l.ip_address
-                      ? <span className="text-xs font-mono bg-[#f0f4ff] dark:bg-[#1e2d4a] px-2 py-1 rounded-lg text-[#434654] dark:text-[#c7d2fe]">{l.ip_address}</span>
+                      ? <span className="text-xs font-mono bg-accent px-2 py-1 rounded-lg text-muted-foreground">{l.ip_address}</span>
                       : <span className="text-xs text-[#737686]">—</span>}
                   </td>
-                  <td className="px-5 py-3.5 text-xs text-[#737686] dark:text-[#94a3b8] whitespace-nowrap">{formatDateTime(l.created_at)}</td>
+                  <td className="px-5 py-3.5 text-xs text-muted-foreground whitespace-nowrap">{formatDateTime(l.created_at)}</td>
                 </tr>
               ))}
             </tbody>

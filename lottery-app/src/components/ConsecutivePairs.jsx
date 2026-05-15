@@ -9,7 +9,7 @@ const RANK_COLORS = [
   { bg: 'bg-[#3b82f6]', text: 'text-white', bar: 'bg-[#3b82f6]', badge: 'bg-[#3b82f6]/10 text-[#3b82f6] dark:text-[#6fa3ff]' },
   { bg: 'bg-[#60a5fa]', text: 'text-white', bar: 'bg-[#60a5fa]', badge: 'bg-[#60a5fa]/10 text-[#60a5fa] dark:text-[#93c5fd]' },
 ];
-const DEFAULT_COLOR = { bg: 'bg-[#e8effe] dark:bg-[#1e2d4a]', text: 'text-[#434654] dark:text-white', bar: 'bg-[#c3cfef] dark:bg-[#2b3a54]', badge: 'bg-[#e8effe] dark:bg-[#1e2d4a] text-[#737686] dark:text-[#94a3b8]' };
+const DEFAULT_COLOR = { bg: 'bg-secondary', text: 'text-[#434654] dark:text-white', bar: 'bg-border', badge: 'bg-secondary text-muted-foreground' };
 
 function getRankColor(i) {
   return RANK_COLORS[i] ?? DEFAULT_COLOR;
@@ -43,22 +43,22 @@ export default function ConsecutivePairs({ timeframe }) {
 
   if (loading || !stats) {
     return (
-      <div className="bg-white dark:bg-[#152033] rounded-3xl p-6 sm:p-8 border border-[#dee9fd] dark:border-[#2b3a54] shadow-sm">
-        <p className="text-[#737686] dark:text-[#94a3b8] text-sm animate-pulse">ກຳລັງໂຫຼດ...</p>
+      <div className="bg-card rounded-3xl p-6 sm:p-8 border border-border shadow-sm">
+        <p className="text-muted-foreground text-sm animate-pulse">ກຳລັງໂຫຼດ...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-[#152033] rounded-3xl p-6 sm:p-8 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54] space-y-8">
+    <div className="bg-card rounded-3xl p-6 sm:p-8 shadow-sm border border-border space-y-8">
 
       {/* ─── Header ─── */}
       <div>
-        <h2 className="text-xl font-bold text-[#121c2a] dark:text-white flex items-center gap-2">
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
           <span className="material-symbols-outlined text-[#003fb1]">sync_alt</span>
           ສະຖິຕິຈັບຄູ່ຕົວເລກ
         </h2>
-        <p className="text-[#737686] dark:text-[#94a3b8] text-sm mt-1">
+        <p className="text-muted-foreground text-sm mt-1">
           ພິມເລກ 2 ຕົວທີ່ອອກລ່າສຸດ — ເບິ່ງວ່າເລກໃດ ມັກອອກຕາມ
         </p>
       </div>
@@ -66,7 +66,7 @@ export default function ConsecutivePairs({ timeframe }) {
       {/* ─── Search Input ─── */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
         <div className="relative flex-1 max-w-xs">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] dark:text-[#94a3b8] material-symbols-outlined text-xl select-none">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground material-symbols-outlined text-xl select-none">
             search
           </span>
           <input
@@ -76,22 +76,22 @@ export default function ConsecutivePairs({ timeframe }) {
             value={inputVal}
             onChange={handleInput}
             placeholder="ພິມເລກ 2 ຕົວ (ເຊັ່ນ: 07)"
-            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#f4f7fe] dark:bg-[#0d1627] border-2 border-[#dee9fd] dark:border-[#2b3a54] focus:border-[#003fb1] outline-none text-xl font-black text-[#121c2a] dark:text-white placeholder:text-[#b0b5d0] placeholder:font-normal tracking-[0.25em] transition-colors"
+            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#f4f7fe] dark:bg-[#0d1627] border-2 border-border focus:border-[#003fb1] outline-none text-xl font-black text-foreground placeholder:text-[#b0b5d0] placeholder:font-normal tracking-[0.25em] transition-colors"
           />
         </div>
 
         {query.length === 2 && (
           <div className="flex items-center gap-3 px-4 py-2 bg-[#003fb1]/8 dark:bg-[#003fb1]/20 rounded-2xl border border-[#003fb1]/20">
-            <span className="text-[#737686] dark:text-[#94a3b8] text-sm">ຫຼັງຈາກ</span>
+            <span className="text-muted-foreground text-sm">ຫຼັງຈາກ</span>
             <span className="text-3xl font-black text-[#003fb1] tracking-wider">{query}</span>
-            <span className="text-[#737686] dark:text-[#94a3b8] text-sm">ອອກ...</span>
+            <span className="text-muted-foreground text-sm">ອອກ...</span>
           </div>
         )}
 
         {query.length === 2 && (
           <button
             onClick={() => setInputVal('')}
-            className="flex items-center gap-1 text-xs font-bold text-[#737686] dark:text-[#94a3b8] hover:text-[#ba1a1a] transition-colors px-3 py-2 rounded-xl hover:bg-[#ffdad6]/30"
+            className="flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-[#ba1a1a] transition-colors px-3 py-2 rounded-xl hover:bg-[#ffdad6]/30"
           >
             <span className="material-symbols-outlined text-[16px]">close</span>
             ລ້າງ
@@ -104,14 +104,14 @@ export default function ConsecutivePairs({ timeframe }) {
         <div>
           {searchResults.length === 0 ? (
             <div className="py-10 text-center">
-              <span className="material-symbols-outlined text-4xl text-[#dee9fd] dark:text-[#2b3a54] mb-2 block">search_off</span>
-              <p className="text-[#737686] dark:text-[#94a3b8] text-sm">
-                ເລກ <span className="font-black text-[#121c2a] dark:text-white">{query}</span> ຍັງບໍ່ເຄີຍເຫັນໃນຂໍ້ມູນ
+              <span className="material-symbols-outlined text-4xl text-border mb-2 block">search_off</span>
+              <p className="text-muted-foreground text-sm">
+                ເລກ <span className="font-black text-foreground">{query}</span> ຍັງບໍ່ເຄີຍເຫັນໃນຂໍ້ມູນ
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#737686] dark:text-[#94a3b8] mb-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
                 ອັນດັບເລກທີ່ອອກຕາມຫຼັງ <span className="text-[#003fb1]">{query}</span> ({searchResults.reduce((s,r)=>s+r.count,0)} ຄັ້ງທັງໝົດ)
               </p>
               {searchResults.map((r, i) => {
@@ -121,7 +121,7 @@ export default function ConsecutivePairs({ timeframe }) {
                 return (
                   <div key={r.nextNum} className="flex items-center gap-4 group">
                     {/* Rank */}
-                    <span className="w-6 text-center text-xs font-black text-[#737686] dark:text-[#94a3b8] shrink-0">
+                    <span className="w-6 text-center text-xs font-black text-muted-foreground shrink-0">
                       {i + 1}
                     </span>
 
@@ -133,10 +133,10 @@ export default function ConsecutivePairs({ timeframe }) {
                     {/* Bar + count */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-[#737686] dark:text-[#94a3b8]">{r.pct}%</span>
-                        <span className="text-sm font-black text-[#121c2a] dark:text-white">{r.count} ຄັ້ງ</span>
+                        <span className="text-xs font-bold text-muted-foreground">{r.pct}%</span>
+                        <span className="text-sm font-black text-foreground">{r.count} ຄັ້ງ</span>
                       </div>
-                      <div className="h-2 w-full bg-[#e8effe] dark:bg-[#1e2d4a] rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
                         <div
                           className={`h-full ${col.bar} rounded-full transition-all duration-500`}
                           style={{ width: `${barW}%` }}
@@ -153,17 +153,17 @@ export default function ConsecutivePairs({ timeframe }) {
 
       {/* ─── Divider if showing global ─── */}
       {searchResults !== null && searchResults.length > 0 && (
-        <hr className="border-[#dee9fd] dark:border-[#2b3a54]" />
+        <hr className="border-border" />
       )}
 
       {/* ─── Global Hot Pairs (always visible) ─── */}
       <div>
-        <p className="text-xs font-bold uppercase tracking-widest text-[#737686] dark:text-[#94a3b8] mb-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
           Top 10 ຄູ່ທີ່ມັກອອກຕາມຫຼັງກັນທຸກເວລາ
         </p>
 
         {hotPairs.length === 0 ? (
-          <div className="py-8 text-center text-[#737686] dark:text-[#94a3b8] text-sm">
+          <div className="py-8 text-center text-muted-foreground text-sm">
             ຍັງບໍ່ມີຂໍ້ມູນສະຖິຕິທີ່ພຽງພໍ
           </div>
         ) : (
@@ -174,15 +174,15 @@ export default function ConsecutivePairs({ timeframe }) {
               return (
                 <div
                   key={`${pair.currentNum}-${pair.nextNum}`}
-                  className="flex items-center gap-3 p-3 bg-[#f9f9ff] dark:bg-[#0d1627] rounded-2xl border border-[#dee9fd] dark:border-[#2b3a54] hover:border-[#003fb1]/40 transition-colors group cursor-pointer"
+                  className="flex items-center gap-3 p-3 bg-background rounded-2xl border border-border hover:border-[#003fb1]/40 transition-colors group cursor-pointer"
                   onClick={() => setInputVal(pair.currentNum)}
                   title={`ກົດເພື່ອຄົ້ນຫາ ${pair.currentNum}`}
                 >
                   {/* Rank bubble */}
-                  <span className="text-[10px] font-black text-[#737686] dark:text-[#94a3b8] w-4 text-center shrink-0">{i + 1}</span>
+                  <span className="text-[10px] font-black text-muted-foreground w-4 text-center shrink-0">{i + 1}</span>
 
                   {/* From number */}
-                  <span className="w-10 h-10 rounded-lg bg-white dark:bg-[#152033] border border-[#dee9fd] dark:border-[#2b3a54] flex items-center justify-center text-base font-black text-[#121c2a] dark:text-white shrink-0">
+                  <span className="w-10 h-10 rounded-lg bg-card border border-border flex items-center justify-center text-base font-black text-foreground shrink-0">
                     {pair.currentNum}
                   </span>
 
@@ -197,13 +197,13 @@ export default function ConsecutivePairs({ timeframe }) {
 
                   {/* Bar */}
                   <div className="flex-1 min-w-0">
-                    <div className="h-1.5 w-full bg-[#e8effe] dark:bg-[#1e2d4a] rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
                       <div className={`h-full ${col.bar} rounded-full`} style={{ width: `${barW}%` }} />
                     </div>
                   </div>
 
                   {/* Count */}
-                  <span className="text-sm font-black text-[#121c2a] dark:text-white shrink-0">{pair.count}</span>
+                  <span className="text-sm font-black text-foreground shrink-0">{pair.count}</span>
                 </div>
               );
             })}

@@ -9,7 +9,7 @@ const PasswordInput = forwardRef(function PasswordInput(
   return (
     <div>
       {label && (
-        <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+        <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">
           {label}
         </label>
       )}
@@ -21,8 +21,8 @@ const PasswordInput = forwardRef(function PasswordInput(
           ref={ref}
           type={show ? 'text' : 'password'}
           placeholder={placeholder}
-          className={`w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-10 py-3 text-sm font-medium
-            text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 transition-all
+          className={`w-full bg-accent rounded-xl pl-9 pr-10 py-3 text-sm font-medium
+            text-foreground focus:outline-none focus:ring-2 transition-all
             ${error
               ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10'
               : 'focus:ring-[#003fb1]/40'

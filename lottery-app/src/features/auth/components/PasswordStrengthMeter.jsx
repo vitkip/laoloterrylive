@@ -35,7 +35,7 @@ export default function PasswordStrengthMeter({ password }) {
           {strength.label}
         </span>
       </div>
-      <div className="h-1.5 bg-[#dee9fd] dark:bg-[#2b3a54] rounded-full overflow-hidden">
+      <div className="h-1.5 bg-border rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500 ease-out"
           style={{ width: `${strength.pct}%`, background: strength.color }}

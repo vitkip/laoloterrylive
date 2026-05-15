@@ -66,11 +66,11 @@ export default function OTPInput({ length = 6, value = '', onChange, disabled = 
           onFocus={e => e.target.select()}
           className={`
             w-11 h-14 text-center text-2xl font-black rounded-xl border-2 transition-all duration-150
-            bg-[#f0f4ff] dark:bg-[#1e2d4a] text-[#121c2a] dark:text-white
+            bg-accent text-foreground
             focus:outline-none
             ${digit
-              ? 'border-[#003fb1] bg-white dark:bg-[#152033] shadow-md shadow-[#003fb1]/15 scale-105'
-              : 'border-[#dee9fd] dark:border-[#2b3a54]'
+              ? 'border-[#003fb1] bg-card shadow-md shadow-[#003fb1]/15 scale-105'
+              : 'border-border'
             }
             focus:border-[#003fb1] focus:bg-white dark:focus:bg-[#152033] focus:scale-105 focus:shadow-md focus:shadow-[#003fb1]/15
             disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100

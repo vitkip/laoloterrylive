@@ -31,7 +31,7 @@ function SortTh({ col, label, sortBy, sortDir, onSort }) {
       className="px-5 py-4 text-left cursor-pointer select-none group whitespace-nowrap"
       onClick={() => onSort(col)}
     >
-      <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-widest text-[#434654] dark:text-[#94a3b8] group-hover:text-[#003fb1]">
+      <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground group-hover:text-[#003fb1]">
         {label}
         <span className={`material-symbols-outlined text-[13px] transition-colors ${active ? 'text-[#003fb1]' : 'opacity-0 group-hover:opacity-50'}`}>
           {active && sortDir === 'ASC' ? 'arrow_upward' : 'arrow_downward'}
@@ -64,8 +64,8 @@ function UserDetailModal({ user, open, onClose, onEdit, onResetPass, onToggleAct
         <div className="flex items-center gap-4 p-4 bg-[#f9f9ff] dark:bg-[#1e2d4a] rounded-2xl">
           <UserAvatar name={user.full_name} username={user.username} size="xl" />
           <div>
-            <h4 className="text-xl font-black text-[#121c2a] dark:text-white">{user.full_name || '—'}</h4>
-            <p className="text-sm text-[#737686] dark:text-[#94a3b8] mt-0.5">@{user.username}</p>
+            <h4 className="text-xl font-black text-foreground">{user.full_name || '—'}</h4>
+            <p className="text-sm text-muted-foreground mt-0.5">@{user.username}</p>
             <div className="flex items-center gap-2 mt-2">
               <RoleBadge role={user.role} />
               <ActiveBadge active={user.is_active} />
@@ -84,9 +84,9 @@ function UserDetailModal({ user, open, onClose, onEdit, onResetPass, onToggleAct
             <div key={label} className="bg-[#f9f9ff] dark:bg-[#1e2d4a] rounded-xl p-3">
               <div className="flex items-center gap-1.5 mb-1">
                 <span className="material-symbols-outlined text-[14px] text-[#003fb1]">{icon}</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#737686] dark:text-[#94a3b8]">{label}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
               </div>
-              <p className="font-bold text-[#121c2a] dark:text-white truncate">{value}</p>
+              <p className="font-bold text-foreground truncate">{value}</p>
             </div>
           ))}
         </div>
@@ -97,14 +97,14 @@ function UserDetailModal({ user, open, onClose, onEdit, onResetPass, onToggleAct
             <span className="material-symbols-outlined text-blue-600 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>login</span>
             <div>
               <p className="text-[10px] font-bold text-blue-600/70 uppercase tracking-wider">ເຂົ້າລະບົບລ່າສຸດ</p>
-              <p className="text-sm font-bold text-[#121c2a] dark:text-white">{formatDateTime(user.last_login.created_at)}</p>
+              <p className="text-sm font-bold text-foreground">{formatDateTime(user.last_login.created_at)}</p>
               {user.last_login.ip_address && <p className="text-xs text-[#737686]">IP: {user.last_login.ip_address}</p>}
             </div>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex flex-wrap gap-2 pt-2 border-t border-[#dee9fd] dark:border-[#2b3a54]">
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
           <button onClick={() => onEdit(user)}
             className="flex items-center gap-1.5 px-4 py-2 bg-[#003fb1] text-white text-sm font-bold rounded-xl hover:bg-[#1a56db] transition-colors">
             <span className="material-symbols-outlined text-[16px]">edit</span>ແກ້ໄຂ
@@ -162,16 +162,16 @@ function UserFormModal({ open, onClose, editingUser, onSave, loading }) {
         {!isEdit && (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">Username *</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Username *</label>
               <input required minLength={4} type="text" autoComplete="off" placeholder="ຢ່າງໜ້ອຍ 4 ຕົວ"
-                className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                 value={form.username} onChange={e => set('username', e.target.value.toLowerCase().replace(/\s/g, ''))} />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">Password *</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Password *</label>
               <div className="relative">
                 <input required minLength={6} type={showPass ? 'text' : 'password'} placeholder="ຢ່າງໜ້ອຍ 6 ຕົວ" autoComplete="new-password"
-                  className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 pr-10 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                  className="w-full bg-accent rounded-xl p-3 pr-10 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                   value={form.password} onChange={e => set('password', e.target.value)} />
                 <button type="button" onClick={() => setShowPass(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#003fb1]">
@@ -183,31 +183,31 @@ function UserFormModal({ open, onClose, editingUser, onSave, loading }) {
         )}
 
         <div>
-          <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">ຊື່ເຕັມ *</label>
+          <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ຊື່ເຕັມ *</label>
           <input required type="text" placeholder="ຊື່ ແລະ ນາມສະກຸນ"
-            className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+            className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
             value={form.full_name} onChange={e => set('full_name', e.target.value)} />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">Email</label>
+            <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Email</label>
             <input type="email" placeholder="user@example.com"
-              className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+              className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
               value={form.email} onChange={e => set('email', e.target.value)} />
           </div>
           <div>
-            <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">ເບີໂທ</label>
+            <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ເບີໂທ</label>
             <input type="tel" placeholder="020xxxxxxxx"
-              className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+              className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
               value={form.phone_number} onChange={e => set('phone_number', e.target.value)} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">ຕຳແໜ່ງ *</label>
-            <select className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+            <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ຕຳແໜ່ງ *</label>
+            <select className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
               value={form.role} onChange={e => set('role', e.target.value)}>
               <option value="admin">Admin</option>
               <option value="staff">Staff</option>
@@ -216,8 +216,8 @@ function UserFormModal({ open, onClose, editingUser, onSave, loading }) {
           </div>
           {isEdit && (
             <div>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">ສະຖານະ</label>
-              <select className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ສະຖານະ</label>
+              <select className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                 value={form.is_active} onChange={e => set('is_active', parseInt(e.target.value))}>
                 <option value={1}>ໃຊ້ງານ (Active)</option>
                 <option value={0}>ລະງັບ (Disabled)</option>
@@ -226,9 +226,9 @@ function UserFormModal({ open, onClose, editingUser, onSave, loading }) {
           )}
         </div>
 
-        <div className="flex gap-3 pt-3 border-t border-[#dee9fd] dark:border-[#2b3a54]">
+        <div className="flex gap-3 pt-3 border-t border-border">
           <button type="button" onClick={onClose}
-            className="flex-1 py-3 bg-[#f0f4ff] dark:bg-[#1e2d4a] text-[#434654] dark:text-[#c7d2fe] font-bold rounded-xl hover:bg-[#dee9fd] transition-colors text-sm">
+            className="flex-1 py-3 bg-accent text-muted-foreground font-bold rounded-xl hover:bg-[#dee9fd] transition-colors text-sm">
             ຍົກເລີກ
           </button>
           <button type="submit" disabled={loading}
@@ -255,17 +255,17 @@ function PasswordModal({ open, onClose, targetUser, onSave, loading }) {
         {targetUser && (
           <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-xl p-3">
             <span className="material-symbols-outlined text-amber-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
-            <p className="text-sm text-[#121c2a] dark:text-white">
+            <p className="text-sm text-foreground">
               ຕັ້ງ password ໃໝ່ສຳລັບ <span className="font-black">@{targetUser.username}</span>
             </p>
           </div>
         )}
         <form onSubmit={e => { e.preventDefault(); onSave(pass); }} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">ລະຫັດຜ່ານໃໝ່ *</label>
+            <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ລະຫັດຜ່ານໃໝ່ *</label>
             <div className="relative">
               <input required minLength={6} type={show ? 'text' : 'password'} placeholder="ຢ່າງໜ້ອຍ 6 ຕົວ" autoComplete="new-password"
-                className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 pr-10 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                className="w-full bg-accent rounded-xl p-3 pr-10 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                 value={pass} onChange={e => setPass(e.target.value)} />
               <button type="button" onClick={() => setShow(v => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#003fb1]">
@@ -282,7 +282,7 @@ function PasswordModal({ open, onClose, targetUser, onSave, loading }) {
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={onClose}
-              className="flex-1 py-3 bg-[#f0f4ff] dark:bg-[#1e2d4a] text-[#434654] dark:text-[#c7d2fe] font-bold rounded-xl hover:bg-[#dee9fd] transition-colors text-sm">
+              className="flex-1 py-3 bg-accent text-muted-foreground font-bold rounded-xl hover:bg-[#dee9fd] transition-colors text-sm">
               ຍົກເລີກ
             </button>
             <button type="submit" disabled={loading || pass.length < 6}
@@ -304,21 +304,21 @@ function Paginator({ page, totalPages, total, perPage, onPage, onPerPage }) {
   const from = (page - 1) * perPage + 1;
   const to   = Math.min(page * perPage, total);
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-[#dee9fd] dark:border-[#2b3a54]">
-      <div className="flex items-center gap-2 text-xs text-[#737686] dark:text-[#94a3b8]">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-border">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>ສະແດງ {from}–{to} ຈາກ {total} ຄົນ</span>
         <select value={perPage} onChange={e => onPerPage(+e.target.value)}
-          className="bg-[#f0f4ff] dark:bg-[#1e2d4a] border-none rounded-lg px-2 py-1 text-xs font-bold text-[#434654] dark:text-[#c7d2fe]">
+          className="bg-accent border-none rounded-lg px-2 py-1 text-xs font-bold text-muted-foreground">
           {[10, 20, 50].map(n => <option key={n} value={n}>{n} / ໜ້າ</option>)}
         </select>
       </div>
       <div className="flex items-center gap-1">
         <button onClick={() => onPage(1)} disabled={page === 1}
-          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] transition-colors">
+          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-accent transition-colors">
           <span className="material-symbols-outlined text-[16px]">first_page</span>
         </button>
         <button onClick={() => onPage(page - 1)} disabled={page === 1}
-          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] transition-colors">
+          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-accent transition-colors">
           <span className="material-symbols-outlined text-[16px]">chevron_left</span>
         </button>
         {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -329,17 +329,17 @@ function Paginator({ page, totalPages, total, perPage, onPage, onPerPage }) {
           else p = page - 2 + i;
           return (
             <button key={p} onClick={() => onPage(p)}
-              className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${p === page ? 'bg-[#003fb1] text-white' : 'hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] text-[#434654] dark:text-[#94a3b8]'}`}>
+              className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${p === page ? 'bg-[#003fb1] text-white' : 'hover:bg-accent text-muted-foreground'}`}>
               {p}
             </button>
           );
         })}
         <button onClick={() => onPage(page + 1)} disabled={page === totalPages}
-          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] transition-colors">
+          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-accent transition-colors">
           <span className="material-symbols-outlined text-[16px]">chevron_right</span>
         </button>
         <button onClick={() => onPage(totalPages)} disabled={page === totalPages}
-          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] transition-colors">
+          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 hover:bg-accent transition-colors">
           <span className="material-symbols-outlined text-[16px]">last_page</span>
         </button>
       </div>
@@ -360,13 +360,13 @@ function StatsBar({ stats }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map(c => (
-        <div key={c.label} className="bg-white dark:bg-[#152033] rounded-2xl p-4 border border-[#dee9fd] dark:border-[#2b3a54] shadow-sm flex items-center gap-3">
+        <div key={c.label} className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: c.bg }}>
             <span className="material-symbols-outlined text-[20px]" style={{ color: c.color, fontVariationSettings: "'FILL' 1" }}>{c.icon}</span>
           </div>
           <div>
             <p className="text-2xl font-black leading-none" style={{ color: c.color }}>{c.value ?? 0}</p>
-            <p className="text-[11px] font-bold text-[#737686] dark:text-[#94a3b8] mt-0.5">{c.label}</p>
+            <p className="text-[11px] font-bold text-muted-foreground mt-0.5">{c.label}</p>
           </div>
         </div>
       ))}
@@ -397,14 +397,14 @@ function StaffView() {
 
   return (
     <div className="max-w-lg mx-auto space-y-5">
-      <div className="bg-white dark:bg-[#152033] rounded-3xl p-8 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+      <div className="bg-card rounded-3xl p-8 shadow-sm border border-border">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 rounded-2xl bg-[#eff3ff] flex items-center justify-center">
             <span className="material-symbols-outlined text-[#003fb1] text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>key</span>
           </div>
           <div>
-            <h2 className="text-xl font-black text-[#121c2a] dark:text-white">ປ່ຽນລະຫັດຜ່ານ</h2>
-            <p className="text-xs text-[#737686] dark:text-[#94a3b8]">@{user?.username}</p>
+            <h2 className="text-xl font-black text-foreground">ປ່ຽນລະຫັດຜ່ານ</h2>
+            <p className="text-xs text-muted-foreground">@{user?.username}</p>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -413,10 +413,10 @@ function StaffView() {
             { key: 'new_password', label: 'ລະຫັດຜ່ານໃໝ່ (ຢ່າງໜ້ອຍ 6 ຕົວ)', showKey: 'new' },
           ].map(({ key, label, showKey }) => (
             <div key={key}>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">{label}</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">{label}</label>
               <div className="relative">
                 <input required minLength={key === 'new_password' ? 6 : 1} type={show[showKey] ? 'text' : 'password'}
-                  className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 pr-10 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40"
+                  className="w-full bg-accent rounded-xl p-3 pr-10 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40"
                   value={form[key]} onChange={e => set(key, e.target.value)} />
                 <button type="button" onClick={() => setShow(s => ({ ...s, [showKey]: !s[showKey] }))}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#003fb1]">
@@ -604,11 +604,11 @@ export default function AdminUsers() {
       <StatsBar stats={stats} />
 
       {/* Header */}
-      <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+      <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex-1">
-            <h1 className="text-xl font-black text-[#121c2a] dark:text-white">ຈັດການຜູ້ໃຊ້ (Users)</h1>
-            <p className="text-xs text-[#737686] dark:text-[#94a3b8] mt-0.5">ຈັດການສິດທິ, ພະນັກງານ ແລະ ລະຫັດຜ່ານ</p>
+            <h1 className="text-xl font-black text-foreground">ຈັດການຜູ້ໃຊ້ (Users)</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">ຈັດການສິດທິ, ພະນັກງານ ແລະ ລະຫັດຜ່ານ</p>
           </div>
           <button onClick={openCreate}
             className="flex items-center gap-2 bg-[#003fb1] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#1a56db] transition-colors shrink-0">
@@ -622,7 +622,7 @@ export default function AdminUsers() {
           <div className="flex-1 relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#737686]">search</span>
             <input type="text" placeholder="ຄົ້ນຫາ username, ຊື່, email..."
-              className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-4 py-2.5 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+              className="w-full bg-accent rounded-xl pl-9 pr-4 py-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
               value={search} onChange={e => setSearch(e.target.value)} />
             {search && (
               <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#003fb1]">
@@ -632,7 +632,7 @@ export default function AdminUsers() {
           </div>
           {/* Role filter */}
           <select value={roleFilter} onChange={e => setRole(e.target.value)}
-            className="bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl px-3 py-2.5 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all">
+            className="bg-accent rounded-xl px-3 py-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all">
             <option value="">ທຸກຕຳແໜ່ງ</option>
             <option value="admin">Admin</option>
             <option value="staff">Staff</option>
@@ -640,7 +640,7 @@ export default function AdminUsers() {
           </select>
           {/* Active filter */}
           <select value={activeFilter} onChange={e => setActive(e.target.value)}
-            className="bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl px-3 py-2.5 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all">
+            className="bg-accent rounded-xl px-3 py-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all">
             <option value="">ທຸກສະຖານະ</option>
             <option value="1">ໃຊ້ງານ</option>
             <option value="0">ລະງັບ</option>
@@ -649,17 +649,17 @@ export default function AdminUsers() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-[#152033] rounded-2xl shadow-sm border border-[#dee9fd] dark:border-[#2b3a54] overflow-hidden">
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#f0f4ff] dark:bg-[#1e2d4a] sticky top-0 z-10">
+            <thead className="bg-accent sticky top-0 z-10">
               <tr>
                 <SortTh col="username"   label="ຜູ້ໃຊ້"     sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortTh col="full_name"  label="ຊື່ເຕັມ"     sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortTh col="role"       label="ຕຳແໜ່ງ"     sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortTh col="is_active"  label="ສະຖານະ"     sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <SortTh col="created_at" label="ສ້າງວັນທີ"  sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                <th className="px-5 py-4 text-right text-[11px] font-extrabold uppercase tracking-widest text-[#434654] dark:text-[#94a3b8]">ການຈັດການ</th>
+                <th className="px-5 py-4 text-right text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground">ການຈັດການ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#dee9fd] dark:divide-[#2b3a54]">
@@ -686,15 +686,15 @@ export default function AdminUsers() {
                     <div className="flex items-center gap-3">
                       <UserAvatar name={u.full_name} username={u.username} size="sm" />
                       <div>
-                        <p className="font-bold text-sm text-[#121c2a] dark:text-white">@{u.username}</p>
-                        {u.email && <p className="text-[11px] text-[#737686] dark:text-[#94a3b8] truncate max-w-[160px]">{u.email}</p>}
+                        <p className="font-bold text-sm text-foreground">@{u.username}</p>
+                        {u.email && <p className="text-[11px] text-muted-foreground truncate max-w-[160px]">{u.email}</p>}
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-sm text-[#434654] dark:text-[#c7d2fe]">{u.full_name || '—'}</td>
+                  <td className="px-5 py-4 text-sm text-muted-foreground">{u.full_name || '—'}</td>
                   <td className="px-5 py-4"><RoleBadge role={u.role} size="xs" /></td>
                   <td className="px-5 py-4"><ActiveBadge active={u.is_active} /></td>
-                  <td className="px-5 py-4 text-xs text-[#737686] dark:text-[#94a3b8]">{formatDate(u.created_at)}</td>
+                  <td className="px-5 py-4 text-xs text-muted-foreground">{formatDate(u.created_at)}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                       <button onClick={() => openEdit(u)}

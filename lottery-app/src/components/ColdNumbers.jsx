@@ -27,7 +27,7 @@ export default function ColdNumbers({ timeframe }) {
           </span>
         </div>
         <div>
-          <h2 className="text-base font-extrabold text-[#0c4a6e] dark:text-white tracking-tight">ເລກດັບ</h2>
+          <h2 className="text-base font-extrabold text-foreground tracking-tight">ເລກດັບ</h2>
           <p className="text-[11px] text-[#0369a1] dark:text-[#7dd3fc] font-medium">Cold Numbers</p>
         </div>
       </div>

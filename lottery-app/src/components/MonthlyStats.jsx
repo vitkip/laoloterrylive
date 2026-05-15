@@ -104,14 +104,14 @@ export default function MonthlyStats() {
     <div className="space-y-8">
 
       {/* ─── Month Picker ─── */}
-      <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+      <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
         <div className="flex items-center gap-3 mb-5">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: accentLight }}>
             <span className="material-symbols-outlined text-[18px]" style={{ color: accent }}>calendar_month</span>
           </div>
           <div>
-            <h2 className="text-sm font-extrabold text-[#121c2a] dark:text-white">ເລືອກເດືອນທີ່ຕ້ອງການວິເຄາະ</h2>
-            <p className="text-[11px] text-[#737686] dark:text-[#94a3b8]">ສະແດງຜົນຫວຍທຸກປີ ທີ່ອອກໃນເດືອນດຽວກັນ</p>
+            <h2 className="text-sm font-extrabold text-foreground">ເລືອກເດືອນທີ່ຕ້ອງການວິເຄາະ</h2>
+            <p className="text-[11px] text-muted-foreground">ສະແດງຜົນຫວຍທຸກປີ ທີ່ອອກໃນເດືອນດຽວກັນ</p>
           </div>
         </div>
 
@@ -132,7 +132,7 @@ export default function MonthlyStats() {
                 className={`relative flex flex-col items-center gap-1 px-2 py-3 rounded-xl border-2 text-center transition-all duration-200 hover:-translate-y-0.5
                   ${isSelected
                     ? 'shadow-md'
-                    : 'border-[#e8edf8] dark:border-[#2b3a54] bg-[#f5f7ff] dark:bg-[#1a2844] hover:border-opacity-60'
+                    : 'border-border bg-[#f5f7ff] dark:bg-[#1a2844] hover:border-opacity-60'
                   }`}
                 style={isSelected
                   ? { borderColor: ac, background: `${ac}14`, boxShadow: `0 4px 12px ${ac}30` }
@@ -142,7 +142,7 @@ export default function MonthlyStats() {
                 <span className="text-xs font-black" style={isSelected ? { color: ac } : {}}>
                   {String(m).padStart(2, '0')}
                 </span>
-                <span className={`text-[11px] font-bold leading-tight ${isSelected ? '' : 'text-[#555870] dark:text-[#94a3b8]'}`}
+                <span className={`text-[11px] font-bold leading-tight ${isSelected ? '' : 'text-muted-foreground'}`}
                   style={isSelected ? { color: ac } : {}}>
                   {name}
                 </span>
@@ -171,7 +171,7 @@ export default function MonthlyStats() {
             <span className="material-symbols-outlined text-[28px] text-[#003fb1]">calendar_month</span>
           </div>
           <div className="text-center">
-            <p className="font-bold text-[#555870] dark:text-[#94a3b8] mb-1">ເລືອກເດືອນ</p>
+            <p className="font-bold text-muted-foreground mb-1">ເລືອກເດືອນ</p>
             <p className="text-xs text-[#a0a3bd] dark:text-[#555870]">ກົດເດືອນດ້ານເທິງ ເພື່ອເບິ່ງວິເຄາະ</p>
           </div>
         </div>
@@ -184,7 +184,7 @@ export default function MonthlyStats() {
             <span className="material-symbols-outlined text-[26px] text-[#ba1a1a]">search_off</span>
           </div>
           <div className="text-center">
-            <p className="font-bold text-[#555870] dark:text-[#94a3b8] mb-1">ບໍ່ມີຂໍ້ມູນ</p>
+            <p className="font-bold text-muted-foreground mb-1">ບໍ່ມີຂໍ້ມູນ</p>
             <p className="text-xs text-[#a0a3bd] dark:text-[#555870]">ຍັງບໍ່ມີຜົນຫວຍໃນເດືອນ{LAO_MONTHS[selectedMonth - 1]}</p>
           </div>
         </div>
@@ -231,12 +231,12 @@ export default function MonthlyStats() {
             <div className="lg:col-span-2 space-y-4">
 
               {/* Top 2-digit frequency */}
-              <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+              <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: accentLight }}>
                     <span className="material-symbols-outlined text-[13px]" style={{ color: accent }}>bar_chart</span>
                   </span>
-                  <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     ຄວາມຖີ່ 2 ຕົວ (Top 10)
                   </p>
                 </div>
@@ -260,7 +260,7 @@ export default function MonthlyStats() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-[11px] font-bold text-[#121c2a] dark:text-white">
+                                <span className="text-[11px] font-bold text-foreground">
                                   {count} ງວດ
                                 </span>
                                 <span className="text-[10px] font-bold" style={{ color: accent }}>{pct}%</span>
@@ -286,8 +286,8 @@ export default function MonthlyStats() {
 
               {/* All 2-digit heat map mini */}
               {analysis.freq.length > 0 && (
-                <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
-                  <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider mb-3">
+                <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
                     ເລກທີ່ເຄີຍອອກ ({analysis.freq.length} ຕົວ)
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -316,7 +316,7 @@ export default function MonthlyStats() {
             {/* Right: Year-by-year draws */}
             <div className="lg:col-span-3 space-y-4 max-h-[70vh] overflow-y-auto pr-1">
               {analysis.years.map(yr => (
-                <div key={yr} className="bg-white dark:bg-[#152033] rounded-2xl border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm overflow-hidden">
+                <div key={yr} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
                   {/* Year header */}
                   <div className="flex items-center justify-between px-5 py-3 border-b border-[#f0f4ff] dark:border-[#1e2d4a]"
                     style={{ background: `${accent}0d` }}>
@@ -325,7 +325,7 @@ export default function MonthlyStats() {
                         <span className="text-white text-[10px] font-black">{String(yr).slice(-2)}</span>
                       </div>
                       <div>
-                        <p className="text-sm font-extrabold text-[#121c2a] dark:text-white">ປີ {yr}</p>
+                        <p className="text-sm font-extrabold text-foreground">ປີ {yr}</p>
                         <p className="text-[10px]" style={{ color: accent }}>
                           {LAO_MONTHS[selectedMonth - 1]} {yr}
                         </p>
@@ -353,7 +353,7 @@ export default function MonthlyStats() {
 
                           {/* Date */}
                           <div className="shrink-0 w-28 hidden sm:block">
-                            <p className="text-xs font-bold text-[#121c2a] dark:text-white leading-tight">
+                            <p className="text-xs font-bold text-foreground leading-tight">
                               {formatLaoDate(d.draw_date, true)}
                             </p>
                             <p className="text-[10px] text-[#a0a3bd]">{d.draw_date}</p>

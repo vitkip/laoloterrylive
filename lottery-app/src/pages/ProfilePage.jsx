@@ -32,12 +32,12 @@ function getActionIcon(action = '') {
 
 function Card({ title, icon, children }) {
   return (
-    <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+    <div className="bg-card rounded-2xl p-6 shadow-sm border border-border">
       <div className="flex items-center gap-2 mb-5">
         <div className="w-7 h-7 rounded-lg bg-[#eff3ff] flex items-center justify-center">
           <span className="material-symbols-outlined text-[15px] text-[#003fb1]">{icon}</span>
         </div>
-        <h2 className="text-sm font-extrabold text-[#121c2a] dark:text-white uppercase tracking-widest">{title}</h2>
+        <h2 className="text-sm font-extrabold text-foreground uppercase tracking-widest">{title}</h2>
       </div>
       {children}
     </div>
@@ -181,28 +181,28 @@ export default function ProfilePage() {
           <Card title="ຂໍ້ມູນສ່ວນຕົວ" icon="person">
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">Username</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Username</label>
                 <input disabled value={profile?.username || ''} type="text"
                   className="w-full bg-[#e8edf8] dark:bg-[#1a2438] rounded-xl p-3 text-sm text-[#737686] cursor-not-allowed" />
                 <p className="text-[10px] text-[#737686] mt-1">Username ບໍ່ສາມາດປ່ຽນໄດ້</p>
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">ຊື່ເຕັມ *</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ຊື່ເຕັມ *</label>
                 <input required type="text" placeholder="ຊື່ ແລະ ນາມສະກຸນ"
-                  className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                  className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                   value={profileForm.full_name} onChange={e => setP('full_name', e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">Email</label>
+                  <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Email</label>
                   <input type="email" placeholder="your@email.com"
-                    className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                    className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                     value={profileForm.email} onChange={e => setP('email', e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">ເບີໂທ</label>
+                  <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ເບີໂທ</label>
                   <input type="tel" placeholder="020xxxxxxxx"
-                    className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                    className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                     value={profileForm.phone_number} onChange={e => setP('phone_number', e.target.value)} />
                 </div>
               </div>
@@ -223,12 +223,12 @@ export default function ProfilePage() {
                 { key: 'confirm_password', label: 'ຢືນຢັນລະຫັດຜ່ານໃໝ່', showKey: 'con' },
               ].map(({ key, label, showKey }) => (
                 <div key={key}>
-                  <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">{label}</label>
+                  <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">{label}</label>
                   <div className="relative">
                     <input required type={showPass[showKey] ? 'text' : 'password'}
                       minLength={key !== 'current_password' ? 6 : 1}
                       autoComplete={key === 'current_password' ? 'current-password' : 'new-password'}
-                      className={`w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 pr-10 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      className={`w-full bg-accent rounded-xl p-3 pr-10 text-sm font-medium text-foreground focus:outline-none focus:ring-2 transition-all ${
                         key === 'confirm_password' && passForm.confirm_password && passForm.new_password !== passForm.confirm_password
                           ? 'focus:ring-red-400/40 ring-2 ring-red-400/40' : 'focus:ring-[#003fb1]/40'
                       }`}
@@ -256,8 +256,8 @@ export default function ProfilePage() {
         {/* Right column - Activity */}
         <div className="space-y-5">
           {/* Info card */}
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-5 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
-            <h3 className="text-sm font-extrabold text-[#121c2a] dark:text-white uppercase tracking-widest mb-4">ຂໍ້ມູນ Account</h3>
+          <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+            <h3 className="text-sm font-extrabold text-foreground uppercase tracking-widest mb-4">ຂໍ້ມູນ Account</h3>
             {[
               { label: 'User ID',    value: `#${profile?.user_id}`,               icon: 'tag' },
               { label: 'ຕຳແໜ່ງ',    value: <RoleBadge role={profile?.role} />,   icon: 'badge' },
@@ -265,11 +265,11 @@ export default function ProfilePage() {
               { label: 'Email',      value: profile?.email || '—',                icon: 'mail' },
               { label: 'ເບີໂທ',     value: profile?.phone_number || '—',         icon: 'call' },
             ].map(({ label, value, icon }) => (
-              <div key={label} className="flex items-start gap-3 py-3 border-b border-[#dee9fd] dark:border-[#2b3a54] last:border-0">
+              <div key={label} className="flex items-start gap-3 py-3 border-b border-border last:border-0">
                 <span className="material-symbols-outlined text-[16px] text-[#003fb1] mt-0.5">{icon}</span>
                 <div>
-                  <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wide">{label}</p>
-                  <div className="text-sm font-bold text-[#121c2a] dark:text-white mt-0.5">{value}</div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{label}</p>
+                  <div className="text-sm font-bold text-foreground mt-0.5">{value}</div>
                 </div>
               </div>
             ))}
@@ -285,12 +285,12 @@ export default function ProfilePage() {
                   const { icon, color } = getActionIcon(log.action);
                   return (
                     <div key={log.log_id} className="flex items-start gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-[#f0f4ff] dark:bg-[#1e2d4a] flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0 mt-0.5">
                         <span className={`material-symbols-outlined text-[13px] ${color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-[#121c2a] dark:text-white truncate">{log.action}</p>
-                        <p className="text-[10px] text-[#737686] dark:text-[#94a3b8]">{formatDateTime(log.created_at)}</p>
+                        <p className="text-xs font-bold text-foreground truncate">{log.action}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatDateTime(log.created_at)}</p>
                       </div>
                     </div>
                   );

@@ -51,7 +51,7 @@ export default function DreamDictionary() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center shadow-sm mb-4">
             <span className="material-symbols-outlined text-white text-[20px]">menu_book</span>
           </div>
-          <h2 className="text-lg font-extrabold text-[#2e1065] dark:text-white mb-1.5">ຕຳລາແປຄວາມຝັນ</h2>
+          <h2 className="text-lg font-extrabold text-foreground mb-1.5">ຕຳລາແປຄວາມຝັນ</h2>
           <p className="text-xs text-[#6d28d9] dark:text-[#c4b5fd] leading-relaxed">
             ພິມສິ່ງທີ່ທ່ານຝັນເຫັນ ເພື່ອຄົ້ນຫາຕົວເລກ ຫຼື ນາມສັດທີ່ກ່ຽວຂ້ອງ
           </p>
@@ -67,7 +67,7 @@ export default function DreamDictionary() {
             placeholder="ຄົ້ນຫາ ເຊັ່ນ: ງູ, ນ້ຳ, ໄຟ..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full bg-white dark:bg-[#152033] pl-12 pr-10 py-3.5 rounded-xl border border-[#ddd6fe]/60 dark:border-[#4c1d95]/40 focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 outline-none text-sm font-medium text-[#121c2a] dark:text-white placeholder:text-[#a78bfa] shadow-sm transition-all"
+            className="w-full bg-card pl-12 pr-10 py-3.5 rounded-xl border border-[#ddd6fe]/60 dark:border-[#4c1d95]/40 focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 outline-none text-sm font-medium text-foreground placeholder:text-[#a78bfa] shadow-sm transition-all"
           />
           {searchTerm && (
             <button
@@ -82,7 +82,7 @@ export default function DreamDictionary() {
         {/* Quick hints */}
         {!searchTerm && (
           <div>
-            <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider mb-2">ຄຳຄົ້ນຫາທີ່ນິຍົມ</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">ຄຳຄົ້ນຫາທີ່ນິຍົມ</p>
             <div className="flex flex-wrap gap-1.5">
               {QUICK_HINTS.map(hint => (
                 <button
@@ -118,7 +118,7 @@ export default function DreamDictionary() {
                 <span className="material-symbols-outlined text-[28px] text-[#7c3aed]">auto_awesome</span>
               </div>
               <div className="text-center">
-                <p className="font-bold text-[#555870] dark:text-[#94a3b8] mb-1">ເລີ່ມຄົ້ນຫາ</p>
+                <p className="font-bold text-muted-foreground mb-1">ເລີ່ມຄົ້ນຫາ</p>
                 <p className="text-xs text-[#a0a3bd] dark:text-[#555870]">ພິມຄຳທີ່ທ່ານຝັນເຫັນ ຫຼື ຄລິກຄຳຮ້ອນ</p>
               </div>
             </div>
@@ -131,7 +131,7 @@ export default function DreamDictionary() {
                 <span className="material-symbols-outlined text-[26px] text-[#ba1a1a]">search_off</span>
               </div>
               <div className="text-center">
-                <p className="font-bold text-[#555870] dark:text-[#94a3b8] mb-1">ບໍ່ພົບຂໍ້ມູນ</p>
+                <p className="font-bold text-muted-foreground mb-1">ບໍ່ພົບຂໍ້ມູນ</p>
                 <p className="text-xs text-[#a0a3bd] dark:text-[#555870]">ລອງໃຊ້ຄຳອື່ນ ເຊັ່ນ: ງູ, ໄຟ, ນ້ຳ</p>
               </div>
             </div>
@@ -146,7 +146,7 @@ export default function DreamDictionary() {
             return (
               <div
                 key={idx}
-                className="group bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm hover:shadow-md hover:border-[#7c3aed]/30 dark:hover:border-[#7c3aed]/30 hover:-translate-y-0.5 transition-all duration-200"
+                className="group bg-card rounded-2xl p-5 border border-border shadow-sm hover:shadow-md hover:border-[#7c3aed]/30 dark:hover:border-[#7c3aed]/30 hover:-translate-y-0.5 transition-all duration-200"
               >
                 <div className="flex items-start gap-4">
                   {/* Icon */}
@@ -159,7 +159,7 @@ export default function DreamDictionary() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <h3 className="font-extrabold text-[#121c2a] dark:text-white text-[15px] leading-tight">
+                      <h3 className="font-extrabold text-foreground text-[15px] leading-tight">
                         {res.type === 'animal' ? res.data.animal_name_lao : 'ເລກເດັດ'}
                       </h3>
                       <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${cs.bg} ${cs.text} ${cs.border}`}>

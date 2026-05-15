@@ -24,7 +24,7 @@ function HomePageSkeleton() {
         <div className={`w-32 h-6 ${shimmer}`} />
       </div>
       {/* Result card skeleton */}
-      <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 sm:p-8 border border-[#dee9fd] dark:border-[#2b3a54] min-h-[220px]">
+      <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border min-h-[220px]">
         <div className={`w-48 h-5 mb-6 ${shimmer}`} />
         <div className={`w-52 h-16 mb-4 ${shimmer}`} />
         <div className={`w-40 h-4 mb-3 ${shimmer}`} />
@@ -33,7 +33,7 @@ function HomePageSkeleton() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[0,1,2,3].map(i => (
-          <div key={i} className="bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] h-24 animate-pulse" />
+          <div key={i} className="bg-card rounded-2xl p-5 border border-border h-24 animate-pulse" />
         ))}
       </div>
       {/* Recent draws */}
@@ -41,7 +41,7 @@ function HomePageSkeleton() {
         <div className={`w-36 h-6 ${shimmer}`} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[0,1,2,3].map(i => (
-            <div key={i} className="bg-white dark:bg-[#152033] rounded-xl p-4 border border-[#dee9fd] dark:border-[#2b3a54] h-[76px] animate-pulse" />
+            <div key={i} className="bg-card rounded-xl p-4 border border-border h-[76px] animate-pulse" />
           ))}
         </div>
       </div>
@@ -50,7 +50,7 @@ function HomePageSkeleton() {
 }
 
 const StatCard = ({ icon, label, value, image, accent = '#003fb1', bg = '#eff3ff' }) => (
-  <div className="group relative bg-white dark:bg-[#152033] rounded-2xl p-5 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
+  <div className="group relative bg-card rounded-2xl p-5 border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
     <div
       className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-[0.07] -translate-y-6 translate-x-6"
       style={{ background: accent }}
@@ -66,8 +66,8 @@ const StatCard = ({ icon, label, value, image, accent = '#003fb1', bg = '#eff3ff
         }
       </div>
       <div>
-        <p className="text-[11px] font-semibold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider mb-1">{label}</p>
-        <p className="text-base font-extrabold text-[#121c2a] dark:text-white leading-tight">{value}</p>
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+        <p className="text-base font-extrabold text-foreground leading-tight">{value}</p>
       </div>
     </div>
   </div>
@@ -179,7 +179,7 @@ export default function HomePage() {
       <section>
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#003fb1] to-[#1a56db]" />
-          <h2 className="text-xl sm:text-2xl font-extrabold text-[#121c2a] dark:text-white">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-foreground">
             ຜົນລ່າສຸດ
           </h2>
           <span className="inline-flex items-center gap-1.5 bg-[#edfdf5] text-[#00714d] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-[#6cf8bb]/40">
@@ -195,7 +195,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#006c49] to-[#00a36c]" />
-            <h2 className="text-xl font-extrabold text-[#121c2a] dark:text-white">
+            <h2 className="text-xl font-extrabold text-foreground">
               ງວດຜ່ານມາ
             </h2>
           </div>
@@ -221,7 +221,7 @@ export default function HomePage() {
       <section>
         <div className="flex items-center gap-3 mb-5">
           <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#7c3aed] to-[#a855f7]" />
-          <h2 className="text-xl font-extrabold text-[#121c2a] dark:text-white">ສະຫຼຸບຂໍ້ມູນ</h2>
+          <h2 className="text-xl font-extrabold text-foreground">ສະຫຼຸບຂໍ້ມູນ</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {statItems.map(item => (

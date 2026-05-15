@@ -66,7 +66,7 @@ export default function VerifyEmailPage() {
       actions: (
         <Link
           to="/login"
-          className="inline-flex items-center gap-2 text-sm text-[#003fb1] dark:text-[#b5c4ff] font-bold hover:underline"
+          className="inline-flex items-center gap-2 text-sm text-primary font-bold hover:underline"
         >
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
           ກັບໄປ Login
@@ -82,7 +82,7 @@ export default function VerifyEmailPage() {
       actions: (
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-sm text-[#003fb1] dark:text-[#b5c4ff] font-bold hover:underline"
+          className="inline-flex items-center gap-2 text-sm text-primary font-bold hover:underline"
         >
           <span className="material-symbols-outlined text-[16px]">home</span>
           ໜ້າຫຼັກ
@@ -100,12 +100,12 @@ export default function VerifyEmailPage() {
         <div className="absolute -bottom-48 -left-48 w-96 h-96 rounded-full bg-white/[0.04] blur-3xl" />
       </div>
 
-      <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-2xl p-10 max-w-sm w-full text-center border border-white/10 relative">
+      <div className="bg-card rounded-3xl shadow-2xl p-10 max-w-sm w-full text-center border border-white/10 relative">
         {state === STATE.LOADING ? (
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-full border-4 border-[#003fb1]/20 border-t-[#003fb1] animate-spin mx-auto" />
             <div>
-              <p className="font-black text-lg text-[#121c2a] dark:text-white">{cfg.title}</p>
+              <p className="font-black text-lg text-foreground">{cfg.title}</p>
               <p className="text-sm text-[#737686] mt-1">{cfg.desc}</p>
             </div>
           </div>
@@ -117,7 +117,7 @@ export default function VerifyEmailPage() {
               </span>
             </div>
             <div>
-              <h2 className="text-xl font-black text-[#121c2a] dark:text-white">{cfg.title}</h2>
+              <h2 className="text-xl font-black text-foreground">{cfg.title}</h2>
               <p className="text-sm text-[#737686] mt-1.5 leading-relaxed">{cfg.desc}</p>
             </div>
             {cfg.actions}

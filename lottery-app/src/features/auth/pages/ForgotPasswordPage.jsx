@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       <div className="w-full max-w-md relative">
-        <div className="bg-white dark:bg-[#152033] rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+        <div className="bg-card rounded-3xl shadow-2xl overflow-hidden border border-white/10">
 
           {/* Header */}
           <div className="relative bg-gradient-to-br from-[#001d6e] to-[#1a56db] px-8 py-8 text-center overflow-hidden">
@@ -63,10 +63,10 @@ export default function ForgotPasswordPage() {
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-[#121c2a] dark:text-white">ສົ່ງສຳເລັດ!</h2>
+                  <h2 className="text-lg font-black text-foreground">ສົ່ງສຳເລັດ!</h2>
                   <p className="text-sm text-[#737686] mt-1.5 leading-relaxed">
                     ກວດ Email ທີ່{' '}
-                    <span className="font-bold text-[#121c2a] dark:text-white">{submittedEmail}</span>
+                    <span className="font-bold text-foreground">{submittedEmail}</span>
                     {' '}ເພື່ອຮັບລິ້ງລີເຊັດລະຫັດຜ່ານ (ໝົດອາຍຸ 1 ຊົ່ວໂມງ)
                   </p>
                 </div>
@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
 
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-2 text-sm text-[#003fb1] dark:text-[#b5c4ff] font-bold hover:underline"
+                  className="inline-flex items-center gap-2 text-sm text-primary font-bold hover:underline"
                 >
                   <span className="material-symbols-outlined text-[16px]">arrow_back</span>
                   ກັບໄປໜ້າ Login
@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
                 </p>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">
                     Email Address
                   </label>
                   <div className="relative">
@@ -119,8 +119,8 @@ export default function ForgotPasswordPage() {
                       type="email"
                       placeholder="example@email.com"
                       autoComplete="email"
-                      className={`w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl pl-9 pr-4 py-3 text-sm font-medium
-                        text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 transition-all
+                      className={`w-full bg-accent rounded-xl pl-9 pr-4 py-3 text-sm font-medium
+                        text-foreground focus:outline-none focus:ring-2 transition-all
                         ${errors.email ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10' : 'focus:ring-[#003fb1]/40'}`}
                     />
                   </div>

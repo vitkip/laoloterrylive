@@ -9,7 +9,7 @@ export default function RepeatPattern({ timeframe }) {
   const maxMirrorTotal = mirrors[0]?.total || 1;
 
   return (
-    <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 sm:p-8 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm overflow-hidden relative">
+    <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm overflow-hidden relative">
       <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-[#7c3aed]/6 blur-3xl pointer-events-none" />
 
       {/* Header */}
@@ -20,8 +20,8 @@ export default function RepeatPattern({ timeframe }) {
           </span>
         </div>
         <div>
-          <h2 className="text-base font-extrabold text-[#121c2a] dark:text-white tracking-tight">Repeat Pattern Detection</h2>
-          <p className="text-[11px] text-[#737686] dark:text-[#94a3b8] font-medium">ເລກຊ້ຳ & ເລກສະລັບ</p>
+          <h2 className="text-base font-extrabold text-foreground tracking-tight">Repeat Pattern Detection</h2>
+          <p className="text-[11px] text-muted-foreground font-medium">ເລກຊ້ຳ & ເລກສະລັບ</p>
         </div>
       </div>
 
@@ -31,7 +31,7 @@ export default function RepeatPattern({ timeframe }) {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <span className="w-2 h-2 rounded-full bg-[#7c3aed]" />
-            <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               ເລກຄູ່ (11, 22, 33…)
             </p>
           </div>
@@ -45,7 +45,7 @@ export default function RepeatPattern({ timeframe }) {
                   className={`rounded-xl p-3 border transition-all hover:-translate-y-0.5 duration-200
                     ${highlight
                       ? 'bg-[#f5f3ff] dark:bg-[#1e1333] border-[#ddd6fe]/50 dark:border-[#4c1d95]/30'
-                      : 'bg-[#f5f7ff] dark:bg-[#1a2235] border-[#e8edf8] dark:border-[#2b3a54] opacity-50'
+                      : 'bg-[#f5f7ff] dark:bg-[#1a2235] border-border opacity-50'
                     }`}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -73,7 +73,7 @@ export default function RepeatPattern({ timeframe }) {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <span className="w-2 h-2 rounded-full bg-[#0891b2]" />
-            <p className="text-[10px] font-bold text-[#737686] dark:text-[#94a3b8] uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               ເລກສະລັບ (12 ↔ 21)
             </p>
           </div>

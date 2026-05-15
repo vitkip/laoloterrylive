@@ -157,7 +157,7 @@ export default function MemberProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-white dark:bg-[#152033] rounded-2xl p-1 border border-[#dee9fd] dark:border-[#2b3a54] shadow-sm">
+      <div className="flex bg-card rounded-2xl p-1 border border-border shadow-sm">
         {[
           { key: 'profile',  label: 'ຂໍ້ມູນສ່ວນຕົວ',  icon: 'person' },
           { key: 'password', label: 'ປ່ຽນລະຫັດຜ່ານ',  icon: 'lock'   },
@@ -169,7 +169,7 @@ export default function MemberProfilePage() {
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
               activeTab === t.key
                 ? 'bg-[#003fb1] text-white shadow-md'
-                : 'text-[#737686] dark:text-[#94a3b8] hover:text-[#003fb1] dark:hover:text-white'
+                : 'text-muted-foreground hover:text-primary'
             }`}
           >
             <span className="material-symbols-outlined text-[15px]">{t.icon}</span>
@@ -180,31 +180,31 @@ export default function MemberProfilePage() {
 
       {/* Tab: Profile */}
       {activeTab === 'profile' && (
-        <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+        <div className="bg-card rounded-2xl p-6 shadow-sm border border-border">
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">Username</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Username</label>
               <input disabled value={profile?.username || ''} type="text"
                 className="w-full bg-[#e8edf8] dark:bg-[#1a2438] rounded-xl p-3 text-sm text-[#737686] cursor-not-allowed" />
               <p className="text-[10px] text-[#737686] mt-1">Username ບໍ່ສາມາດປ່ຽນໄດ້</p>
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">ຊື່ເຕັມ *</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ຊື່ເຕັມ *</label>
               <input required type="text" placeholder="ຊື່ ແລະ ນາມສະກຸນ"
-                className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                 value={profileForm.full_name} onChange={e => setP('full_name', e.target.value)} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">Email</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Email</label>
                 <input type="email" placeholder="your@email.com"
-                  className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                  className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                   value={profileForm.email} onChange={e => setP('email', e.target.value)} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">ເບີໂທ</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ເບີໂທ</label>
                 <input type="tel" placeholder="020xxxxxxxx"
-                  className="w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
+                  className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                   value={profileForm.phone_number} onChange={e => setP('phone_number', e.target.value)} />
               </div>
             </div>
@@ -219,7 +219,7 @@ export default function MemberProfilePage() {
 
       {/* Tab: Password */}
       {activeTab === 'password' && (
-        <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
+        <div className="bg-card rounded-2xl p-6 shadow-sm border border-border">
           <form onSubmit={handleSavePass} className="space-y-4">
             {[
               { key: 'current_password', label: 'ລະຫັດຜ່ານປັດຈຸບັນ', sk: 'cur', ac: 'current-password' },
@@ -227,11 +227,11 @@ export default function MemberProfilePage() {
               { key: 'confirm_password', label: 'ຢືນຢັນລະຫັດຜ່ານໃໝ່',sk: 'con', ac: 'new-password' },
             ].map(({ key, label, sk, ac }) => (
               <div key={key}>
-                <label className="block text-xs font-bold text-[#434654] dark:text-[#94a3b8] mb-1.5 uppercase tracking-wide">{label}</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">{label}</label>
                 <div className="relative">
                   <input required type={showPass[sk] ? 'text' : 'password'} autoComplete={ac}
                     minLength={key !== 'current_password' ? 6 : 1}
-                    className={`w-full bg-[#f0f4ff] dark:bg-[#1e2d4a] rounded-xl p-3 pr-10 text-sm font-medium text-[#121c2a] dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                    className={`w-full bg-accent rounded-xl p-3 pr-10 text-sm font-medium text-foreground focus:outline-none focus:ring-2 transition-all ${
                       key === 'confirm_password' && passForm.confirm_password && passForm.new_password !== passForm.confirm_password
                         ? 'ring-2 ring-red-400/40 focus:ring-red-400/40' : 'focus:ring-[#003fb1]/40'
                     }`}
@@ -258,8 +258,8 @@ export default function MemberProfilePage() {
 
       {/* Tab: Activity */}
       {activeTab === 'activity' && (
-        <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 shadow-sm border border-[#dee9fd] dark:border-[#2b3a54]">
-          <h3 className="text-sm font-extrabold text-[#121c2a] dark:text-white uppercase tracking-widest mb-4">ກິດຈະກຳລ່າສຸດ</h3>
+        <div className="bg-card rounded-2xl p-6 shadow-sm border border-border">
+          <h3 className="text-sm font-extrabold text-foreground uppercase tracking-widest mb-4">ກິດຈະກຳລ່າສຸດ</h3>
           {!profile?.recent_activity?.length ? (
             <div className="text-center py-10">
               <span className="material-symbols-outlined text-4xl text-[#003fb1]/20">history</span>
@@ -271,15 +271,15 @@ export default function MemberProfilePage() {
                 const { icon, color } = getActionIcon(log.action);
                 return (
                   <div key={log.log_id} className="flex items-center gap-3 py-3">
-                    <div className="w-8 h-8 rounded-xl bg-[#f0f4ff] dark:bg-[#1e2d4a] flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-accent flex items-center justify-center shrink-0">
                       <span className={`material-symbols-outlined text-[15px] ${color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-bold text-[#121c2a] dark:text-white">{log.action}</p>
-                      <p className="text-[11px] text-[#737686] dark:text-[#94a3b8]">{formatDateTime(log.created_at)}</p>
+                      <p className="text-sm font-bold text-foreground">{log.action}</p>
+                      <p className="text-[11px] text-muted-foreground">{formatDateTime(log.created_at)}</p>
                     </div>
                     {log.ip_address && (
-                      <span className="text-[10px] font-mono bg-[#f0f4ff] dark:bg-[#1e2d4a] px-2 py-0.5 rounded text-[#737686] dark:text-[#94a3b8] hidden sm:block">
+                      <span className="text-[10px] font-mono bg-accent px-2 py-0.5 rounded text-muted-foreground hidden sm:block">
                         {log.ip_address}
                       </span>
                     )}

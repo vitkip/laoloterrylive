@@ -2,7 +2,7 @@ export default function TableSkeleton({ cols = 5, rows = 6 }) {
   return (
     <>
       {Array.from({ length: rows }).map((_, ri) => (
-        <tr key={ri} className="border-b border-[#dee9fd] dark:border-[#2b3a54]">
+        <tr key={ri} className="border-b border-border">
           {Array.from({ length: cols }).map((_, ci) => (
             <td key={ci} className="px-6 py-4">
               <div

@@ -1,7 +1,7 @@
 const STYLES = {
   hot:     'bg-[#6cf8bb]/30 text-[#00714d]',
   cold:    'bg-[#ffdad6]/30 text-[#ba1a1a]',
-  neutral: 'bg-[#d9e3f7] text-[#737686] dark:text-[#94a3b8]',
+  neutral: 'bg-[#d9e3f7] text-muted-foreground',
   pending: 'bg-amber-100 text-amber-700',
   published: 'bg-[#6cf8bb]/30 text-[#00714d]',
 }

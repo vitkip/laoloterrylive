@@ -12,6 +12,7 @@ function getNavItems(role) {
     { path: '/admin',        icon: 'dashboard',        label: 'ພາບລວມລະບົບ' },
     { path: '/admin/live',   icon: 'podcasts',          label: 'ຖ່າຍທອດສົດ' },
     { path: '/admin/draws',  icon: 'add_circle',        label: 'ປ້ອນຜົນຫວຍ' },
+    { path: '/admin/types',  icon: 'category',          label: 'ປະເພດຫວຍ' },
   ];
   const adminOnly = [
     { path: '/admin/animals', icon: 'image',            label: 'ຮູບນາມສັດ' },
@@ -38,7 +39,7 @@ function NavItem({ item, isActive, collapsed, onClick }) {
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold transition-all duration-150 group relative ${
         isActive
           ? 'bg-[#003fb1] text-white shadow-md shadow-[#003fb1]/20'
-          : 'text-[#434654] dark:text-[#c7d2fe] hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] hover:text-[#003fb1] dark:hover:text-white'
+          : 'text-muted-foreground hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] hover:text-primary'
       }`}
     >
       <span className="material-symbols-outlined text-[20px] shrink-0" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
@@ -73,13 +74,13 @@ function UserDropdown({ user, onLogout, collapsed }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2.5 w-full p-2 rounded-xl hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] transition-colors"
+        className="flex items-center gap-2.5 w-full p-2 rounded-xl hover:bg-accent transition-colors"
       >
         <UserAvatar name={user?.name} username={user?.username} size="sm" />
         {!collapsed && (
           <div className="flex-1 text-left overflow-hidden">
-            <p className="text-sm font-bold text-[#121c2a] dark:text-white truncate">{user?.name || user?.username}</p>
-            <p className="text-[10px] text-[#737686] dark:text-[#94a3b8] capitalize">{user?.role}</p>
+            <p className="text-sm font-bold text-foreground truncate">{user?.name || user?.username}</p>
+            <p className="text-[10px] text-muted-foreground capitalize">{user?.role}</p>
           </div>
         )}
         {!collapsed && (
@@ -90,12 +91,12 @@ function UserDropdown({ user, onLogout, collapsed }) {
       </button>
 
       {open && (
-        <div className={`absolute ${collapsed ? 'left-full ml-3 bottom-0' : 'bottom-full mb-2 left-0 right-0'} bg-white dark:bg-[#152033] rounded-2xl shadow-xl border border-[#dee9fd] dark:border-[#2b3a54] z-50 overflow-hidden min-w-[180px]`}>
-          <div className="p-3 border-b border-[#dee9fd] dark:border-[#2b3a54]">
+        <div className={`absolute ${collapsed ? 'left-full ml-3 bottom-0' : 'bottom-full mb-2 left-0 right-0'} bg-card rounded-2xl shadow-xl border border-border z-50 overflow-hidden min-w-[180px]`}>
+          <div className="p-3 border-b border-border">
             <div className="flex items-center gap-2.5">
               <UserAvatar name={user?.name} username={user?.username} size="sm" />
               <div>
-                <p className="text-sm font-bold text-[#121c2a] dark:text-white">{user?.name || user?.username}</p>
+                <p className="text-sm font-bold text-foreground">{user?.name || user?.username}</p>
                 <RoleBadge role={user?.role} size="xs" />
               </div>
             </div>
@@ -105,12 +106,12 @@ function UserDropdown({ user, onLogout, collapsed }) {
             { icon: 'key', label: 'ປ່ຽນ Password', action: () => { navigate('/admin/users'); setOpen(false); } },
           ].map(item => (
             <button key={item.label} onClick={item.action}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-[#434654] dark:text-[#c7d2fe] hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] transition-colors">
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent transition-colors">
               <span className="material-symbols-outlined text-[16px] text-[#003fb1]">{item.icon}</span>
               {item.label}
             </button>
           ))}
-          <div className="border-t border-[#dee9fd] dark:border-[#2b3a54]">
+          <div className="border-t border-border">
             <button onClick={() => { onLogout(); setOpen(false); }}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
               <span className="material-symbols-outlined text-[16px]">logout</span>
@@ -130,6 +131,7 @@ function Breadcrumb({ location }) {
     '/admin':          'Dashboard',
     '/admin/live':     'ຖ່າຍທອດສົດ',
     '/admin/draws':    'ປ້ອນຜົນຫວຍ',
+    '/admin/types':    'ປະເພດຫວຍ',
     '/admin/animals':  'ຮູບນາມສັດ',
     '/admin/users':    'ຈັດການຜູ້ໃຊ້',
     '/admin/logs':     'Audit Logs',
@@ -137,10 +139,10 @@ function Breadcrumb({ location }) {
   };
   const label = LABELS[location.pathname] || location.pathname.split('/').pop();
   return (
-    <div className="hidden md:flex items-center gap-1.5 text-xs text-[#737686] dark:text-[#94a3b8]">
+    <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground">
       <span className="material-symbols-outlined text-[14px]">home</span>
       <span>/</span>
-      <span className="font-bold text-[#121c2a] dark:text-white">{label}</span>
+      <span className="font-bold text-foreground">{label}</span>
     </div>
   );
 }
@@ -166,14 +168,14 @@ export default function AdminLayout() {
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   return (
-    <div className="flex h-screen bg-[#f3f6fc] dark:bg-[#0d1627] text-[#121c2a] dark:text-white overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
 
       {/* ── Desktop Sidebar ─────────────────────────── */}
-      <aside className={`hidden md:flex flex-col bg-white dark:bg-[#152033] border-r border-[#dee9fd] dark:border-[#2b3a54] transition-all duration-300 ease-in-out shrink-0 ${
+      <aside className={`hidden md:flex flex-col bg-card border-r border-border transition-all duration-300 ease-in-out shrink-0 ${
         collapsed ? 'w-16' : 'w-60'
       }`}>
         {/* Logo */}
-        <div className={`flex items-center border-b border-[#dee9fd] dark:border-[#2b3a54] h-16 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-4 gap-2'}`}>
+        <div className={`flex items-center border-b border-border h-16 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-4 gap-2'}`}>
           {!collapsed && (
             <Link to="/" className="text-lg font-black text-[#003fb1] tracking-tighter flex items-center gap-1.5 flex-1">
               <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
@@ -187,7 +189,7 @@ export default function AdminLayout() {
           )}
           <button
             onClick={() => setCollapsed(v => !v)}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center text-[#737686] hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] hover:text-[#003fb1] transition-colors ${collapsed ? 'mx-auto mt-1' : ''}`}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center text-[#737686] hover:bg-accent hover:text-[#003fb1] transition-colors ${collapsed ? 'mx-auto mt-1' : ''}`}
             title={collapsed ? 'ຂະຫຍາຍ sidebar' : 'ຫຍໍ້ sidebar'}
           >
             <span className="material-symbols-outlined text-[18px]">{collapsed ? 'menu_open' : 'menu'}</span>
@@ -197,7 +199,7 @@ export default function AdminLayout() {
         {/* Nav */}
         <nav className="flex-1 p-2 flex flex-col gap-1 overflow-y-auto">
           {!collapsed && (
-            <p className="text-[9px] font-extrabold text-[#737686] dark:text-[#94a3b8] uppercase tracking-widest px-3 py-2">ເມນູຫຼັກ</p>
+            <p className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest px-3 py-2">ເມນູຫຼັກ</p>
           )}
           {navItems.map(item => (
             <NavItem
@@ -210,7 +212,7 @@ export default function AdminLayout() {
         </nav>
 
         {/* Footer */}
-        <div className="p-2 border-t border-[#dee9fd] dark:border-[#2b3a54]">
+        <div className="p-2 border-t border-border">
           <UserDropdown user={user} onLogout={handleLogout} collapsed={collapsed} />
         </div>
       </aside>
@@ -219,13 +221,13 @@ export default function AdminLayout() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-[#152033] flex flex-col shadow-2xl">
-            <div className="flex items-center justify-between px-4 h-16 border-b border-[#dee9fd] dark:border-[#2b3a54]">
+          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-card flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between px-4 h-16 border-b border-border">
               <Link to="/" className="text-lg font-black text-[#003fb1] tracking-tighter flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
                 LaoLots
               </Link>
-              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#737686] hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a]">
+              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#737686] hover:bg-accent">
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
             </div>
@@ -234,7 +236,7 @@ export default function AdminLayout() {
                 <NavItem key={item.path} item={item} isActive={location.pathname === item.path} collapsed={false} onClick={() => setMobileOpen(false)} />
               ))}
             </nav>
-            <div className="p-3 border-t border-[#dee9fd] dark:border-[#2b3a54]">
+            <div className="p-3 border-t border-border">
               <UserDropdown user={user} onLogout={handleLogout} collapsed={false} />
             </div>
           </aside>
@@ -244,10 +246,10 @@ export default function AdminLayout() {
       {/* ── Main Content ─────────────────────────────── */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Top bar */}
-        <header className="h-16 bg-white dark:bg-[#152033] border-b border-[#dee9fd] dark:border-[#2b3a54] flex items-center px-4 gap-3 shrink-0 z-30">
+        <header className="h-16 bg-card border-b border-border flex items-center px-4 gap-3 shrink-0 z-30">
           {/* Mobile menu btn */}
           <button onClick={() => setMobileOpen(true)}
-            className="md:hidden w-9 h-9 rounded-xl flex items-center justify-center text-[#434654] dark:text-[#c7d2fe] hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] transition-colors">
+            className="md:hidden w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors">
             <span className="material-symbols-outlined text-[20px]">menu</span>
           </button>
 
@@ -258,12 +260,12 @@ export default function AdminLayout() {
           {/* Quick actions */}
           <div className="flex items-center gap-1">
             <Link to="/" target="_blank"
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#737686] hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] hover:text-[#003fb1] transition-colors"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#737686] hover:bg-accent hover:text-[#003fb1] transition-colors"
               title="ເບິ່ງໜ້າເວັບ">
               <span className="material-symbols-outlined text-[18px]">open_in_new</span>
             </Link>
             <Link to="/admin/profile"
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#737686] hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d4a] hover:text-[#003fb1] transition-colors"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#737686] hover:bg-accent hover:text-[#003fb1] transition-colors"
               title="Profile ຂອງຂ້ອຍ">
               <span className="material-symbols-outlined text-[18px]">account_circle</span>
             </Link>

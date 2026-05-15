@@ -35,7 +35,7 @@ export default function CountdownTimer({ seconds, onExpire }) {
       <div className="relative w-5 h-5">
         <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
           <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor"
-            strokeWidth="2" className="text-[#dee9fd] dark:text-[#2b3a54]" />
+            strokeWidth="2" className="text-border" />
           <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor"
             strokeWidth="2" strokeDasharray={`${2 * Math.PI * 8}`}
             strokeDashoffset={`${2 * Math.PI * 8 * (1 - pct / 100)}`}

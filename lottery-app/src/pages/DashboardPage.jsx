@@ -30,7 +30,7 @@ function SectionLabel({ icon, label, accent = '#003fb1' }) {
       >
         <span className="material-symbols-outlined text-[18px]" style={{ color: accent }}>{icon}</span>
       </div>
-      <h2 className="text-base font-extrabold text-[#121c2a] dark:text-white uppercase tracking-widest text-[11px]">
+      <h2 className="text-base font-extrabold text-foreground uppercase tracking-widest text-[11px]">
         {label}
       </h2>
       <div className="flex-1 h-px bg-gradient-to-r from-[#e8edf8] to-transparent dark:from-[#2b3a54]" />
@@ -94,19 +94,19 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="w-1 h-5 rounded-full bg-gradient-to-b from-[#003fb1] to-[#4f46e5]" />
-          <p className="text-sm font-bold text-[#555870] dark:text-[#94a3b8] uppercase tracking-widest text-[10px]">
+          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
             ຊ່ວງເວລາທີ່ວິເຄາະ
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1e2d4a] p-1.5 rounded-2xl border border-[#e8edf8] dark:border-[#2b3a54]">
+        <div className="flex items-center gap-1 bg-accent p-1.5 rounded-2xl border border-border">
           {TIMEFRAMES.map(({ value, label, icon }) => (
             <button
               key={value}
               onClick={() => setTimeframe(value)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold transition-all duration-200
                 ${timeframe === value
-                  ? 'bg-white dark:bg-[#152033] text-[#003fb1] dark:text-[#93b4ff] shadow-sm'
-                  : 'text-[#737686] dark:text-[#94a3b8] hover:text-[#003fb1] dark:hover:text-white'
+                  ? 'bg-card text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-primary'
                 }`}
             >
               <span className="material-symbols-outlined text-[14px]">{icon}</span>
@@ -129,10 +129,10 @@ export default function DashboardPage() {
       <div>
         <SectionLabel icon="bar_chart" label="ການກະຈາຍຕົວເລກ" accent="#0369a1" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 sm:p-8 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+          <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm">
             <DigitDistribution timeframe={timeframe} />
           </div>
-          <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 sm:p-8 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm">
+          <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm">
             <HistoricalVolatility timeframe={timeframe} />
           </div>
         </div>

@@ -10,11 +10,11 @@ export default function GapAnalysis({ timeframe }) {
     if (ratio >= 2)   return { bar: 'from-[#dc2626] to-[#ef4444]', text: 'text-[#dc2626] dark:text-[#f87171]', bg: 'bg-[#fff4f4] dark:bg-[#2a1010]', badge: 'bg-[#dc2626]' };
     if (ratio >= 1.5) return { bar: 'from-[#d97706] to-[#f59e0b]', text: 'text-[#d97706] dark:text-[#fbbf24]', bg: 'bg-[#fffbeb] dark:bg-[#1c1208]', badge: 'bg-[#d97706]' };
     if (ratio >= 1)   return { bar: 'from-[#0369a1] to-[#0ea5e9]', text: 'text-[#0369a1] dark:text-[#38bdf8]', bg: 'bg-[#e0f2fe] dark:bg-[#0c2a3e]', badge: 'bg-[#0369a1]' };
-    return              { bar: 'from-[#374151] to-[#6b7280]', text: 'text-[#555870] dark:text-[#94a3b8]', bg: 'bg-[#f5f7ff] dark:bg-[#1e2d4a]', badge: 'bg-[#374151]' };
+    return              { bar: 'from-[#374151] to-[#6b7280]', text: 'text-muted-foreground', bg: 'bg-muted', badge: 'bg-[#374151]' };
   };
 
   return (
-    <div className="bg-white dark:bg-[#152033] rounded-2xl p-6 sm:p-8 border border-[#e8edf8] dark:border-[#2b3a54] shadow-sm overflow-hidden relative">
+    <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm overflow-hidden relative">
       <div className="absolute -bottom-10 -left-10 w-36 h-36 rounded-full bg-[#f59e0b]/8 blur-3xl pointer-events-none" />
 
       {/* Header */}
@@ -26,8 +26,8 @@ export default function GapAnalysis({ timeframe }) {
             </span>
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-[#121c2a] dark:text-white tracking-tight">Gap Analysis</h2>
-            <p className="text-[11px] text-[#737686] dark:text-[#94a3b8] font-medium">ເລກຂາດ — Top 10</p>
+            <h2 className="text-base font-extrabold text-foreground tracking-tight">Gap Analysis</h2>
+            <p className="text-[11px] text-muted-foreground font-medium">ເລກຂາດ — Top 10</p>
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-[9px] font-bold text-[#a0a3bd] uppercase tracking-wider">

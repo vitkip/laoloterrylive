@@ -1,85 +1,122 @@
-import { useState } from 'react';
+import { useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50];
+const PAGE_SIZE_OPTIONS = [10, 20, 50]
 
 export default function Pagination({ total, page, pageSize, onPageChange, onPageSizeChange }) {
-  const [goInput, setGoInput] = useState('');
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const [goInput, setGoInput] = useState('')
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   const getPages = () => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    if (page <= 4) return [1, 2, 3, 4, 5, '...', totalPages];
-    if (page >= totalPages - 3) return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    return [1, '...', page - 1, page, page + 1, '...', totalPages];
-  };
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
+    if (page <= 4) return [1, 2, 3, 4, 5, '...', totalPages]
+    if (page >= totalPages - 3) return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+    return [1, '...', page - 1, page, page + 1, '...', totalPages]
+  }
 
   const handleGo = () => {
-    const n = parseInt(goInput);
-    if (n >= 1 && n <= totalPages) { onPageChange(n); setGoInput(''); }
-  };
+    const n = parseInt(goInput)
+    if (n >= 1 && n <= totalPages) { onPageChange(n); setGoInput('') }
+  }
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 mt-6 select-none">
+    <div className="flex flex-wrap items-center justify-center gap-1.5 mt-6 select-none">
+
       {/* Prev */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 rounded-full"
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
-        className="w-8 h-8 flex items-center justify-center rounded-full text-[#737686] hover:bg-[#eff3ff] disabled:opacity-30 disabled:cursor-not-allowed transition"
+        aria-label="ໜ້າກ່ອນ"
       >
-        <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-      </button>
+        <ChevronLeft className="w-4 h-4" />
+      </Button>
 
       {/* Page numbers */}
       {getPages().map((p, i) =>
         p === '...'
-          ? <span key={`ellipsis-${i}`} className="w-8 h-8 flex items-center justify-center text-[#737686] text-sm">…</span>
-          : <button
+          ? (
+            <span
+              key={`ellipsis-${i}`}
+              className="w-8 h-8 flex items-center justify-center text-muted-foreground text-sm"
+            >
+              …
+            </span>
+          )
+          : (
+            <Button
               key={p}
+              variant={p === page ? 'default' : 'ghost'}
+              size="icon"
+              className={cn(
+                'h-8 w-8 rounded-full text-sm font-bold',
+                p === page && 'shadow-sm'
+              )}
               onClick={() => onPageChange(p)}
-              className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold transition
-                ${p === page
-                  ? 'bg-[#c7d2fe] text-[#003fb1]'
-                  : 'text-[#434654] dark:text-[#c7d2fe] hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a]'
-                }`}
             >
               {p}
-            </button>
+            </Button>
+          )
       )}
 
       {/* Next */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 rounded-full"
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
-        className="w-8 h-8 flex items-center justify-center rounded-full text-[#737686] hover:bg-[#eff3ff] disabled:opacity-30 disabled:cursor-not-allowed transition"
+        aria-label="ໜ້າຕໍ່ໄປ"
       >
-        <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-      </button>
+        <ChevronRight className="w-4 h-4" />
+      </Button>
 
-      {/* Page size */}
-      <div className="ml-2 flex items-center gap-1 border border-[#c3c5d7] dark:border-[#2b3a54] rounded-full px-3 py-1">
-        <select
-          value={pageSize}
-          onChange={e => { onPageSizeChange(parseInt(e.target.value)); onPageChange(1); }}
-          className="bg-transparent border-none outline-none text-sm font-bold text-[#121c2a] dark:text-white cursor-pointer"
+      {/* Page size selector */}
+      <div className="ml-2">
+        <Select
+          value={String(pageSize)}
+          onValueChange={v => { onPageSizeChange(parseInt(v)); onPageChange(1) }}
         >
-          {PAGE_SIZE_OPTIONS.map(s => <option key={s} value={s}>{s} / page</option>)}
-        </select>
+          <SelectTrigger className="h-8 w-[100px] rounded-full text-xs font-bold border-border">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PAGE_SIZE_OPTIONS.map(s => (
+              <SelectItem key={s} value={String(s)} className="text-xs">
+                {s} / ໜ້າ
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Go to page */}
-      <div className="flex items-center gap-2 text-sm text-[#737686] dark:text-[#94a3b8]">
-        <span>Go to</span>
-        <input
+      <div className="flex items-center gap-2 text-sm text-muted-foreground ml-1">
+        <span className="text-xs">ໄປໜ້າ</span>
+        <Input
           type="number"
           min={1}
           max={totalPages}
           value={goInput}
           onChange={e => setGoInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleGo()}
-          className="w-14 h-8 text-center border border-[#c3c5d7] dark:border-[#2b3a54] rounded-full bg-transparent outline-none text-sm font-bold text-[#121c2a] dark:text-white focus:border-[#003fb1] focus:ring-1 focus:ring-[#003fb1]"
+          className="w-14 h-8 text-center rounded-full text-sm font-bold focus-visible:ring-primary px-2"
+          placeholder="—"
+          aria-label="ໄປໜ້າ"
         />
-        <span>Page</span>
       </div>
     </div>
-  );
+  )
 }
