@@ -37,14 +37,18 @@ function HighlightResult({ full_result, searchStr }) {
   )
 }
 
-export default function NumberHistorySearch() {
+export default function NumberHistorySearch({ selectedType = 'all' }) {
   const { draws } = useData();
   const [searchNumber, setSearchNumber] = useState('');
 
+  const filteredDraws = selectedType === 'all'
+    ? draws
+    : draws?.filter(d => String(d.type_id) === String(selectedType))
+
   const results = useMemo(() => {
-    if (!searchNumber.trim() || !draws) return [];
+    if (!searchNumber.trim() || !filteredDraws) return [];
     const searchStr = searchNumber.trim();
-    return draws
+    return filteredDraws
       .filter(d => {
         if (d.status !== 'published') return false;
         if (searchStr.length === 2) {
@@ -54,18 +58,18 @@ export default function NumberHistorySearch() {
         return d.full_result?.includes(searchStr);
       })
       .sort((a, b) => new Date(b.draw_date) - new Date(a.draw_date));
-  }, [searchNumber, draws]);
+  }, [searchNumber, filteredDraws]);
 
   const stats = useMemo(() => {
-    if (!results.length || !draws?.length) return null;
-    const published = draws.filter(d => d.status === 'published').length;
+    if (!results.length || !filteredDraws?.length) return null;
+    const published = filteredDraws.filter(d => d.status === 'published').length;
     const pct = published > 0 ? ((results.length / published) * 100).toFixed(1) : 0;
     const dates = results.map(d => new Date(d.draw_date));
     const latest = new Date(Math.max(...dates));
     const earliest = new Date(Math.min(...dates));
     const daysSinceLast = Math.floor((new Date() - latest) / (1000 * 60 * 60 * 24));
     return { count: results.length, pct, latest, earliest, daysSinceLast }
-  }, [results, draws]);
+  }, [results, filteredDraws]);
 
   const digitButtons = ['0','1','2','3','4','5','6','7','8','9'];
 

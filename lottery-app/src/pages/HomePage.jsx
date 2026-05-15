@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { useStatistics } from '../hooks/useStatistics'
@@ -74,13 +75,18 @@ const StatCard = ({ icon, label, value, image, accent = '#003fb1', bg = '#eff3ff
 )
 
 export default function HomePage() {
-  const { draws } = useData();
+  const { draws, types } = useData();
   const { stats } = useStatistics();
+  const [selectedType, setSelectedType] = useState('all');
 
   if (!draws || draws.length === 0) return <HomePageSkeleton />
 
-  const latest = draws.find(d => d.status === 'published') || draws[0]
-  const recentDraws = draws.filter(d => d.draw_id !== latest.draw_id).slice(0, 4)
+  const filteredDraws = selectedType === 'all'
+    ? draws
+    : draws.filter(d => String(d.type_id) === String(selectedType))
+
+  const latest = filteredDraws.find(d => d.status === 'published') || filteredDraws[0]
+  const recentDraws = latest ? filteredDraws.filter(d => d.draw_id !== latest.draw_id).slice(0, 4) : []
 
   const statItems = [
     {
@@ -175,47 +181,90 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ─── Latest Result ─── */}
-      <section>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#003fb1] to-[#1a56db]" />
-          <h2 className="text-xl sm:text-2xl font-extrabold text-foreground">
-            ຜົນລ່າສຸດ
-          </h2>
-          <span className="inline-flex items-center gap-1.5 bg-[#edfdf5] text-[#00714d] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-[#6cf8bb]/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00714d] animate-pulse" />
-            Live
-          </span>
+      {/* ─── Type Filter Tabs ─── */}
+      {types && types.length > 1 && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1">ປະເພດ:</span>
+          <button
+            onClick={() => setSelectedType('all')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all ${
+              selectedType === 'all'
+                ? 'bg-[#003fb1] text-white border-[#003fb1] shadow-sm'
+                : 'bg-card text-muted-foreground border-border hover:border-[#003fb1]/40'
+            }`}
+          >
+            ທັງໝົດ ({draws.length})
+          </button>
+          {types.filter(t => t.is_active != 0).map(t => {
+            const color = t.color || '#003fb1'
+            const active = String(selectedType) === String(t.type_id)
+            const cnt = draws.filter(d => String(d.type_id) === String(t.type_id)).length
+            return (
+              <button
+                key={t.type_id}
+                onClick={() => setSelectedType(String(t.type_id))}
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all"
+                style={active
+                  ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 2px 8px ${color}40` }
+                  : { background: 'transparent', color, borderColor: `${color}50` }
+                }
+              >
+                {t.type_name} ({cnt})
+              </button>
+            )
+          })}
         </div>
-        <ResultCard draw={latest} />
-      </section>
+      )}
+
+      {/* ─── Latest Result ─── */}
+      {latest ? (
+        <section>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#003fb1] to-[#1a56db]" />
+            <h2 className="text-xl sm:text-2xl font-extrabold text-foreground">
+              ຜົນລ່າສຸດ
+            </h2>
+            <span className="inline-flex items-center gap-1.5 bg-[#edfdf5] text-[#00714d] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-[#6cf8bb]/40">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00714d] animate-pulse" />
+              Live
+            </span>
+          </div>
+          <ResultCard draw={latest} />
+        </section>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 gap-3 bg-card rounded-2xl border border-border">
+          <span className="material-symbols-outlined text-4xl text-muted-foreground">inbox</span>
+          <p className="text-sm text-muted-foreground">ຍັງບົ່ມີງວດຫວຍສົໄນປະເພດນີ້</p>
+        </div>
+      )}
 
       {/* ─── Recent Draws ─── */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#006c49] to-[#00a36c]" />
-            <h2 className="text-xl font-extrabold text-foreground">
-              ງວດຜ່ານມາ
-            </h2>
+      {recentDraws.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#006c49] to-[#00a36c]" />
+              <h2 className="text-xl font-extrabold text-foreground">
+                ງວດຜ່ານມາ
+              </h2>
+            </div>
+            <Link
+              to="/history"
+              className="inline-flex items-center gap-1.5 text-[#003fb1] text-sm font-bold hover:gap-2.5 transition-all duration-200 group"
+            >
+              ທັງໝົດ
+              <span className="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">
+                arrow_forward
+              </span>
+            </Link>
           </div>
-          <Link
-            to="/history"
-            className="inline-flex items-center gap-1.5 text-[#003fb1] text-sm font-bold hover:gap-2.5 transition-all duration-200 group"
-          >
-            ທັງໝົດ
-            <span className="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">
-              arrow_forward
-            </span>
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {recentDraws.map(d => (
-            <ResultCard key={d.draw_id} draw={d} compact />
-          ))}
-        </div>
-      </section>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {recentDraws.map(d => (
+              <ResultCard key={d.draw_id} draw={d} compact />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ─── Quick Stats ─── */}
       <section>

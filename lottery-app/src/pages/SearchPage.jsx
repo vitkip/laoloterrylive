@@ -2,6 +2,7 @@ import { useState } from 'react';
 import DreamDictionary from '../components/DreamDictionary';
 import NumberHistorySearch from '../components/NumberHistorySearch';
 import MonthlyStats from '../components/MonthlyStats';
+import { useData } from '../context/DataContext';
 
 const TABS = [
   { id: 'dream',   label: 'ຕຳລາແປຄວາມຝັນ',       icon: 'auto_awesome',    color: '#7c3aed' },
@@ -11,6 +12,8 @@ const TABS = [
 
 export default function SearchPage() {
   const [activeTab, setActiveTab] = useState('dream')
+  const [selectedType, setSelectedType] = useState('all')
+  const { draws, types } = useData()
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -48,6 +51,42 @@ export default function SearchPage() {
         </div>
       </div>
 
+      {/* ─── Type Selector (hidden for dream tab) ─── */}
+      {activeTab !== 'dream' && types && types.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="w-1 h-5 rounded-full bg-gradient-to-b from-[#7c3aed] to-[#4f46e5]" />
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mr-1">ປະເພດຫວຍ</span>
+          <button
+            onClick={() => setSelectedType('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+              selectedType === 'all'
+                ? 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-sm'
+                : 'bg-card text-muted-foreground border-border hover:border-[#7c3aed]/50'
+            }`}
+          >
+            ທັງໝົດ ({draws?.length ?? 0})
+          </button>
+          {types.filter(t => t.is_active != 0).map(t => {
+            const color = t.color || '#7c3aed'
+            const active = selectedType === String(t.type_id)
+            const cnt = draws?.filter(d => String(d.type_id) === String(t.type_id)).length ?? 0
+            return (
+              <button
+                key={t.type_id}
+                onClick={() => setSelectedType(String(t.type_id))}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all"
+                style={active
+                  ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 2px 8px ${color}40` }
+                  : { background: 'transparent', color, borderColor: `${color}50` }
+                }
+              >
+                {t.type_name} ({cnt})
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* ─── Tab Switcher ─── */}
       <div className="flex items-center gap-1 bg-accent p-1.5 rounded-2xl border border-border w-full">
         {TABS.map(tab => (
@@ -74,8 +113,8 @@ export default function SearchPage() {
       {/* ─── Panel ─── */}
       <div className="min-h-[60vh]">
         {activeTab === 'dream'   && <DreamDictionary />}
-        {activeTab === 'number'  && <NumberHistorySearch />}
-        {activeTab === 'monthly' && <MonthlyStats />}
+        {activeTab === 'number'  && <NumberHistorySearch selectedType={selectedType} />}
+        {activeTab === 'monthly' && <MonthlyStats selectedType={selectedType} />}
       </div>
     </div>
   )

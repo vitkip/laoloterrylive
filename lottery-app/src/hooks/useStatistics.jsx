@@ -2,15 +2,22 @@ import { useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { resolveAnimalImage } from '../utils/api';
 
-export const useStatistics = (timeframe = 'all') => {
+export const useStatistics = (timeframe = 'all', typeId = 'all') => {
   const { draws, animals, loading } = useData();
 
   const stats = useMemo(() => {
     if (!draws.length || !animals.length) return null;
 
-    let targetDraws = draws;
+    // ── Step 1: Filter by type ──
+    let targetDraws = typeId === 'all'
+      ? draws
+      : draws.filter(d => String(d.type_id) === String(typeId));
+
+    if (!targetDraws.length) return null;
+
+    // ── Step 2: Filter by timeframe ──
     if (timeframe !== 'all') {
-      const published = draws.filter(d => d.status === 'published');
+      const published = targetDraws.filter(d => d.status === 'published');
       if (published.length > 0) {
         const sorted = [...published].sort((a,b) => new Date(b.draw_date) - new Date(a.draw_date));
         const latestDate = new Date(sorted[0].draw_date);
@@ -23,7 +30,7 @@ export const useStatistics = (timeframe = 'all') => {
         } else if (timeframe === '1_year') {
           cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
         }
-        targetDraws = draws.filter(d => new Date(d.draw_date) >= cutoffDate);
+        targetDraws = targetDraws.filter(d => new Date(d.draw_date) >= cutoffDate);
       }
     }
 
@@ -235,7 +242,7 @@ export const useStatistics = (timeframe = 'all') => {
       gapAnalysis,
       repeatPatterns,
     };
-  }, [draws, animals, timeframe]);
+  }, [draws, animals, timeframe, typeId]);
 
   return { stats, loading };
 };

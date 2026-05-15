@@ -127,9 +127,19 @@ export default function ResultCard({ draw, compact = false }) {
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <span className="text-xs text-[#006c49] font-bold uppercase tracking-widest block mb-1">
-              {typeName}
-            </span>
+            {typeName && (() => {
+              const typeObj = lotteryTypes.find(t => t.type_id === draw.type_id)
+              const color = typeObj?.color || '#006c49'
+              return (
+                <span
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border mb-1"
+                  style={{ color, background: `${color}12`, borderColor: `${color}40` }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                  {typeName}
+                </span>
+              )
+            })()}
             <h2 className="text-xl font-bold text-foreground">
               ງວດທີ {draw.draw_number} — {formatLaoDate(draw.draw_date, false)}
             </h2>

@@ -369,17 +369,22 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
-  const { draws, loading } = useData()
+  const { draws, types, loading } = useData()
   const [range, setRange] = useState('50')
   const [mode, setMode]   = useState('heatmap')
   const [heatMode, setHeatMode] = useState('freq')
   const [hoveredNum, setHoveredNum] = useState(null)
   const [backtestNum, setBacktestNum] = useState('')
   const [aiTrials, setAiTrials] = useState(10)
+  const [selectedType, setSelectedType] = useState('all')
 
-  const analytics    = useMemo(() => computeAnalytics(draws, range), [draws, range])
-  const backtest     = useMemo(() => computeBacktest(draws, range, backtestNum), [draws, range, backtestNum])
-  const aiBacktest   = useMemo(() => computeAIBacktest(draws, aiTrials), [draws, aiTrials])
+  const filteredDraws = useMemo(() => (
+    selectedType === 'all' ? draws : draws?.filter(d => String(d.type_id) === selectedType)
+  ), [draws, selectedType])
+
+  const analytics    = useMemo(() => computeAnalytics(filteredDraws, range), [filteredDraws, range])
+  const backtest     = useMemo(() => computeBacktest(filteredDraws, range, backtestNum), [filteredDraws, range, backtestNum])
+  const aiBacktest   = useMemo(() => computeAIBacktest(filteredDraws, aiTrials), [filteredDraws, aiTrials])
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -413,6 +418,10 @@ export default function AnalyticsPage() {
               </h1>
               <p className="text-white/50 text-sm max-w-md">
                 ລະບົບວິເຄາະ Big Data — ຄວາມຖີ່ · Trend · Gap · AI Score
+                {selectedType !== 'all' && types && (() => {
+                  const t = types.find(x => String(x.type_id) === selectedType)
+                  return t ? <span className="ml-1 font-bold text-white/70">· {t.type_name}</span> : null
+                })()}
               </p>
             </div>
 
@@ -434,6 +443,41 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Type Selector ───────────────────────────────────────────────────── */}
+      {types && types.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ປະເພດ:</span>
+          <button
+            onClick={() => setSelectedType('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+              selectedType === 'all'
+                ? 'bg-[#003fb1] text-white border-[#003fb1] shadow-sm'
+                : 'bg-card text-muted-foreground border-border hover:border-[#003fb1]/50'
+            }`}
+          >
+            ທັງໝົດ ({draws?.length ?? 0})
+          </button>
+          {types.filter(t => t.is_active != 0).map(t => {
+            const color = t.color || '#003fb1'
+            const active = selectedType === String(t.type_id)
+            const cnt = draws?.filter(d => String(d.type_id) === String(t.type_id)).length ?? 0
+            return (
+              <button
+                key={t.type_id}
+                onClick={() => setSelectedType(String(t.type_id))}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all"
+                style={active
+                  ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 2px 8px ${color}40` }
+                  : { background: 'transparent', color, borderColor: `${color}50` }
+                }
+              >
+                {t.type_name} ({cnt})
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {/* ── Control Panel ───────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
@@ -918,7 +962,7 @@ export default function AnalyticsPage() {
       {/* ── TAB: BACKTEST ───────────────────────────────────────────────────── */}
       {mode === 'backtest' && (
         <BacktestPanel
-          draws={draws}
+          draws={filteredDraws}
           range={range}
           backtest={backtest}
           backtestNum={backtestNum}

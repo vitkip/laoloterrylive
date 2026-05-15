@@ -40,15 +40,19 @@ function DigitRow({ result, size = 'sm' }) {
   );
 }
 
-export default function MonthlyStats() {
+export default function MonthlyStats({ selectedType = 'all' }) {
   const { draws } = useData();
   const [selectedMonth, setSelectedMonth] = useState(null); // 1–12
 
+  const filteredDraws = selectedType === 'all'
+    ? draws
+    : draws?.filter(d => String(d.type_id) === String(selectedType))
+
   // ── Compute stats for selected month ──
   const analysis = useMemo(() => {
-    if (!selectedMonth || !draws?.length) return null;
+    if (!selectedMonth || !filteredDraws?.length) return null;
 
-    const monthDraws = draws
+    const monthDraws = filteredDraws
       .filter(d => {
         if (d.status !== 'published') return false;
         return new Date(d.draw_date).getMonth() + 1 === selectedMonth;
@@ -95,7 +99,7 @@ export default function MonthlyStats() {
       topTwoDigit: freqArr[0],
       topDigit,
     };
-  }, [selectedMonth, draws]);
+  }, [selectedMonth, filteredDraws]);
 
   const accent = selectedMonth ? MONTH_ACCENT[selectedMonth - 1] : '#003fb1';
   const accentLight = `${accent}18`;
@@ -121,7 +125,7 @@ export default function MonthlyStats() {
             const ac = MONTH_ACCENT[i];
             const isSelected = selectedMonth === m;
             // Count draws in this month
-            const cnt = draws?.filter(d =>
+            const cnt = filteredDraws?.filter(d =>
               d.status === 'published' && new Date(d.draw_date).getMonth() + 1 === m
             ).length ?? 0;
 

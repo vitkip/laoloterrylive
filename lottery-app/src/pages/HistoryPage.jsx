@@ -3,7 +3,7 @@ import { useData } from '../context/DataContext'
 import ArchiveTable from '../components/ArchiveTable'
 
 export default function HistoryPage() {
-  const { draws } = useData()
+  const { draws, types } = useData()
   const total = draws?.length ?? 0
   const latestNum = draws?.[0]?.draw_number ?? '-'
 
@@ -37,7 +37,7 @@ export default function HistoryPage() {
           </div>
 
           {/* Stats cards */}
-          <div className="flex gap-3 shrink-0">
+          <div className="flex flex-wrap gap-3 shrink-0">
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 text-center min-w-[80px]">
               <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                 <Database className="w-3 h-3" />
@@ -51,6 +51,22 @@ export default function HistoryPage() {
               <p className="text-2xl font-black text-[#6cf8bb] tabular-nums">{latestNum}</p>
               <p className="text-[10px] text-white/50 mt-0.5">ງວດ</p>
             </div>
+            {/* Per-type pills */}
+            {types && types.filter(t => t.is_active != 0).map(t => {
+              const color = t.color || '#003fb1'
+              const cnt = draws?.filter(d => String(d.type_id) === String(t.type_id)).length ?? 0
+              if (cnt === 0) return null
+              return (
+                <div key={t.type_id} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3 text-center min-w-[80px]">
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-1 truncate max-w-[90px]"
+                    style={{ color: `${color}cc` }}>
+                    {t.type_name}
+                  </p>
+                  <p className="text-xl font-black text-white tabular-nums">{cnt}</p>
+                  <p className="text-[10px] text-white/50 mt-0.5">ງວດ</p>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>

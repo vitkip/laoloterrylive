@@ -8,6 +8,22 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
+
+// ── Type Badge ─────────────────────────────────────────────────────
+function TypeBadge({ typeId, types }) {
+  const t = types?.find(t => t.type_id == typeId)
+  if (!t) return null
+  const color = t.color || '#003fb1'
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap"
+      style={{ color, background: `${color}15`, borderColor: `${color}40` }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+      {t.type_name}
+    </span>
+  )
+}
 import {
   Dialog,
   DialogContent,
@@ -149,15 +165,16 @@ function EmptySearch({ term, onClear }) {
 
 // ── Main component ─────────────────────────────────────────────────
 
-export default function ArchiveTable() {
-  const { draws, animals } = useData()
+export default function ArchiveTable({ compact = false }) {
+  const { draws, animals, types } = useData()
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedType, setSelectedType] = useState('all')
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(compact ? 5 : 10)
   const [videoModalDraw, setVideoModalDraw] = useState(null)
 
-  // Reset to page 1 when search changes
-  useEffect(() => { setPage(1) }, [searchTerm])
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1) }, [searchTerm, selectedType])
 
   if (!draws || draws.length === 0) {
     return (
@@ -169,6 +186,8 @@ export default function ArchiveTable() {
   }
 
   const filteredDraws = draws.filter(d => {
+    const matchType = selectedType === 'all' || String(d.type_id) === String(selectedType)
+    if (!matchType) return false
     if (!searchTerm) return true
     const term = searchTerm.toLowerCase().trim()
     return (
@@ -189,37 +208,70 @@ export default function ArchiveTable() {
       <section className="space-y-4">
 
         {/* ─── Toolbar ─── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-
-          {/* Title + count */}
-          <div className="flex items-center gap-2.5">
-            <span className="w-1 h-5 rounded-full bg-gradient-to-b from-[#003fb1] to-[#1a56db]" />
-            <h3 className="text-base sm:text-lg font-extrabold text-foreground">ຜົນທັງໝົດ</h3>
-            <Badge variant="secondary" className="text-primary font-bold">
-              {filteredDraws.length} ງວດ
-            </Badge>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Title + count */}
+            <div className="flex items-center gap-2.5">
+              <span className="w-1 h-5 rounded-full bg-gradient-to-b from-[#003fb1] to-[#1a56db]" />
+              <h3 className="text-base sm:text-lg font-extrabold text-foreground">ຜົນທັງໝົດ</h3>
+              <Badge variant="secondary" className="text-primary font-bold">
+                {filteredDraws.length} ງວດ
+              </Badge>
+            </div>
+            {/* Search input */}
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="text"
+                placeholder="ຄົ້ນຫາວັນທີ, ງວດ, ເລກ..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pl-9 pr-8 focus-visible:ring-primary"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="ລ້າງ"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Search input */}
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-            <Input
-              type="text"
-              placeholder="ຄົ້ນຫາວັນທີ, ງວດ, ເລກ..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="pl-9 pr-8 focus-visible:ring-primary"
-            />
-            {searchTerm && (
+          {/* ─── Type Filter Tabs ─── */}
+          {types && types.length > 1 && (
+            <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive transition-colors"
-                aria-label="ລ້າງ"
+                onClick={() => setSelectedType('all')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                  selectedType === 'all'
+                    ? 'bg-[#003fb1] text-white border-[#003fb1] shadow-sm'
+                    : 'bg-card text-muted-foreground border-border hover:border-[#003fb1]/40'
+                }`}
               >
-                <X className="w-3.5 h-3.5" />
+                ທັງໝົດ
               </button>
-            )}
-          </div>
+              {types.filter(t => t.is_active != 0).map(t => {
+                const color = t.color || '#003fb1'
+                const active = String(selectedType) === String(t.type_id)
+                return (
+                  <button
+                    key={t.type_id}
+                    onClick={() => setSelectedType(String(t.type_id))}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all"
+                    style={active
+                      ? { background: color, color: '#fff', borderColor: color }
+                      : { background: 'transparent', color, borderColor: `${color}50` }
+                    }
+                  >
+                    {t.type_name}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* ─── Table ─── */}
@@ -229,6 +281,9 @@ export default function ArchiveTable() {
               <TableRow className="bg-muted/60 hover:bg-muted/60 border-border">
                 <TableHead className="w-10 text-[10px] uppercase tracking-widest">#</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-widest">ງວດວັນທີ</TableHead>
+                {types && types.length > 1 && (
+                  <TableHead className="text-[10px] uppercase tracking-widest hidden sm:table-cell">ປະເພດ</TableHead>
+                )}
                 <TableHead className="text-[10px] uppercase tracking-widest">ເລກທີ່ອອກ</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-widest">ນາມສັດ (2 ຕົວ)</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-widest text-center">ວິດີໂອ</TableHead>
@@ -264,6 +319,13 @@ export default function ArchiveTable() {
                         ງວດທີ {row.draw_number}
                       </p>
                     </TableCell>
+
+                    {/* Type badge */}
+                    {types && types.length > 1 && (
+                      <TableCell className="hidden sm:table-cell">
+                        <TypeBadge typeId={row.type_id} types={types} />
+                      </TableCell>
+                    )}
 
                     {/* Result digits */}
                     <TableCell>

@@ -301,23 +301,50 @@ export default function AdminPanel() {
             {/* Section 1: Draw Info */}
             <div>
               <SectionDivider icon="info" label="ຂໍ້ມູນງວດ" />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+              <div className="mt-4 space-y-4">
                 {/* Type */}
-                <div>
+                <div className="sm:col-span-3">
                   <FieldLabel icon="category">ປະເພດຫວຍ</FieldLabel>
-                  <FieldBox>
-                    <select
-                      className={inputCls + ' cursor-pointer'}
-                      value={formData.type_id}
-                      onChange={e => setFormData({ ...formData, type_id: parseInt(e.target.value) })}
-                      required
-                    >
-                      {types?.map(t => (
-                        <option key={t.type_id} value={t.type_id}>{t.type_name}</option>
-                      ))}
-                    </select>
-                  </FieldBox>
+                  {types && types.length > 1 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {types.map(t => {
+                        const color = t.color || '#003fb1'
+                        const active = formData.type_id === t.type_id
+                        return (
+                          <button
+                            key={t.type_id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, type_id: t.type_id })}
+                            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border-2 text-sm font-bold transition-all duration-200"
+                            style={active
+                              ? { borderColor: color, background: `${color}15`, color }
+                              : { borderColor: '#e8edf8', background: 'transparent', color: '#737686' }
+                            }
+                          >
+                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
+                            {t.type_name}
+                            {active && <span className="material-symbols-outlined text-[14px]">check</span>}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <FieldBox>
+                      <select
+                        className={inputCls + ' cursor-pointer'}
+                        value={formData.type_id}
+                        onChange={e => setFormData({ ...formData, type_id: parseInt(e.target.value) })}
+                        required
+                      >
+                        {types?.map(t => (
+                          <option key={t.type_id} value={t.type_id}>{t.type_name}</option>
+                        ))}
+                      </select>
+                    </FieldBox>
+                  )}
                 </div>
+                {/* Date + Number row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Date */}
                 <div>
                   <FieldLabel icon="calendar_today">ງວດວັນທີ</FieldLabel>
@@ -353,8 +380,9 @@ export default function AdminPanel() {
                     />
                   </FieldBox>
                 </div>
-              </div>
-            </div>
+                </div>{/* end date+number grid */}
+              </div>{/* end space-y-4 */}
+            </div>{/* end Section 1 */}
 
             {/* Section 2: Result Entry */}
             <div>
