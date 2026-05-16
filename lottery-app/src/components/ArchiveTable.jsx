@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Search, X, PlayCircle, ExternalLink, VideoOff, Loader2 } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import { formatLaoDate } from '../utils/date'
@@ -163,18 +163,52 @@ function EmptySearch({ term, onClear }) {
   )
 }
 
+// ── Constants ─────────────────────────────────────────────────────
+
+const LAO_MONTHS = [
+  '', 'ມັງກອນ', 'ກຸມພາ', 'ມີນາ', 'ເມສາ', 'ພຶດສະພາ', 'ມິຖຸນາ',
+  'ກໍລະກົດ', 'ສິງຫາ', 'ກັນຍາ', 'ຕຸລາ', 'ພະຈິກ', 'ທັນວາ'
+]
+
 // ── Main component ─────────────────────────────────────────────────
 
 export default function ArchiveTable({ compact = false }) {
   const { draws, animals, types } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState('all')
+  const [filterYear, setFilterYear] = useState('')
+  const [filterMonth, setFilterMonth] = useState('')
+  const [filterDay, setFilterDay] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(compact ? 5 : 10)
   const [videoModalDraw, setVideoModalDraw] = useState(null)
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1) }, [searchTerm, selectedType])
+  useEffect(() => { setPage(1) }, [searchTerm, selectedType, filterYear, filterMonth, filterDay])
+
+  // Reset month/day when year changes (avoid stale selection)
+  useEffect(() => { setFilterMonth(''); setFilterDay('') }, [filterYear])
+  // Reset day when month changes
+  useEffect(() => { setFilterDay('') }, [filterMonth])
+
+  // ── Available options derived from data (must be before early return) ──
+  const availableYears = useMemo(() =>
+    draws ? [...new Set(draws.map(d => d.draw_date.slice(0, 4)))].sort((a, b) => b - a) : [],
+    [draws]
+  )
+
+  const availableMonths = useMemo(() => {
+    if (!draws) return []
+    const src = filterYear ? draws.filter(d => d.draw_date.startsWith(filterYear)) : draws
+    return [...new Set(src.map(d => parseInt(d.draw_date.slice(5, 7))))].sort((a, b) => a - b)
+  }, [draws, filterYear])
+
+  const availableDays = useMemo(() => {
+    if (!draws) return []
+    let src = filterYear ? draws.filter(d => d.draw_date.startsWith(filterYear)) : draws
+    if (filterMonth) src = src.filter(d => d.draw_date.slice(5, 7) === filterMonth.padStart(2, '0'))
+    return [...new Set(src.map(d => parseInt(d.draw_date.slice(8, 10))))].sort((a, b) => a - b)
+  }, [draws, filterYear, filterMonth])
 
   if (!draws || draws.length === 0) {
     return (
@@ -185,9 +219,23 @@ export default function ArchiveTable({ compact = false }) {
     )
   }
 
+  const hasDateFilter = filterYear || filterMonth || filterDay
+  const hasAnyFilter = searchTerm || selectedType !== 'all' || hasDateFilter
+
+  const clearAllFilters = () => {
+    setSearchTerm(''); setSelectedType('all')
+    setFilterYear(''); setFilterMonth(''); setFilterDay('')
+  }
+
   const filteredDraws = draws.filter(d => {
     const matchType = selectedType === 'all' || String(d.type_id) === String(selectedType)
     if (!matchType) return false
+
+    const [yyyy, mm, dd] = d.draw_date.split('-')
+    if (filterYear && yyyy !== filterYear) return false
+    if (filterMonth && mm !== filterMonth.padStart(2, '0')) return false
+    if (filterDay && dd !== filterDay.padStart(2, '0')) return false
+
     if (!searchTerm) return true
     const term = searchTerm.toLowerCase().trim()
     return (
@@ -272,6 +320,72 @@ export default function ArchiveTable({ compact = false }) {
               })}
             </div>
           )}
+
+          {/* ─── Date Filter Row ─── */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">ກັນຕອງວັນທີ:</span>
+
+            {/* Year */}
+            <select
+              value={filterYear}
+              onChange={e => setFilterYear(e.target.value)}
+              className={`h-8 px-2.5 rounded-xl border text-xs font-bold bg-card outline-none transition-all cursor-pointer
+                ${ filterYear ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground' }`}
+            >
+              <option value="">ປີ (ທັງໝົດ)</option>
+              {availableYears.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+
+            {/* Month */}
+            <select
+              value={filterMonth}
+              onChange={e => setFilterMonth(e.target.value)}
+              className={`h-8 px-2.5 rounded-xl border text-xs font-bold bg-card outline-none transition-all cursor-pointer
+                ${ filterMonth ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground' }`}
+            >
+              <option value="">ເດືອນ (ທັງໝົດ)</option>
+              {availableMonths.map(m => (
+                <option key={m} value={m}>{LAO_MONTHS[m]} ({m.toString().padStart(2, '0')})</option>
+              ))}
+            </select>
+
+            {/* Day */}
+            <select
+              value={filterDay}
+              onChange={e => setFilterDay(e.target.value)}
+              className={`h-8 px-2.5 rounded-xl border text-xs font-bold bg-card outline-none transition-all cursor-pointer
+                ${ filterDay ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground' }`}
+            >
+              <option value="">ວັນ (ທັງໝົດ)</option>
+              {availableDays.map(d => (
+                <option key={d} value={d}>{d.toString().padStart(2, '0')}</option>
+              ))}
+            </select>
+
+            {/* Clear date filter */}
+            {hasDateFilter && (
+              <button
+                onClick={() => { setFilterYear(''); setFilterMonth(''); setFilterDay('') }}
+                className="flex items-center gap-1 h-8 px-2.5 rounded-xl border border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10 text-xs font-bold transition-all"
+              >
+                <X className="w-3 h-3" />
+                ລ້າງວັນທີ
+              </button>
+            )}
+
+            {/* Clear all */}
+            {hasAnyFilter && (
+              <button
+                onClick={clearAllFilters}
+                className="ml-auto flex items-center gap-1 h-8 px-3 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-secondary border border-border transition-all"
+              >
+                <X className="w-3 h-3" />
+                ລ້າງທຸກ
+              </button>
+            )}
+          </div>
         </div>
 
         {/* ─── Table ─── */}
@@ -392,9 +506,19 @@ export default function ArchiveTable({ compact = false }) {
           </Table>
         </div>
 
-        {/* ─── Empty search state ─── */}
-        {searchTerm && filteredDraws.length === 0 && (
-          <EmptySearch term={searchTerm} onClear={() => setSearchTerm('')} />
+        {/* ─── Empty state ─── */}
+        {filteredDraws.length === 0 && (
+          hasAnyFilter ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
+                <Search className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-bold text-muted-foreground">ບໍ່ພົນຂໍ້ມູນທີ່ຕໍງກັນ</p>
+              <Button variant="link" size="sm" onClick={clearAllFilters} className="text-primary">
+                ລ້າງທຸກໃບ້ filter
+              </Button>
+            </div>
+          ) : null
         )}
 
         {/* ─── Pagination ─── */}
