@@ -91,7 +91,7 @@ export default function AdminLive() {
           {/* Source Type Selector */}
           <div>
             <label className="block text-sm font-bold text-muted-foreground mb-3">ເລືອກແຫຼ່ງ Live</label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {SOURCE_OPTIONS.map(opt => (
                 <label
                   key={opt.value}

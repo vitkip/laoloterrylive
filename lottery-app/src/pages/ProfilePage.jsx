@@ -192,7 +192,7 @@ export default function ProfilePage() {
                   className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                   value={profileForm.full_name} onChange={e => setP('full_name', e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Email</label>
                   <input type="email" placeholder="your@email.com"

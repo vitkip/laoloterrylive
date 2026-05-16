@@ -160,7 +160,7 @@ function UserFormModal({ open, onClose, editingUser, onSave, loading }) {
     <Modal open={open} onClose={onClose} title={isEdit ? 'ແກ້ໄຂຂໍ້ມູນຜູ້ໃຊ້' : 'ເພີ່ມຜູ້ໃຊ້ໃໝ່'} size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         {!isEdit && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Username *</label>
               <input required minLength={4} type="text" autoComplete="off" placeholder="ຢ່າງໜ້ອຍ 4 ຕົວ"
@@ -189,7 +189,7 @@ function UserFormModal({ open, onClose, editingUser, onSave, loading }) {
             value={form.full_name} onChange={e => set('full_name', e.target.value)} />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Email</label>
             <input type="email" placeholder="user@example.com"
@@ -204,7 +204,7 @@ function UserFormModal({ open, onClose, editingUser, onSave, loading }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">ຕຳແໜ່ງ *</label>
             <select className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"

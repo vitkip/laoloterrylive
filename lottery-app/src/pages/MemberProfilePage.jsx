@@ -128,7 +128,7 @@ export default function MemberProfilePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(108,248,187,0.08),transparent_60%)]" />
         <div className="relative z-10 flex items-center gap-4">
           {/* Avatar */}
-          <div className="w-18 h-18 w-[72px] h-[72px] rounded-2xl flex items-center justify-center font-black text-3xl ring-4 ring-white/20 shrink-0"
+          <div className="w-[72px] h-[72px] rounded-2xl flex items-center justify-center font-black text-3xl ring-4 ring-white/20 shrink-0"
             style={{ background: bg, color: fg }}>
             {initial}
           </div>
@@ -194,7 +194,7 @@ export default function MemberProfilePage() {
                 className="w-full bg-accent rounded-xl p-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-[#003fb1]/40 transition-all"
                 value={profileForm.full_name} onChange={e => setP('full_name', e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">Email</label>
                 <input type="email" placeholder="your@email.com"
