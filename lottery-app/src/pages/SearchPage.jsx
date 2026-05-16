@@ -16,7 +16,7 @@ export default function SearchPage() {
   const { draws, types } = useData()
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="space-y-8">
 
       {/* ─── Hero Header ─── */}
       <div className="relative rounded-3xl overflow-hidden">
