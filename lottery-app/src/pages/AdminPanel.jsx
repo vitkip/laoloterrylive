@@ -287,7 +287,7 @@ export default function AdminPanel() {
     || (suggestedAnimals[0] && !formData.animal_id ? suggestedAnimals[0] : null);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-7">
+    <div className="space-y-7">
 
       {/* ─── Page Header ─── */}
       <div className="relative rounded-3xl overflow-hidden">
@@ -343,7 +343,11 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ─── Form Card ─── */}
+      {/* ─── Two-column grid: Form | History ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-7 items-start">
+
+      {/* ─── Col 1: Form Card ─── */}
+      <div className="lg:col-span-2">
       <form onSubmit={handleSubmit}>
         <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
 
@@ -641,8 +645,10 @@ export default function AdminPanel() {
           </div>
         </div>
       </form>
+      </div>{/* end col-1 form */}
 
-      {/* ─── Recent Draws ─── */}
+      {/* ─── Col 2: Recent Draws ─── */}
+      <div className="lg:col-span-3">
       <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
 
         {/* Card header + filter */}
@@ -846,6 +852,8 @@ export default function AdminPanel() {
           </div>
         )}
       </div>
+      </div>{/* end col-2 history */}
+      </div>{/* end two-column grid */}
     </div>
   );
 }

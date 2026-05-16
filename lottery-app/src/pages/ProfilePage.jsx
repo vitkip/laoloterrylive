@@ -147,7 +147,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Profile Hero */}
       <div className="relative bg-gradient-to-br from-[#001d6e] via-[#003fb1] to-[#1a56db] rounded-3xl p-6 sm:p-8 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(108,248,187,0.08),transparent_60%)]" />

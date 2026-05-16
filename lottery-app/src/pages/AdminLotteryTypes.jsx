@@ -375,7 +375,7 @@ export default function AdminLotteryTypes() {
   const totalDraws = types.reduce((s, t) => s + (t.draw_count || 0), 0);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-7">
+    <div className="space-y-7">
 
       {/* ─── Page Header ─── */}
       <div className="relative rounded-3xl overflow-hidden">
@@ -460,7 +460,7 @@ export default function AdminLotteryTypes() {
 
       {/* ─── Type Cards Grid ─── */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="bg-card rounded-2xl border border-border animate-pulse h-44" />
           ))}
@@ -479,7 +479,7 @@ export default function AdminLotteryTypes() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map(item => (
             <TypeCard
               key={item.type_id}
