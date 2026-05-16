@@ -83,10 +83,13 @@ export default function AdminPanel() {
   const [isEditing, setIsEditing] = useState(false);
   const [editDrawId, setEditDrawId] = useState(null);
 
-  const getNextDrawNumber = (dateStr) => {
+  const getNextDrawNumber = (dateStr, typeId) => {
+    const tid = typeId ?? formData.type_id;
     if (!draws.length || !dateStr) return 1;
     const year = new Date(dateStr).getFullYear();
-    const inYear = draws.filter(d => new Date(d.draw_date).getFullYear() === year);
+    const inYear = draws.filter(d =>
+      new Date(d.draw_date).getFullYear() === year && d.type_id === tid
+    );
     if (!inYear.length) return 1;
     return Math.max(...inYear.map(d => parseInt(d.draw_number) || 0)) + 1;
   };
@@ -97,6 +100,13 @@ export default function AdminPanel() {
       setFormData(f => ({ ...f, draw_number: getNextDrawNumber(f.draw_date).toString() }));
     }
   }, [draws.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selectedType = types?.find(t => t.type_id === formData.type_id);
+
+  const filteredDraws = useMemo(() =>
+    (draws || []).filter(d => d.type_id === formData.type_id),
+    [draws, formData.type_id]
+  );
 
   const suggestedAnimals = useMemo(() => {
     if (formData.full_result.length >= 2) {
@@ -314,7 +324,10 @@ export default function AdminPanel() {
                           <button
                             key={t.type_id}
                             type="button"
-                            onClick={() => setFormData({ ...formData, type_id: t.type_id })}
+                            onClick={() => {
+                            const nextNum = !isEditing ? getNextDrawNumber(formData.draw_date, t.type_id) : parseInt(formData.draw_number || '1');
+                            setFormData({ ...formData, type_id: t.type_id, draw_number: nextNum.toString() });
+                          }}
                             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border-2 text-sm font-bold transition-all duration-200"
                             style={active
                               ? { borderColor: color, background: `${color}15`, color }
@@ -333,7 +346,11 @@ export default function AdminPanel() {
                       <select
                         className={inputCls + ' cursor-pointer'}
                         value={formData.type_id}
-                        onChange={e => setFormData({ ...formData, type_id: parseInt(e.target.value) })}
+                        onChange={e => {
+                          const newTypeId = parseInt(e.target.value);
+                          const nextNum = !isEditing ? getNextDrawNumber(formData.draw_date, newTypeId).toString() : formData.draw_number;
+                          setFormData({ ...formData, type_id: newTypeId, draw_number: nextNum });
+                        }}
                         required
                       >
                         {types?.map(t => (
@@ -589,26 +606,28 @@ export default function AdminPanel() {
               <span className="material-symbols-outlined text-[#003fb1] text-[18px]">history</span>
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-foreground">ຜົນລ່າສຸດ</h3>
+              <h3 className="text-sm font-extrabold text-foreground">
+                ຜົນລ່າສຸດ{selectedType ? <span className="text-primary"> — {selectedType.type_name}</span> : ''}
+              </h3>
               <p className="text-[10px] text-muted-foreground">10 ງວດຫຼ້າສຸດ</p>
             </div>
           </div>
           <span className="text-[10px] font-bold text-primary bg-secondary px-3 py-1 rounded-full">
-            {draws?.length ?? 0} ງວດທັງໝົດ
+            {filteredDraws.length} ງວດທັງໝົດ
           </span>
         </div>
 
         {/* Draw list */}
-        {(!draws || draws.length === 0)
+        {filteredDraws.length === 0
           ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <span className="material-symbols-outlined text-4xl text-[#c3c5d7]">inbox</span>
-              <p className="text-sm text-muted-foreground">ຍັງບໍ່ມີຂໍ້ມູນ</p>
+              <p className="text-sm text-muted-foreground">ຍັງບໍ່ມີຂໍ້ມູນສຳລັບປະເພດນີ້</p>
             </div>
           )
           : (
             <div className="divide-y divide-[#f0f4ff] dark:divide-[#1e2d4a]">
-              {draws.slice(0, 10).map((d, idx) => {
+              {filteredDraws.slice(0, 10).map((d, idx) => {
                 const animalForDraw = (() => {
                   const det = d.results_detail?.find(r => r.prize_type === '2_digits');
                   const aid = det?.animal_id;
