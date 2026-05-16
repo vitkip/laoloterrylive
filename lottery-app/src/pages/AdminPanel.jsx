@@ -62,6 +62,9 @@ function ResultDigits({ result }) {
   );
 }
 
+const LAO_MONTHS = ['', 'ມັງກອນ', 'ກຸມພາ', 'ມີນາ', 'ເມສາ', 'ພຶດສະພາ', 'ມິຖຸນາ', 'ກໍລະກົດ', 'ສິງຫາ', 'ກັນຍາ', 'ຕຸລາ', 'ພະຈິກ', 'ທັນວາ'];
+const HISTORY_PAGE_SIZE = 10;
+
 // ── Main Component ────────────────────────────────────────────────
 
 export default function AdminPanel() {
@@ -83,6 +86,11 @@ export default function AdminPanel() {
   const [isEditing, setIsEditing] = useState(false);
   const [editDrawId, setEditDrawId] = useState(null);
 
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyYear, setHistoryYear] = useState('');
+  const [historyMonth, setHistoryMonth] = useState('');
+  const [historyPage, setHistoryPage] = useState(1);
+
   const getNextDrawNumber = (dateStr, typeId) => {
     const tid = typeId ?? formData.type_id;
     if (!draws.length || !dateStr) return 1;
@@ -101,12 +109,50 @@ export default function AdminPanel() {
     }
   }, [draws.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Reset history filters when type changes
+  useEffect(() => { setHistoryYear(''); setHistoryMonth(''); setHistoryPage(1); }, [formData.type_id]);
+  // Reset month when year changes
+  useEffect(() => { setHistoryMonth(''); setHistoryPage(1); }, [historyYear]);
+  // Reset page when search/month changes
+  useEffect(() => { setHistoryPage(1); }, [historySearch, historyMonth]);
+
   const selectedType = types?.find(t => t.type_id === formData.type_id);
 
   const filteredDraws = useMemo(() =>
     (draws || []).filter(d => d.type_id === formData.type_id),
     [draws, formData.type_id]
   );
+
+  const historyAvailYears = useMemo(() =>
+    [...new Set(filteredDraws.map(d => d.draw_date.slice(0, 4)))].sort((a, b) => b - a),
+    [filteredDraws]
+  );
+
+  const historyAvailMonths = useMemo(() => {
+    const src = historyYear ? filteredDraws.filter(d => d.draw_date.startsWith(historyYear)) : filteredDraws;
+    return [...new Set(src.map(d => parseInt(d.draw_date.slice(5, 7))))].sort((a, b) => a - b);
+  }, [filteredDraws, historyYear]);
+
+  const searchedDraws = useMemo(() =>
+    filteredDraws.filter(d => {
+      const [yyyy, mm] = d.draw_date.split('-');
+      if (historyYear && yyyy !== historyYear) return false;
+      if (historyMonth && mm !== historyMonth.padStart(2, '0')) return false;
+      if (!historySearch) return true;
+      const term = historySearch.trim().toLowerCase();
+      return (
+        d.full_result?.includes(term) ||
+        d.draw_number.toString().includes(term) ||
+        d.draw_date.includes(term) ||
+        formatLaoDate(d.draw_date, true).toLowerCase().includes(term)
+      );
+    }),
+    [filteredDraws, historySearch, historyYear, historyMonth]
+  );
+
+  const totalHistoryPages = Math.max(1, Math.ceil(searchedDraws.length / HISTORY_PAGE_SIZE));
+  const safeHistoryPage = Math.min(historyPage, totalHistoryPages);
+  const pagedDraws = searchedDraws.slice((safeHistoryPage - 1) * HISTORY_PAGE_SIZE, safeHistoryPage * HISTORY_PAGE_SIZE);
 
   const suggestedAnimals = useMemo(() => {
     if (formData.full_result.length >= 2) {
@@ -599,35 +645,101 @@ export default function AdminPanel() {
       {/* ─── Recent Draws ─── */}
       <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
 
-        {/* Card header */}
-        <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#003fb1] text-[18px]">history</span>
+        {/* Card header + filter */}
+        <div className="px-5 sm:px-8 py-5 border-b border-border space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[#003fb1] text-[18px]">history</span>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-extrabold text-foreground truncate">
+                  ຜົນລ່າສຸດ{selectedType ? <span className="text-primary"> — {selectedType.type_name}</span> : ''}
+                </h3>
+                <p className="text-[10px] text-muted-foreground">
+                  {(historySearch || historyYear || historyMonth)
+                    ? `ສະແດງ ${searchedDraws.length} / ${filteredDraws.length} ງວດ`
+                    : `${filteredDraws.length} ງວດທັງໝົດ`}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-extrabold text-foreground">
-                ຜົນລ່າສຸດ{selectedType ? <span className="text-primary"> — {selectedType.type_name}</span> : ''}
-              </h3>
-              <p className="text-[10px] text-muted-foreground">10 ງວດຫຼ້າສຸດ</p>
-            </div>
+            <span className="text-[10px] font-bold text-primary bg-secondary px-3 py-1 rounded-full shrink-0">
+              {searchedDraws.length} ງວດ
+            </span>
           </div>
-          <span className="text-[10px] font-bold text-primary bg-secondary px-3 py-1 rounded-full">
-            {filteredDraws.length} ງວດທັງໝົດ
-          </span>
+
+          {/* Search + year + month */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            {/* Search */}
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[16px] text-muted-foreground pointer-events-none">search</span>
+              <input
+                type="text"
+                value={historySearch}
+                onChange={e => setHistorySearch(e.target.value)}
+                placeholder="ຄົ້ນຫາ ງວດ, ວັນທີ, ເລກ..."
+                className="w-full h-9 pl-9 pr-8 bg-[#f5f7ff] dark:bg-[#1a2844] border border-border rounded-xl text-xs font-medium text-foreground placeholder:text-[#a0a3bd] outline-none focus:border-[#003fb1] focus:ring-2 focus:ring-[#003fb1]/15 transition-all"
+              />
+              {historySearch && (
+                <button onClick={() => setHistorySearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive transition-colors">
+                  <span className="material-symbols-outlined text-[15px]">close</span>
+                </button>
+              )}
+            </div>
+            {/* Year */}
+            <select
+              value={historyYear}
+              onChange={e => setHistoryYear(e.target.value)}
+              className={`h-9 px-2.5 rounded-xl border text-xs font-bold outline-none transition-all cursor-pointer shrink-0
+                ${historyYear ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground bg-[#f5f7ff] dark:bg-[#1a2844]'}`}
+            >
+              <option value="">ທຸກປີ</option>
+              {historyAvailYears.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            {/* Month */}
+            <select
+              value={historyMonth}
+              onChange={e => setHistoryMonth(e.target.value)}
+              className={`h-9 px-2.5 rounded-xl border text-xs font-bold outline-none transition-all cursor-pointer shrink-0
+                ${historyMonth ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground bg-[#f5f7ff] dark:bg-[#1a2844]'}`}
+            >
+              <option value="">ທຸກເດືອນ</option>
+              {historyAvailMonths.map(m => <option key={m} value={m}>{LAO_MONTHS[m]}</option>)}
+            </select>
+            {/* Clear */}
+            {(historySearch || historyYear || historyMonth) && (
+              <button
+                onClick={() => { setHistorySearch(''); setHistoryYear(''); setHistoryMonth(''); }}
+                className="h-9 px-3 rounded-xl border border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10 text-xs font-bold transition-all flex items-center justify-center gap-1 shrink-0"
+              >
+                <span className="material-symbols-outlined text-[14px]">filter_list_off</span>
+                <span className="hidden sm:inline">ລ້າງ</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Draw list */}
-        {filteredDraws.length === 0
+        {searchedDraws.length === 0
           ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <span className="material-symbols-outlined text-4xl text-[#c3c5d7]">inbox</span>
-              <p className="text-sm text-muted-foreground">ຍັງບໍ່ມີຂໍ້ມູນສຳລັບປະເພດນີ້</p>
+              <span className="material-symbols-outlined text-4xl text-[#c3c5d7]">
+                {filteredDraws.length === 0 ? 'inbox' : 'search_off'}
+              </span>
+              <p className="text-sm text-muted-foreground">
+                {filteredDraws.length === 0 ? 'ຍັງບໍ່ມີຂໍ້ມູນສຳລັບປະເພດນີ້' : 'ບໍ່ພົບຂໍ້ມູນທີ່ຕ້ອງການ'}
+              </p>
+              {(historySearch || historyYear || historyMonth) && (
+                <button
+                  onClick={() => { setHistorySearch(''); setHistoryYear(''); setHistoryMonth(''); }}
+                  className="text-xs text-primary font-bold hover:underline"
+                >ລ້າງ filter</button>
+              )}
             </div>
           )
           : (
             <div className="divide-y divide-[#f0f4ff] dark:divide-[#1e2d4a]">
-              {filteredDraws.slice(0, 10).map((d, idx) => {
+              {pagedDraws.map((d, idx) => {
                 const animalForDraw = (() => {
                   const det = d.results_detail?.find(r => r.prize_type === '2_digits');
                   const aid = det?.animal_id;
@@ -636,35 +748,36 @@ export default function AdminPanel() {
                     ?? (twoDigit ? animals.find(a => a.animal_numbers.split(',').map(n => n.trim()).includes(twoDigit)) : null);
                 })();
                 const isCurrentEdit = isEditing && d.draw_id === editDrawId;
+                const rowNum = (safeHistoryPage - 1) * HISTORY_PAGE_SIZE + idx + 1;
                 return (
                   <div
                     key={d.draw_id}
-                    className={`group flex items-center gap-4 px-5 sm:px-7 py-4 transition-all duration-200 hover:bg-[#f8faff] dark:hover:bg-[#1a2844]
+                    className={`flex items-center gap-3 px-4 sm:px-7 py-3.5 transition-all duration-200 hover:bg-[#f8faff] dark:hover:bg-[#1a2844]
                       ${isCurrentEdit ? 'bg-[#fffbeb] dark:bg-[#1c1208]' : ''}`}
                   >
                     {/* Rank + Number */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <span className="text-[11px] font-black text-[#c3c5d7] dark:text-[#2b3a54] w-4 text-center">{idx + 1}</span>
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-sm
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[10px] font-black text-[#c3c5d7] dark:text-[#2b3a54] w-4 text-center hidden sm:block">{rowNum}</span>
+                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-sm shrink-0
                         ${isCurrentEdit ? 'bg-gradient-to-br from-[#d97706] to-[#f59e0b] text-white' : 'bg-secondary text-primary'}`}>
                         {d.draw_number}
                       </div>
                     </div>
 
-                    {/* Date */}
-                    <div className="shrink-0 hidden sm:block">
-                      <p className="text-xs font-bold text-foreground leading-tight">
-                        {formatLaoDate(d.draw_date, true)}
+                    {/* Date — raw on mobile, full Lao date on desktop */}
+                    <div className="shrink-0 hidden xs:block">
+                      <p className="text-[11px] font-bold text-foreground leading-tight">
+                        <span className="hidden sm:inline">{formatLaoDate(d.draw_date, true)}</span>
+                        <span className="sm:hidden">{d.draw_date}</span>
                       </p>
-                      <p className="text-[10px] text-[#a0a3bd] dark:text-[#555870]">{d.draw_date}</p>
                     </div>
 
                     {/* Result digits */}
-                    <div className="flex-1 min-w-0 flex items-center justify-start sm:justify-center">
+                    <div className="flex-1 min-w-0 flex items-center justify-center">
                       <ResultDigits result={d.full_result} />
                     </div>
 
-                    {/* Animal */}
+                    {/* Animal — md+ only */}
                     {animalForDraw && (
                       <div className="shrink-0 hidden md:flex items-center gap-1.5">
                         {resolveAnimalImage(animalForDraw)
@@ -675,13 +788,13 @@ export default function AdminPanel() {
                       </div>
                     )}
 
-                    {/* Edit button */}
+                    {/* Edit button — always visible (mobile-friendly) */}
                     <button
                       onClick={() => handleEdit(d)}
-                      className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200
+                      className={`shrink-0 flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200
                         ${isCurrentEdit
                           ? 'bg-[#fcd34d]/30 text-[#92400e] dark:text-[#fcd34d]'
-                          : 'bg-[#f5f7ff] dark:bg-[#1a2844] text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] hover:text-primary'
+                          : 'bg-[#f5f7ff] dark:bg-[#1a2844] text-muted-foreground hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] hover:text-primary'
                         }`}
                     >
                       <span className="material-symbols-outlined text-[14px]">{isCurrentEdit ? 'edit_square' : 'edit'}</span>
@@ -693,6 +806,45 @@ export default function AdminPanel() {
             </div>
           )
         }
+
+        {/* Pagination */}
+        {totalHistoryPages > 1 && (
+          <div className="flex items-center justify-center gap-1.5 px-5 py-4 border-t border-border flex-wrap">
+            <button
+              onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+              disabled={safeHistoryPage === 1}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground bg-secondary hover:bg-[#eff3ff] hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+            </button>
+            {Array.from({ length: totalHistoryPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalHistoryPages || Math.abs(p - safeHistoryPage) <= 1)
+              .reduce((acc, p, i, arr) => {
+                if (i > 0 && p - arr[i - 1] > 1) acc.push('...');
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((item, i) =>
+                item === '...'
+                  ? <span key={`e${i}`} className="w-6 text-center text-xs text-muted-foreground">…</span>
+                  : <button
+                      key={item}
+                      onClick={() => setHistoryPage(item)}
+                      className={`w-8 h-8 rounded-xl text-xs font-bold transition-all
+                        ${safeHistoryPage === item ? 'bg-[#003fb1] text-white shadow-sm' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
+                    >{item}</button>
+              )
+            }
+            <button
+              onClick={() => setHistoryPage(p => Math.min(totalHistoryPages, p + 1))}
+              disabled={safeHistoryPage === totalHistoryPages}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground bg-secondary hover:bg-[#eff3ff] hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
+            <span className="text-[10px] text-muted-foreground ml-1">{safeHistoryPage}/{totalHistoryPages}</span>
+          </div>
+        )}
       </div>
     </div>
   );
