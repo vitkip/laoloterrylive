@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import ArchiveTable from '../components/ArchiveTable';
 import { formatLaoDate } from '../utils/date';
 import { API, resolveAnimalImage } from '../utils/api';
 import UserAvatar from '../components/UserAvatar';
@@ -340,6 +339,195 @@ function UserStats() {
   );
 }
 
+// ── Recent Entry History Widget ───────────────────────────────────
+
+function RecentHistory() {
+  const { draws, animals, types } = useData();
+  const recentDraws = (draws ?? []).slice(0, 6);
+
+  if (!draws) {
+    return (
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-8 flex items-center gap-4">
+        <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center">
+          <span className="material-symbols-outlined text-[#003fb1] text-[18px] animate-spin">progress_activity</span>
+        </div>
+        <p className="text-sm text-muted-foreground font-medium">ກຳລັງໂຫຼດ...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div className="flex items-center gap-2.5">
+          <div className="relative w-3 h-3 flex items-center justify-center shrink-0">
+            <span className="absolute w-3 h-3 rounded-full bg-[#003fb1]/30 animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-[#003fb1] block" />
+          </div>
+          <h3 className="text-sm font-extrabold text-foreground">6 ງວດລ່າສຸດ</h3>
+          <span className="text-[10px] bg-[#eff3ff] dark:bg-[#1e2d4a] text-[#003fb1] font-bold px-2 py-0.5 rounded-full border border-[#003fb1]/20">
+            {draws.length} ທັງໝົດ
+          </span>
+        </div>
+        <Link
+          to="/admin/draws"
+          className="flex items-center gap-1 text-[11px] font-bold text-[#003fb1] hover:text-[#1a56db] transition-colors"
+        >
+          ຈັດການທັງໝົດ
+          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </Link>
+      </div>
+
+      {/* ── Column headers ── */}
+      <div className="hidden sm:grid grid-cols-[28px_160px_1fr_130px_auto] items-center gap-3 px-5 py-2.5 bg-muted/40 border-b border-border">
+        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">#</span>
+        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">ງວດ / ວັນທີ</span>
+        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">ເລກທີ່ອອກ</span>
+        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">ນາມສັດ</span>
+        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">ສະຖານະ</span>
+      </div>
+
+      {/* ── Rows ── */}
+      <div className="divide-y divide-border">
+        {recentDraws.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-14 gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
+              <span className="material-symbols-outlined text-muted-foreground text-[24px]">inbox</span>
+            </div>
+            <p className="text-sm text-muted-foreground font-medium">ຍັງບໍ່ມີຂໍ້ມູນ</p>
+          </div>
+        ) : recentDraws.map((draw, idx) => {
+          const twoDigitResult = draw.results_detail?.find(r => r.prize_type === '2_digits');
+          const animal = animals?.find(a => String(a.animal_id) === String(twoDigitResult?.animal_id));
+          const animalImg = resolveAnimalImage(animal);
+          const t = types?.find(t => t.type_id == draw.type_id);
+          const color = t?.color || '#003fb1';
+          const pairs = draw.full_result?.length >= 6
+            ? [draw.full_result.slice(0, 2), draw.full_result.slice(2, 4), draw.full_result.slice(4, 6)]
+            : [];
+          const isLatest = idx === 0;
+
+          return (
+            <div
+              key={draw.draw_id}
+              className={`flex items-center gap-3 sm:gap-4 px-5 py-3.5 hover:bg-accent/40 transition-colors duration-150 ${isLatest ? 'bg-[#eff3ff]/40 dark:bg-[#1e2d4a]/20' : ''}`}
+            >
+              {/* Index / pulse dot */}
+              <div className="w-6 flex items-center justify-center shrink-0">
+                {isLatest ? (
+                  <div className="relative w-3 h-3 flex items-center justify-center">
+                    <span className="absolute w-3 h-3 rounded-full bg-[#003fb1]/30 animate-ping" />
+                    <span className="w-2 h-2 rounded-full bg-[#003fb1] block" />
+                  </div>
+                ) : (
+                  <span className="text-[10px] font-bold text-muted-foreground/40 tabular-nums">{idx + 1}</span>
+                )}
+              </div>
+
+              {/* Date + draw# + type badge */}
+              <div className="flex-[0_0_140px] sm:flex-[0_0_160px] min-w-0">
+                <p className="text-xs font-bold text-foreground leading-snug truncate">
+                  {formatLaoDate(draw.draw_date, true)}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <span className="text-[10px] text-muted-foreground/60 font-medium whitespace-nowrap">ງວດທີ {draw.draw_number}</span>
+                  {t && (
+                    <span
+                      className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full text-[9px] font-bold border leading-none"
+                      style={{ color, background: `${color}12`, borderColor: `${color}35` }}
+                    >
+                      <span className="w-1 h-1 rounded-full shrink-0" style={{ background: color }} />
+                      {t.type_name}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Digit chips */}
+              <div className="flex items-center gap-1 flex-1 min-w-0">
+                {pairs.length > 0 ? pairs.map((pair, pi) => (
+                  <div key={pi} className="flex items-center gap-0.5">
+                    {pair.split('').map((d, di) => (
+                      <span
+                        key={di}
+                        className="w-7 h-8 sm:w-8 sm:h-9 flex items-center justify-center rounded-lg bg-gradient-to-br from-[#003fb1] to-[#1a56db] text-white text-sm font-black shadow-sm"
+                      >
+                        {d}
+                      </span>
+                    ))}
+                    {pi < 2 && <span className="mx-0.5 text-border text-[10px] font-black">·</span>}
+                  </div>
+                )) : (
+                  <span className="text-sm font-black text-primary font-mono">{draw.full_result}</span>
+                )}
+              </div>
+
+              {/* Animal */}
+              <div className="hidden sm:flex items-center gap-2 shrink-0 w-[130px]">
+                {animal ? (
+                  <>
+                    {animalImg && (
+                      <img
+                        src={animalImg}
+                        alt={animal.animal_name_lao}
+                        className="w-8 h-8 rounded-lg object-contain bg-secondary/50 p-0.5 shrink-0 border border-border"
+                        onError={e => { e.target.style.display = 'none'; }}
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-foreground leading-tight truncate">{animal.animal_name_lao}</p>
+                      <p className="text-[10px] text-muted-foreground/60 tabular-nums">{twoDigitResult?.result_value}</p>
+                    </div>
+                  </>
+                ) : (
+                  <span className="text-[11px] text-muted-foreground/30">—</span>
+                )}
+              </div>
+
+              {/* Status + video */}
+              <div className="flex items-center gap-2 shrink-0 ml-auto">
+                <span className={`hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+                  draw.status === 'published'
+                    ? 'text-[#006c49] bg-[#edfdf5] border-[#6cf8bb]/40 dark:bg-[#041f0f] dark:border-[#166534]/40'
+                    : 'text-[#d97706] bg-[#fffbeb] border-[#fcd34d]/40 dark:bg-[#1c1400] dark:border-[#92400e]/40'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${draw.status === 'published' ? 'bg-[#006c49]' : 'bg-[#d97706]'}`} />
+                  {draw.status === 'published' ? 'Published' : 'Draft'}
+                </span>
+                {draw.youtube_url && (
+                  <a
+                    href={draw.youtube_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 hover:border-destructive/40 text-destructive transition-all"
+                    title="ເບິ່ງວິດີໂອ"
+                  >
+                    <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Footer CTA ── */}
+      <div className="px-5 py-3.5 border-t border-border bg-muted/20">
+        <Link
+          to="/admin/draws"
+          className="flex items-center justify-center gap-2 text-[11px] font-bold text-[#003fb1] hover:text-[#1a56db] transition-colors group"
+        >
+          <span className="material-symbols-outlined text-[14px]">table_rows</span>
+          ເບິ່ງ ແລະ ຈັດການ ງວດທັງໝົດ
+          <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────
 
 export default function AdminOverview() {
@@ -469,10 +657,8 @@ export default function AdminOverview() {
 
       {/* ─── Recent History ─── */}
       <div>
-        <SectionLabel icon="history" label="ປະຫວັດການປ້ອນລ່າສຸດ" accent="#555870" />
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-          <ArchiveTable compact />
-        </div>
+        <SectionLabel icon="history" label="ປະຫວັດການປ້ອນລ່າສຸດ" accent="#003fb1" />
+        <RecentHistory />
       </div>
 
     </div>

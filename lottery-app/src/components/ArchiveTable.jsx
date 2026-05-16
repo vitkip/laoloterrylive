@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Search, X, PlayCircle, ExternalLink, VideoOff, Loader2 } from 'lucide-react'
+import { Search, X, PlayCircle, ExternalLink, VideoOff, Loader2, CalendarDays, SlidersHorizontal } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import { formatLaoDate } from '../utils/date'
 import { resolveAnimalImage } from '../utils/api'
@@ -8,6 +8,13 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 // ── Type Badge ─────────────────────────────────────────────────────
 function TypeBadge({ typeId, types }) {
@@ -253,138 +260,177 @@ export default function ArchiveTable({ compact = false }) {
     <>
       <VideoDialog draw={videoModalDraw} onClose={() => setVideoModalDraw(null)} />
 
-      <section className="space-y-4">
+      <section className="space-y-5">
 
-        {/* ─── Toolbar ─── */}
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            {/* Title + count */}
-            <div className="flex items-center gap-2.5">
-              <span className="w-1 h-5 rounded-full bg-gradient-to-b from-[#003fb1] to-[#1a56db]" />
-              <h3 className="text-base sm:text-lg font-extrabold text-foreground">ຜົນທັງໝົດ</h3>
-              <Badge variant="secondary" className="text-primary font-bold">
-                {filteredDraws.length} ງວດ
-              </Badge>
+        {/* ─── Section Header ─── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#003fb1]/10 flex items-center justify-center">
+              <CalendarDays className="w-4 h-4 text-[#003fb1]" />
             </div>
-            {/* Search input */}
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <Input
-                type="text"
-                placeholder="ຄົ້ນຫາວັນທີ, ງວດ, ເລກ..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 pr-8 focus-visible:ring-primary"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive transition-colors"
-                  aria-label="ລ້າງ"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            <h3 className="text-base sm:text-lg font-extrabold text-foreground">ຜົນທັງໝົດ</h3>
+            <Badge variant="secondary" className="text-primary font-bold text-xs px-2.5">
+              {filteredDraws.length} ງວດ
+            </Badge>
           </div>
-
-          {/* ─── Type Filter Tabs ─── */}
-          {types && types.length > 1 && (
-            <div className="flex flex-wrap gap-2">
+          {/* Search input */}
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="text"
+              placeholder="ຄົ້ນຫາວັນທີ, ງວດ, ເລກ..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-9 pr-8 focus-visible:ring-primary"
+            />
+            {searchTerm && (
               <button
-                onClick={() => setSelectedType('all')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                  selectedType === 'all'
-                    ? 'bg-[#003fb1] text-white border-[#003fb1] shadow-sm'
-                    : 'bg-card text-muted-foreground border-border hover:border-[#003fb1]/40'
-                }`}
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive transition-colors"
+                aria-label="ລ້າງ"
               >
-                ທັງໝົດ
+                <X className="w-3.5 h-3.5" />
               </button>
-              {types.filter(t => t.is_active != 0).map(t => {
-                const color = t.color || '#003fb1'
-                const active = String(selectedType) === String(t.type_id)
-                return (
-                  <button
-                    key={t.type_id}
-                    onClick={() => setSelectedType(String(t.type_id))}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all"
-                    style={active
-                      ? { background: color, color: '#fff', borderColor: color }
-                      : { background: 'transparent', color, borderColor: `${color}50` }
-                    }
-                  >
-                    {t.type_name}
-                  </button>
-                )
-              })}
+            )}
+          </div>
+        </div>
+
+        {/* ─── Filter Bar ─── */}
+        <div className="bg-card border border-border rounded-2xl p-4 space-y-3.5">
+
+          {/* Type Filter Tabs */}
+          {types && types.length > 1 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0 w-20">ປະເພດ</span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedType('all')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                    selectedType === 'all'
+                      ? 'bg-[#003fb1] text-white border-[#003fb1] shadow-sm'
+                      : 'bg-background text-muted-foreground border-border hover:border-[#003fb1]/40 hover:text-foreground'
+                  }`}
+                >
+                  ທັງໝົດ
+                </button>
+                {types.filter(t => t.is_active != 0).map(t => {
+                  const color = t.color || '#003fb1'
+                  const active = String(selectedType) === String(t.type_id)
+                  return (
+                    <button
+                      key={t.type_id}
+                      onClick={() => setSelectedType(String(t.type_id))}
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all"
+                      style={active
+                        ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 2px 8px ${color}30` }
+                        : { background: 'transparent', color, borderColor: `${color}50` }
+                      }
+                    >
+                      {t.type_name}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
 
-          {/* ─── Date Filter Row ─── */}
+          {/* Divider */}
+          {types && types.length > 1 && (
+            <div className="h-px bg-border" />
+          )}
+
+          {/* Date Filter Row */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">ກັນຕອງວັນທີ:</span>
+            <div className="flex items-center gap-1.5 w-20 shrink-0">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">ວັນທີ</span>
+            </div>
 
             {/* Year */}
-            <select
-              value={filterYear}
-              onChange={e => setFilterYear(e.target.value)}
-              className={`h-8 px-2.5 rounded-xl border text-xs font-bold bg-card outline-none transition-all cursor-pointer
-                ${ filterYear ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground' }`}
-            >
-              <option value="">ປີ (ທັງໝົດ)</option>
-              {availableYears.map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
+            <Select value={filterYear || '__all__'} onValueChange={v => setFilterYear(v === '__all__' ? '' : v)}>
+              <SelectTrigger className={`h-8 w-36 text-xs font-bold rounded-xl border transition-all ${
+                filterYear ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border'
+              }`}>
+                <SelectValue placeholder="ປີທັງໝົດ" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__" className="text-xs font-bold">ປີ (ທັງໝົດ)</SelectItem>
+                {availableYears.map(y => (
+                  <SelectItem key={y} value={y} className="text-xs font-bold">{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Month */}
-            <select
-              value={filterMonth}
-              onChange={e => setFilterMonth(e.target.value)}
-              className={`h-8 px-2.5 rounded-xl border text-xs font-bold bg-card outline-none transition-all cursor-pointer
-                ${ filterMonth ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground' }`}
-            >
-              <option value="">ເດືອນ (ທັງໝົດ)</option>
-              {availableMonths.map(m => (
-                <option key={m} value={m}>{LAO_MONTHS[m]} ({m.toString().padStart(2, '0')})</option>
-              ))}
-            </select>
+            <Select value={filterMonth || '__all__'} onValueChange={v => setFilterMonth(v === '__all__' ? '' : v)}>
+              <SelectTrigger className={`h-8 w-40 text-xs font-bold rounded-xl border transition-all ${
+                filterMonth ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border'
+              }`}>
+                <SelectValue placeholder="ເດືອນທັງໝົດ" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__" className="text-xs font-bold">ເດືອນ (ທັງໝົດ)</SelectItem>
+                {availableMonths.map(m => (
+                  <SelectItem key={m} value={String(m)} className="text-xs font-bold">
+                    {LAO_MONTHS[m]} ({m.toString().padStart(2, '0')})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Day */}
-            <select
-              value={filterDay}
-              onChange={e => setFilterDay(e.target.value)}
-              className={`h-8 px-2.5 rounded-xl border text-xs font-bold bg-card outline-none transition-all cursor-pointer
-                ${ filterDay ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground' }`}
-            >
-              <option value="">ວັນ (ທັງໝົດ)</option>
-              {availableDays.map(d => (
-                <option key={d} value={d}>{d.toString().padStart(2, '0')}</option>
-              ))}
-            </select>
+            <Select value={filterDay || '__all__'} onValueChange={v => setFilterDay(v === '__all__' ? '' : v)}>
+              <SelectTrigger className={`h-8 w-36 text-xs font-bold rounded-xl border transition-all ${
+                filterDay ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border'
+              }`}>
+                <SelectValue placeholder="ວັນທັງໝົດ" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__" className="text-xs font-bold">ວັນ (ທັງໝົດ)</SelectItem>
+                {availableDays.map(d => (
+                  <SelectItem key={d} value={String(d)} className="text-xs font-bold">
+                    {d.toString().padStart(2, '0')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {/* Clear date filter */}
-            {hasDateFilter && (
-              <button
-                onClick={() => { setFilterYear(''); setFilterMonth(''); setFilterDay('') }}
-                className="flex items-center gap-1 h-8 px-2.5 rounded-xl border border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10 text-xs font-bold transition-all"
-              >
-                <X className="w-3 h-3" />
-                ລ້າງວັນທີ
-              </button>
-            )}
-
-            {/* Clear all */}
-            {hasAnyFilter && (
-              <button
-                onClick={clearAllFilters}
-                className="ml-auto flex items-center gap-1 h-8 px-3 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-secondary border border-border transition-all"
-              >
-                <X className="w-3 h-3" />
-                ລ້າງທຸກ
-              </button>
-            )}
+            {/* Active filter chips */}
+            <div className="flex items-center gap-1.5 ml-1 flex-wrap">
+              {filterYear && (
+                <button
+                  onClick={() => setFilterYear('')}
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-[#003fb1]/10 text-[#003fb1] border border-[#003fb1]/25 text-[11px] font-bold hover:bg-[#003fb1]/20 transition-colors"
+                >
+                  {filterYear} <X className="w-3 h-3" />
+                </button>
+              )}
+              {filterMonth && (
+                <button
+                  onClick={() => setFilterMonth('')}
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-[#003fb1]/10 text-[#003fb1] border border-[#003fb1]/25 text-[11px] font-bold hover:bg-[#003fb1]/20 transition-colors"
+                >
+                  {LAO_MONTHS[parseInt(filterMonth)]} <X className="w-3 h-3" />
+                </button>
+              )}
+              {filterDay && (
+                <button
+                  onClick={() => setFilterDay('')}
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-[#003fb1]/10 text-[#003fb1] border border-[#003fb1]/25 text-[11px] font-bold hover:bg-[#003fb1]/20 transition-colors"
+                >
+                  ວັນທີ {filterDay.toString().padStart(2, '0')} <X className="w-3 h-3" />
+                </button>
+              )}
+              {hasAnyFilter && (
+                <button
+                  onClick={clearAllFilters}
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-destructive/8 text-destructive border border-destructive/20 text-[11px] font-bold hover:bg-destructive/15 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                  ລ້າງທຸກ
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -513,9 +559,11 @@ export default function ArchiveTable({ compact = false }) {
               <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
                 <Search className="w-6 h-6 text-muted-foreground" />
               </div>
-              <p className="text-sm font-bold text-muted-foreground">ບໍ່ພົນຂໍ້ມູນທີ່ຕໍງກັນ</p>
-              <Button variant="link" size="sm" onClick={clearAllFilters} className="text-primary">
-                ລ້າງທຸກໃບ້ filter
+              <p className="text-sm font-bold text-muted-foreground">ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັນ</p>
+              <p className="text-xs text-muted-foreground/70">ລອງປ່ຽນຄ່າ filter ຫຼືລ້າງການຄົ້ນຫາ</p>
+              <Button variant="outline" size="sm" onClick={clearAllFilters} className="gap-1.5 rounded-xl mt-1">
+                <X className="w-3.5 h-3.5" />
+                ລ້າງທຸກ filter
               </Button>
             </div>
           ) : null

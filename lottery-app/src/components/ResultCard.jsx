@@ -84,7 +84,8 @@ export default function ResultCard({ draw, compact = false }) {
   const captureRef = useRef(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const typeName = lotteryTypes.find(t => t.type_id === draw.type_id)?.type_name || ''
+  const lotteryType = lotteryTypes.find(t => t.type_id === draw.type_id) || null
+  const typeName = lotteryType?.type_name || ''
   const twoDigitResult = draw.results_detail?.find(r => r.prize_type === '2_digits')
   const animal = twoDigitResult?.animal_id
     ? animals.find(a => String(a.animal_id) === String(twoDigitResult.animal_id))
@@ -121,7 +122,7 @@ export default function ResultCard({ draw, compact = false }) {
     <Card className="relative">
       {/* Off-screen capture element for share image */}
       <div className="absolute left-[-9999px] top-[-9999px]">
-        <ShareResultCapture ref={captureRef} draw={draw} animal={animal} animalDisplayUrl={animalDisplayUrl} />
+        <ShareResultCapture ref={captureRef} draw={draw} animal={animal} animalDisplayUrl={animalDisplayUrl} lotteryType={lotteryType} />
       </div>
 
       <CardHeader className="pb-4">

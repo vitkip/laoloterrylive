@@ -2,15 +2,15 @@ import React, { forwardRef } from 'react';
 import { formatLaoDate } from '../utils/date';
 import { prizeLabels } from '../data/draws';
 
-const ShareResultCapture = forwardRef(({ draw, animal, animalDisplayUrl }, ref) => {
+const ShareResultCapture = forwardRef(({ draw, animal, animalDisplayUrl, lotteryType }, ref) => {
   if (!draw) return null;
 
   const numbersArr = draw.full_result.split('');
-  
-  // Extract other digits
-  const getPrizeValue = (type) => {
-    return draw.results_detail?.find(r => r.prize_type === type)?.result_value || '-';
-  }
+  const typeName = lotteryType?.type_name || 'ຫວຍລາວ';
+
+  // Get all sub-prizes (everything except 6_digits which is shown separately at the top)
+  const subPrizes = draw.results_detail?.filter(r => r.prize_type !== '6_digits') || [];
+  const hasAnimalPrize = subPrizes.some(r => r.prize_type === '2_digits');
 
   return (
     <div 
@@ -37,7 +37,7 @@ const ShareResultCapture = forwardRef(({ draw, animal, animalDisplayUrl }, ref) 
           <h1 className="text-3xl font-black tracking-tight" style={{ fontFamily: "'Inter', sans-serif" }}>LAOLOTS.COM</h1>
         </div>
         <div className="bg-white/20 px-8 py-2 rounded-full backdrop-blur-md">
-          <h2 className="text-2xl font-bold">ຜົນຫວຍພັດທະນາ / ແຊຣ໌ຜົນລາງວັນ</h2>
+          <h2 className="text-2xl font-bold">{typeName} / ແຊຣ໌ຜົນລາງວັນ</h2>
         </div>
       </div>
 
@@ -72,25 +72,27 @@ const ShareResultCapture = forwardRef(({ draw, animal, animalDisplayUrl }, ref) 
         </div>
 
         {/* Breakdown & Animal (Bottom half split) */}
-        <div className="grid grid-cols-2 gap-6 flex-1">
+        <div className={`grid gap-6 flex-1 ${hasAnimalPrize && animal ? 'grid-cols-2' : 'grid-cols-1'}`}>
           
-          {/* Left: 5,4,3,2 digits */}
-          <div className="bg-white rounded-2xl border border-[#dee9fd] shadow-sm p-6 flex flex-col justify-between">
-             {['5_digits', '4_digits', '3_digits', '2_digits'].map(type => (
-               <div key={type} className="flex items-center justify-between py-3 border-b border-[#eff3ff] last:border-0 last:pb-0">
-                 <span className="bg-[#eff3ff] text-[#003fb1] px-4 py-2 rounded-lg font-bold text-lg inline-block">
-                   {prizeLabels[type]}
-                 </span>
-                 <span className="text-3xl font-black text-[#121c2a]" style={{ fontFamily: "'Inter', sans-serif" }}>
-                   {getPrizeValue(type)}
-                 </span>
-               </div>
-             ))}
-          </div>
+          {/* Left: sub-prizes (dynamically from results_detail) */}
+          {subPrizes.length > 0 && (
+            <div className="bg-white rounded-2xl border border-[#dee9fd] shadow-sm p-6 flex flex-col justify-between">
+               {subPrizes.map(r => (
+                 <div key={r.detail_id ?? r.prize_type} className="flex items-center justify-between py-3 border-b border-[#eff3ff] last:border-0 last:pb-0">
+                   <span className="bg-[#eff3ff] text-[#003fb1] px-4 py-2 rounded-lg font-bold text-lg inline-block">
+                     {prizeLabels[r.prize_type] ?? r.prize_type}
+                   </span>
+                   <span className="text-3xl font-black text-[#121c2a]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                     {r.result_value}
+                   </span>
+                 </div>
+               ))}
+            </div>
+          )}
 
-          {/* Right: Animal Image */}
-          <div className="bg-gradient-to-br from-[#ffffff] to-[#eff3ff] rounded-2xl border border-[#dee9fd] shadow-sm p-6 flex flex-col items-center justify-center">
-             {animal ? (
+          {/* Right: Animal Image (only if lottery has 2_digits + animal) */}
+          {hasAnimalPrize && animal && (
+            <div className="bg-gradient-to-br from-[#ffffff] to-[#eff3ff] rounded-2xl border border-[#dee9fd] shadow-sm p-6 flex flex-col items-center justify-center">
                <>
                  <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center overflow-hidden border-4 border-white shadow-xl mb-4 relative">
                    {animalDisplayUrl ? (
@@ -100,12 +102,10 @@ const ShareResultCapture = forwardRef(({ draw, animal, animalDisplayUrl }, ref) 
                    )}
                  </div>
                  <h3 className="text-3xl font-black text-[#121c2a] mb-1">{animal.animal_name_lao}</h3>
-                 <p className="text-lg font-bold text-[#003fb1]">ນາມສັດ (ເລກ {getPrizeValue('2_digits')})</p>
+                 <p className="text-lg font-bold text-[#003fb1]">ນາມສັດ (ເລກ {subPrizes.find(r => r.prize_type === '2_digits')?.result_value ?? '-'})</p>
                </>
-             ) : (
-               <p className="text-xl font-bold text-[#737686]">ບໍ່ມີຂໍ້ມູນນາມສັດ</p>
-             )}
-          </div>
+            </div>
+          )}
 
         </div>
       </div>
