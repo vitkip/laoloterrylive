@@ -1,6 +1,8 @@
 import { Archive, Database, CalendarDays, TrendingUp, Film } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import ArchiveTable from '../components/ArchiveTable'
+import SEO from '../components/SEO'
+import { webPageSchema, lotteryListSchema, breadcrumbSchema } from '../components/schemas'
 
 export default function HistoryPage() {
   const { draws, types } = useData()
@@ -8,8 +10,33 @@ export default function HistoryPage() {
   const latestNum = draws?.[0]?.draw_number ?? '-'
   const withVideo = draws?.filter(d => d.youtube_url)?.length ?? 0
 
+  const seoDesc = `ຜົນຫວຍລາວຍ້ອນຫຼັງທຸກງວດ ${total} ງວດ. ເບິ່ງຜົນຫວຍພັດທະນາຍ້ອນຫຼັງ, ຖ່ານທອດສົດ ຈາກງວດ 1 ຮອດ ${latestNum}. | ผลหวยลาวย้อนหลังทุกงวด ${total} งวด หวยลาวพัฒนาย้อนหลัง ตรวจหวยย้อนหลังออนไลน์`
+
   return (
     <div className="space-y-10">
+      <SEO
+        title={`ຜົນຫວຍຍ້ອນຫຼັງ ${total} ງວດ | หวยลาวย้อนหลัง ผลหวยพัฒนาย้อนหลัง`}
+        description={seoDesc}
+        keywords={[
+          'ຜົນຫວຍຍ້ອນຫຼັງ', `ງວດທັງໝົດ ${total}`, 'ຫວຍລາວທຸກງວດ',
+          'หวยลาวย้อนหลัง', 'ผลหวยพัฒนาย้อนหลัง', 'ตรวจหวยย้อนหลังออนไลน์',
+          'หวยย้อนหลัง', 'ฐานข้อมูลหวยลาว',
+        ]}
+        url="/history"
+        jsonLd={[
+          webPageSchema(
+            'ຜົນຫວຍຍ້ອນຫຼັງ | หวยลาวย้อนหลัง',
+            'https://laolots.com/history',
+            seoDesc,
+            draws?.[0]?.draw_date,
+          ),
+          breadcrumbSchema([
+            { name: 'ໜ້າຫຼັກ', url: 'https://laolots.com/' },
+            { name: 'ຜົນຫວຍຍ້ອນຫຼັງ', url: 'https://laolots.com/history' },
+          ]),
+          lotteryListSchema(draws ?? []),
+        ]}
+      />
 
       {/* ─── Hero Banner ─── */}
       <div className="relative rounded-3xl overflow-hidden">

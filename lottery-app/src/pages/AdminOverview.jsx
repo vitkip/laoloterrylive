@@ -6,6 +6,7 @@ import { formatLaoDate } from '../utils/date';
 import { API, resolveAnimalImage } from '../utils/api';
 import UserAvatar from '../components/UserAvatar';
 import RoleBadge from '../components/RoleBadge';
+import SEO from '../components/SEO';
 
 // ── Shared primitives ────────────────────────────────────────────
 
@@ -553,6 +554,7 @@ export default function AdminOverview() {
 
   return (
     <div className="space-y-10">
+      <SEO title="Admin Overview" description="" noIndex />
 
       {/* ─── Hero Welcome Banner ─── */}
       <div className="relative rounded-3xl overflow-hidden">

@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "cmdk": "^1.1.1"
+    "cmdk": "^1.1.1",
+    "react-helmet-async": "^3.0.0"
   }
 }

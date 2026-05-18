@@ -3,6 +3,8 @@ import DreamDictionary from '../components/DreamDictionary';
 import NumberHistorySearch from '../components/NumberHistorySearch';
 import MonthlyStats from '../components/MonthlyStats';
 import { useData } from '../context/DataContext';
+import SEO from '../components/SEO';
+import { webPageSchema, faqSchema, breadcrumbSchema } from '../components/schemas';
 
 const TABS = [
   { id: 'dream',   label: 'ຕຳລາແປຄວາມຝັນ',       icon: 'auto_awesome',    color: '#7c3aed' },
@@ -15,8 +17,37 @@ export default function SearchPage() {
   const [selectedType, setSelectedType] = useState('all')
   const { draws, types } = useData()
 
+  const searchFaqs = [
+    { q: 'ຕຳລາຄວາມຝັນແມ່ນຫຍັງ?', a: 'ຕຳລາໂບຮານ 40 ນາມສັດ ແປຄວາມຝັນເປັນເລກຫວຍ' },
+    { q: 'ตำราแปลความฝันคืออะไร?', a: 'ตำราโบราณ 40 นามสัตว์ แปลความฝันเป็นเลขหวย' },
+    { q: 'ສາມາດຊອກຫາຜົນຫວຍຕາມເລກໄດ້ບໍ?', a: 'ໄດ້ — ໃຊ້ tab "ຄົ້ນຫາຕາມເລກ" ເພື່ອເບິ່ງປະຫວັດ' },
+    { q: 'ค้นหาผลหวยตามเลขได้ไหม?', a: 'ได้ — ใช้แท็บ "ค้นหาตามเลข" เพื่อดูประวัติ' },
+  ]
+
   return (
     <div className="space-y-8">
+      <SEO
+        title="ຕຳລາແປຄວາມຝັນ & ຄົ້ນຫາຜົນຫວຍ | ทำนายฝัน ตรวจหวยออนไลน์ เลขเด็ดจากความฝัน"
+        description="ຕຳລາໂບຮານ 40 ນາມສັດ ແປຄວາມຝັນເປັນເລກ, ຄົ້ນຫາຜົນຫວຍຕາມເລກ, ວິເຄາະຕາມເດືອນ | ทำนายฝัน 40 นามสัตว์ แปลความฝันเป็นเลขหวย ค้นหาผลหวยออนไลน์ วิเคราะห์ตามเดือน"
+        keywords={[
+          'ຕຳລາຄວາມຝັນ', 'ທຳນາຍຝັນ', 'ນາມສັດ 40', 'ຄົ້ນຫາຫວຍ',
+          'ทำนายฝัน', 'ตำราความฝัน', 'นามสัตว์', 'ตรวจหวยออนไลน์',
+          'เลขเด็ดจากความฝัน', 'หวยจากความฝัน', 'ค้นหาผลหวย',
+        ]}
+        url="/search"
+        jsonLd={[
+          webPageSchema(
+            'ຕຳລາແປຄວາມຝັນ & ຄົ້ນຫາຜົນຫວຍ | ทำนายฝัน ตรวจหวยออนไลน์',
+            'https://laolots.com/search',
+            'ຕຳລາໂບຮານ 40 ນາມສັດ ແປຄວາມຝັນ, ຄົ້ນຫາຜົນຫວຍ, ວິເຄາະຕາມເດືອນ',
+          ),
+          breadcrumbSchema([
+            { name: 'ໜ້າຫຼັກ', url: 'https://laolots.com/' },
+            { name: 'ຄົ້ນຫາ & ວິເຄາະ', url: 'https://laolots.com/search' },
+          ]),
+          faqSchema(searchFaqs),
+        ]}
+      />
 
       {/* ─── Hero Header ─── */}
       <div className="relative rounded-3xl overflow-hidden">

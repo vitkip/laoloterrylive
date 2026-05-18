@@ -5,6 +5,8 @@ import { useStatistics } from '../hooks/useStatistics'
 import ResultCard from '../components/ResultCard'
 import LiveVdoBanner from '../components/LiveVdoBanner'
 import { resolveAnimalImage } from '../utils/api'
+import SEO from '../components/SEO'
+import { websiteSchema, lotteryResultSchema, breadcrumbSchema } from '../components/schemas'
 
 function HomePageSkeleton() {
   const shimmer = "bg-[#e8edf8] dark:bg-[#2b3a54] animate-pulse rounded-lg"
@@ -187,8 +189,35 @@ export default function HomePage() {
     },
   ]
 
+  const latestDraw = draws.filter(d => d.status === 'published')[0]
+  const latestDateStr = latestDraw?.draw_date ?? ''
+  const latestNumber = latestDraw?.result_number ?? ''
+  const latestTypeName = latestDraw?.type_name ?? 'ພັດທະນາ'
+
+  const seoTitle = latestNumber
+    ? `ຜົນຫວຍ${latestTypeName} ${latestDateStr} ເລກ ${latestNumber} | ผลหวย${latestTypeName} ${latestDateStr}`
+    : 'ຜົນຫວຍພັດທະນາຫຼ້າສຸດ | ผลหวยพัฒนาล่าสุด'
+  const seoDesc = latestNumber
+    ? `ຜົນຫວຍ${latestTypeName}ງວດວັນທີ ${latestDateStr} ເລກທີ່ອອກ: ${latestNumber}. ຖ່າຍທອດສົດ ສະຖິຕິ ວິເຄາະຫວຍ ຈັບຄູ່ນາມສັດ ທຳນາຍຝັນ | ผลหวย${latestTypeName} งวด ${latestDateStr} เลข ${latestNumber}. ถ่ายทอดสด สถิติ วิเคราะห์หวย`
+    : 'ສູນລວມຜົນຫວຍພັດທະນາ ຖ່າຍທອດສົດຫວຍລາວ ວິເຄາະຫວຍ | ศูนย์รวมผลหวยลาว ถ่ายทอดสด วิเคราะห์หวย'
+
   return (
     <div className="space-y-12">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        keywords={[
+          latestNumber, latestDateStr, latestTypeName,
+          `ຜົນຫວຍ ${latestDateStr}`, `เลข ${latestNumber}`, `หวยงวด ${latestDateStr}`,
+          'ຫວຍຫຼ້າສຸດ', 'หวยล่าสุด', 'ผลหวยวันนี้',
+        ].filter(Boolean)}
+        url="/"
+        jsonLd={[
+          websiteSchema(),
+          breadcrumbSchema([{ name: 'ໜ້າຫຼັກ', url: 'https://laolots.com/' }]),
+          ...(latestDraw ? [lotteryResultSchema(latestDraw)] : []),
+        ]}
+      />
       <LiveVdoBanner />
 
       {/* ─── Hero ─── */}

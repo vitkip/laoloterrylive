@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useData } from '../context/DataContext'
+import SEO from '../components/SEO'
+import { webPageSchema, breadcrumbSchema } from '../components/schemas'
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -395,8 +397,31 @@ export default function AnalyticsPage() {
 
   const { n, scores, series, freqBars, hot, cold, aiTop, rising, falling, overdue, decisionTop } = analytics
 
+  const topHot = hot?.[0]?.num ?? ''
+
   return (
     <div className="space-y-5">
+      <SEO
+        title={`AI Analytics ວິເຄາະຫວຍລາວ ${n} ງວດ | วิเคราะห์หวยลาว AI เลขเด็ดวันนี้`}
+        description={`ລະບົບວິເຄາະ Big Data ຫວຍລາວ ${n} ງວດ. Heatmap, Trend, Gap Analysis, AI Score, Backtest | วิเคราะห์ Big Data หวยลาว ${n} งวด Heatmap เทรนด์ Gap Analysis AI Score ตรวจผลหวยแบบเรียลไทม์`}
+        keywords={[
+          'AI Analytics', 'Big Data ຫວຍ', 'Heatmap ຫວຍ', 'Gap Analysis ຫວຍ',
+          'วิเคราะห์หวย AI', 'หวยออกอะไร', 'เลขเด็ดวันนี้', 'AI หวยลาว',
+          topHot ? `เลข ${topHot}` : '',
+        ].filter(Boolean)}
+        url="/analytics"
+        jsonLd={[
+          webPageSchema(
+            'AI Analytics ວິເຄາະຫວຍລາວ | วิเคราะห์หวยลาว AI',
+            'https://laolots.com/analytics',
+            `ລະບົບວິເຄາະ Big Data ຫວຍລາວ ${n} ງວດ`,
+          ),
+          breadcrumbSchema([
+            { name: 'ໜ້າຫຼັກ', url: 'https://laolots.com/' },
+            { name: 'Analytics', url: 'https://laolots.com/analytics' },
+          ]),
+        ]}
+      />
 
       {/* ── Hero Header ─────────────────────────────────────────────────────── */}
       <div className="relative rounded-3xl overflow-hidden">

@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /member/
+Disallow: /login
+Disallow: /register
+Disallow: /verify-otp
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /unauthorized
+
+# Allow Google Image bot
+User-agent: Googlebot-Image
+Allow: /
+
+# Sitemap
+Sitemap: https://laolots.com/sitemap.xml

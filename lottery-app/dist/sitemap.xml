@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ── Home ── -->
+  <url>
+    <loc>https://laolots.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="lo" href="https://laolots.com/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://laolots.com/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://laolots.com/"/>
+  </url>
+
+  <!-- ── History / ຜົນຫວຍຍ້ອນຫຼັງ ── -->
+  <url>
+    <loc>https://laolots.com/history</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="lo" href="https://laolots.com/history"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://laolots.com/history"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://laolots.com/history"/>
+  </url>
+
+  <!-- ── Statistics / ສະຖິຕິ ── -->
+  <url>
+    <loc>https://laolots.com/statistics</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="lo" href="https://laolots.com/statistics"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://laolots.com/statistics"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://laolots.com/statistics"/>
+  </url>
+
+  <!-- ── Analytics / AI ── -->
+  <url>
+    <loc>https://laolots.com/analytics</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="lo" href="https://laolots.com/analytics"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://laolots.com/analytics"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://laolots.com/analytics"/>
+  </url>
+
+  <!-- ── Search / ຄົ້ນຫາ ── -->
+  <url>
+    <loc>https://laolots.com/search</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="lo" href="https://laolots.com/search"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://laolots.com/search"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://laolots.com/search"/>
+  </url>
+
+</urlset>

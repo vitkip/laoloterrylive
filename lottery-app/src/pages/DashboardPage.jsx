@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useStatistics } from '../hooks/useStatistics'
 import { useData } from '../context/DataContext'
+import SEO from '../components/SEO'
+import { webPageSchema, faqSchema, breadcrumbSchema } from '../components/schemas'
 import HotNumbers from '../components/HotNumbers'
 import ColdNumbers from '../components/ColdNumbers'
 import DigitDistribution from '../components/DigitDistribution'
@@ -56,9 +58,39 @@ export default function DashboardPage() {
   // Active type color
   const activeType = types?.find(t => String(t.type_id) === String(selectedType))
   const typeColor = activeType?.color || '#003fb1'
+  const typeName = activeType?.type_name ?? 'ລາວ'
+
+  const statsFaqs = [
+    { q: 'ເລກໃດອອກຫຼາຍທີ່ສຸດ?', a: hotTop ? `ເລກ ${hotTop.number} ອອກ ${hotTop.count} ຄັ້ງ` : 'ກຳລັງໂຫຼດ...' },
+    { q: 'เลขไหนออกบ่อยที่สุด?', a: hotTop ? `เลข ${hotTop.number} ออก ${hotTop.count} ครั้ง` : 'กำลังโหลด...' },
+    { q: 'ສາມາດດຶງສະຖິຕິຫວຍຈາກກີ່ງວດ?', a: `ສາມາດວິເຄາະຈາກ ${totalDraws} ງວດທັງໝົດ` },
+    { q: 'มีข้อมูลหวยลาวย้อนหลังกี่งวด?', a: `มีข้อมูล ${totalDraws} งวด` },
+  ]
 
   return (
     <div className="space-y-14">
+      <SEO
+        title={`ສະຖິຕິຫວຍ${typeName} ${totalDraws} ງວດ | สถิติหวยลาว วิเคราะห์เลขเด็ด`}
+        description={`ວິເຄາະສະຖິຕິຫວຍ${typeName} ຈາກ ${totalDraws} ງວດ. ເລກ Hot/Cold, ການແຈກຢາຍຕົວເລກ, ແນວໂນ້ມ ແລະ Pattern ຫວຍ | วิเคราะห์สถิติหวยลาว ${totalDraws} งวด เลขร้อน เลขเย็น การกระจายตัวเลข แนวโน้ม`}
+        keywords={[
+          'ສະຖິຕິຫວຍ', 'ເລກ Hot', 'ເລກ Cold', 'ການແຈກຢາຍ', 'ວິເຄາະຫວຍ',
+          'สถิติหวยลาว', 'เลขร้อน', 'เลขเย็น', 'วิเคราะห์เลขเด็ด', 'ฐานข้อมูลหวยลาว',
+          hotTop ? `เลข ${hotTop.number}` : '',
+        ].filter(Boolean)}
+        url="/statistics"
+        jsonLd={[
+          webPageSchema(
+            `ສະຖິຕິຫວຍ | สถิติหวยลาว`,
+            'https://laolots.com/statistics',
+            `ວິເຄາະສະຖິຕິຫວຍ${typeName} ຈາກ ${totalDraws} ງວດ`,
+          ),
+          breadcrumbSchema([
+            { name: 'ໜ້າຫຼັກ', url: 'https://laolots.com/' },
+            { name: 'ສະຖິຕິ', url: 'https://laolots.com/statistics' },
+          ]),
+          faqSchema(statsFaqs),
+        ]}
+      />
 
       {/* ─── Hero Header ─── */}
       <div className="relative rounded-3xl overflow-hidden">
