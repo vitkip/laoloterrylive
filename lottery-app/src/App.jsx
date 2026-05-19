@@ -98,9 +98,11 @@ export default function App() {
           {/* ══ TIER 1: Open to everyone ════════════════════════════
               Guest users can ONLY access these pages.              */}
           <Route element={<PublicLayout />}>
-            <Route path="/"        element={<HomePage />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/login"   element={<LoginPage />} />
+            <Route path="/"            element={<HomePage />} />
+            <Route path="/history"     element={<HistoryPage />} />
+            <Route path="/login"       element={<LoginPage />} />
+            <Route path="/statistics"  element={<DashboardPage />} />
+            <Route path="/search"      element={<SearchPage />} />
           </Route>
 
           {/* ══ TIER 1b: Auth / Registration (full-screen, no Navbar) */}
@@ -114,9 +116,7 @@ export default function App() {
               Guests hitting these routes → /login?from=<path>      */}
           <Route element={<AuthRoute />}>
             <Route element={<PublicLayout />}>
-              <Route path="/statistics"    element={<DashboardPage />} />
               <Route path="/analytics"     element={<AnalyticsPage />} />
-              <Route path="/search"        element={<SearchPage />} />
               <Route path="/member/profile" element={<MemberProfilePage />} />
             </Route>
           </Route>
