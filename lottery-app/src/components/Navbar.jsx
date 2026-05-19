@@ -24,6 +24,8 @@ import { cn } from '@/lib/utils'
 const GUEST_LINKS = [
   { label: 'ຜົນຫວຍລ່າສຸດ', href: '/', Icon: Home },
   { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history', Icon: Clock },
+  { label: 'ສະຖິຕິ', href: '/statistics', Icon: BarChart2 },
+  { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search', Icon: Search },
 ]
 
 const MEMBER_LINKS = [
@@ -141,7 +143,7 @@ export default function Navbar() {
           {!user && (
             <span className="hidden lg:flex items-center gap-1.5 ml-1 text-[11px] text-primary/50 bg-secondary px-2.5 py-1.5 rounded-xl border border-primary/10">
               <Lock className="w-3 h-3" />
-              ເຂົ້າສູ່ລະບົບ ເພື່ອເບີ່ງສະຖິຕິ AI
+              ເຂົ້າສູ່ລະບົບ ເພື່ອໃຊ້ AI Analytics
             </span>
           )}
         </nav>
@@ -271,7 +273,7 @@ export default function Navbar() {
                 {!user && (
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary border border-primary/10 mt-1">
                     <Lock className="w-[18px] h-[18px] text-primary/40" />
-                    <span className="text-xs text-muted-foreground">Login ເພື່ອໃຊ້ສະຖິຕິ, Analytics</span>
+                    <span className="text-xs text-muted-foreground">Login ເພື່ອໃຊ້ AI Analytics</span>
                   </div>
                 )}
 
