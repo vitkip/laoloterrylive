@@ -165,20 +165,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Role hints */}
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          {[
-            { role: 'Admin', icon: 'admin_panel_settings', desc: 'ຈັດການລະບົບທັງໝົດ' },
-            { role: 'Staff', icon: 'badge', desc: 'ຈັດການຂໍ້ມູນ' },
-            { role: 'Member', icon: 'person', desc: 'ເບິ່ງສະຖິຕິ' },
-          ].map(r => (
-            <div key={r.role} className="bg-white/60 dark:bg-[#152033]/60 rounded-xl p-2.5 border border-border">
-              <span className="material-symbols-outlined text-[#003fb1] text-[16px] block mb-0.5">{r.icon}</span>
-              <p className="text-[10px] font-black text-foreground">{r.role}</p>
-              <p className="text-[9px] text-muted-foreground">{r.desc}</p>
-            </div>
-          ))}
-        </div>
+      
       </div>
     </div>
   );
