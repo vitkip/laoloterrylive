@@ -9,53 +9,122 @@ const DataContext = createContext({
   error: null
 });
 
+// ── localStorage stale-while-revalidate cache ─────────────────────
+// ຂໍ້ມູນ animals/types ບໍ່ຄ່ອຍປ່ຽນ → cache 5 ນາທີ (fresh window)
+// ຂໍ້ມູນ draws ອາດປ່ຽນທຸກ session → cache 60 ວິ (ສັ້ນ)
+const CACHE_KEY   = 'lao_lottery_data_v1';
+const DRAWS_TTL   =  60 * 1000;   // 60 ວິ — draws fresh window
+const STATIC_TTL  =   5 * 60 * 1000; // 5 ນາທີ — animals/types fresh window
+
+function readCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(payload) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ...payload, ts: Date.now() }));
+  } catch {
+    // localStorage full / private mode — silently ignore
+  }
+}
+
 export const DataProvider = ({ children }) => {
-  const [animals, setAnimals] = useState([]);
-  const [draws, setDraws] = useState([]);
-  const [types, setTypes] = useState([]);
+  // Seed state from cache immediately so first render has data (no spinner on return visits)
+  const cached = readCache();
+  const [animals, setAnimals] = useState(cached?.animals ?? []);
+  const [draws, setDraws]     = useState(cached?.draws   ?? []);
+  const [types, setTypes]     = useState(cached?.types   ?? []);
   const [liveSettings, setLiveSettings] = useState({ youtube_live_url: '', is_live: '0' });
-  const [loading, setLoading] = useState(true);
+  // loading=false if we already have cached data to show
+  const [loading, setLoading] = useState(!cached?.draws?.length);
   const [error, setError] = useState(null);
 
   // Track previous draw data to avoid unnecessary re-renders
-  const prevDrawsJsonRef = useRef('');
+  const prevDrawsJsonRef = useRef(cached ? JSON.stringify(cached.draws) : '');
 
   const fetchData = useCallback(async () => {
+    // Stale-while-revalidate: check if ALL data is still within its fresh window
+    const now = Date.now();
+    const cache = readCache();
+    const drawsFresh  = cache && (now - cache.ts) < DRAWS_TTL;
+    const staticFresh = cache && (now - cache.ts) < STATIC_TTL;
+
     try {
-      const [animalsRes, drawsRes, typesRes, liveRes] = await Promise.all([
-        fetch(`${API}/index.php?action=animals`),
-        fetch(`${API}/index.php?action=draws`),
-        fetch(`${API}/index.php?action=types`),
-        fetch(`${API}/index.php?action=live_settings`)
-      ]);
-      
-      if (!animalsRes.ok || !drawsRes.ok || !typesRes.ok || !liveRes.ok) {
-        throw new Error('Failed to fetch data');
+      // Only fetch what's stale — avoid unnecessary requests
+      const fetches = [];
+      if (!staticFresh) {
+        fetches.push(
+          fetch(`${API}/index.php?action=animals`),
+          fetch(`${API}/index.php?action=types`),
+        );
+      }
+      if (!drawsFresh) {
+        fetches.push(fetch(`${API}/index.php?action=draws`));
+      }
+      // live_settings always polled (lightweight, handled separately)
+      fetches.push(fetch(`${API}/index.php?action=live_settings`));
+
+      if (fetches.length === 1) {
+        // Only live_settings needed — nothing else stale
+        const liveRes = await fetches[0];
+        if (liveRes.ok) setLiveSettings(await liveRes.json());
+        setLoading(false);
+        return;
       }
 
-      const animalsData = await animalsRes.json();
-      const drawsData = await drawsRes.json();
-      const typesData = await typesRes.json();
-      const liveData = await liveRes.json();
+      const responses = await Promise.all(fetches);
+      for (const r of responses) {
+        if (!r.ok) throw new Error('Failed to fetch data');
+      }
 
-      // Only update draws if data actually changed (prevents unnecessary re-renders
-      // and re-computation of useStatistics which is O(N²))
+      // Parse each response by which fetches we triggered
+      let idx = 0;
+      let animalsData = cache?.animals;
+      let typesData   = cache?.types;
+      let drawsData   = cache?.draws;
+
+      if (!staticFresh) {
+        animalsData = await responses[idx++].json();
+        typesData   = await responses[idx++].json();
+      }
+      if (!drawsFresh) {
+        drawsData = await responses[idx++].json();
+      }
+      const liveData = await responses[idx].json();
+
+      // Only update draws state if data actually changed
       const drawsJson = JSON.stringify(drawsData);
       if (drawsJson !== prevDrawsJsonRef.current) {
         prevDrawsJsonRef.current = drawsJson;
-        // Sort once here, no need to sort again in consumers
-        const sortedDraws = drawsData.sort((a, b) => new Date(b.draw_date) - new Date(a.draw_date));
+        const sortedDraws = [...drawsData].sort((a, b) => new Date(b.draw_date) - new Date(a.draw_date));
         setDraws(sortedDraws);
+        drawsData = sortedDraws;
       }
 
-      setAnimals(animalsData);
-      setTypes(typesData);
+      if (!staticFresh) {
+        setAnimals(animalsData);
+        setTypes(typesData);
+      }
       setLiveSettings(liveData);
+
+      // Persist to cache
+      writeCache({ animals: animalsData, draws: drawsData, types: typesData });
       setLoading(false);
     } catch (err) {
       console.error(err);
-      setError(err.message);
-      setLoading(false);
+      // If we have cache, keep showing it and don't show error
+      if (cached?.draws?.length) {
+        setLoading(false);
+      } else {
+        setError(err.message);
+        setLoading(false);
+      }
     }
   }, []);
 

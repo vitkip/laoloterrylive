@@ -122,10 +122,21 @@ switch ($action) {
         break;
 
     case 'draws':
+        // Cache 60s — most users see cached response; new draws invalidate within 1 min
+        header('Cache-Control: public, max-age=60, stale-while-revalidate=300');
+
+        // Limit rows to prevent unbounded growth as DB accumulates years of data.
+        // Default 600 draws (~2 years of 3x/week), max 2000. Pass ?limit=N to override.
+        $limit = isset($_GET['limit']) ? min(max((int)$_GET['limit'], 1), 2000) : 600;
+
         // Single JOIN query instead of N+1 (was 1 query per draw)
         $sql = "
             SELECT d.*, dr.detail_id, dr.prize_type, dr.result_value, dr.animal_id AS detail_animal_id
-            FROM lottery_draws d
+            FROM (
+                SELECT * FROM lottery_draws
+                ORDER BY draw_date DESC, draw_number DESC
+                LIMIT $limit
+            ) d
             LEFT JOIN draw_results_detail dr ON dr.draw_id = d.draw_id
             ORDER BY d.draw_date DESC, d.draw_number DESC, dr.detail_id ASC
         ";
