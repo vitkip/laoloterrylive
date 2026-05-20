@@ -122,6 +122,20 @@ switch ($action) {
         break;
 
     case 'draws':
+        // ETag: cheap COUNT+MAX query → if nothing changed, return 304 (no body)
+        $etag_res = $conn->query("SELECT MAX(draw_id) as mid, COUNT(*) as cnt FROM lottery_draws");
+        $etag_row = $etag_res->fetch_assoc();
+        $etag = '"' . md5($etag_row['mid'] . '_' . $etag_row['cnt']) . '"';
+        header("ETag: $etag");
+        header('Vary: Accept-Encoding');
+        if (
+            isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+            $_SERVER['HTTP_IF_NONE_MATCH'] === $etag
+        ) {
+            http_response_code(304);
+            exit();
+        }
+
         // Cache 60s — most users see cached response; new draws invalidate within 1 min
         header('Cache-Control: public, max-age=60, stale-while-revalidate=300');
 

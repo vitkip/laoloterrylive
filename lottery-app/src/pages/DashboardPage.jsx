@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useStatistics } from '../hooks/useStatistics'
 import { useData } from '../context/DataContext'
 import SEO from '../components/SEO'
@@ -22,6 +22,33 @@ const TIMEFRAMES = [
   { value: '1_year',   label: '1 ປີ',      icon: 'calendar_today' },
   { value: 'all',      label: 'ທັງໝົດ',    icon: 'all_inclusive' },
 ]
+
+// ── Deferred section: only mounts children once scrolled near viewport ──────
+// rootMargin="300px" = start mounting 300px before user reaches the section.
+// Once mounted, stays mounted (hasEntered=true) even when scrolling away.
+function DeferredSection({ children, minHeight = '200px' }) {
+  const ref = useRef(null)
+  const [hasEntered, setHasEntered] = useState(false)
+
+  useEffect(() => {
+    if (!ref.current) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setHasEntered(true) },
+      { rootMargin: '300px' }
+    )
+    observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref}>
+      {hasEntered
+        ? children
+        : <div style={{ minHeight }} className="rounded-2xl bg-card border border-border animate-pulse" />
+      }
+    </div>
+  )
+}
 
 function SectionLabel({ icon, label, accent = '#003fb1' }) {
   return (
@@ -226,49 +253,59 @@ export default function DashboardPage() {
         </div>
 
         {/* ─── Section 2: Distribution Charts ─── */}
-        <div>
-          <SectionLabel icon="bar_chart" label="ການກະຈາຍຕົວເລກ" accent="#0369a1" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm">
-              <DigitDistribution timeframe={timeframe} typeId={selectedType} />
-            </div>
-            <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm">
-              <HistoricalVolatility timeframe={timeframe} typeId={selectedType} />
+        <DeferredSection minHeight="320px">
+          <div>
+            <SectionLabel icon="bar_chart" label="ການກະຈາຍຕົວເລກ" accent="#0369a1" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm">
+                <DigitDistribution timeframe={timeframe} typeId={selectedType} />
+              </div>
+              <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm">
+                <HistoricalVolatility timeframe={timeframe} typeId={selectedType} />
+              </div>
             </div>
           </div>
-        </div>
+        </DeferredSection>
 
         {/* ─── Section 3: Animal Stats ─── */}
-        <div>
-          <SectionLabel icon="pets" label="ສະຖິຕິນາມສັດ" accent="#006c49" />
-          <AnimalStats timeframe={timeframe} typeId={selectedType} />
-        </div>
+        <DeferredSection minHeight="240px">
+          <div>
+            <SectionLabel icon="pets" label="ສະຖິຕິນາມສັດ" accent="#006c49" />
+            <AnimalStats timeframe={timeframe} typeId={selectedType} />
+          </div>
+        </DeferredSection>
 
         {/* ─── Section 4: Advanced Analytics ─── */}
-        <div>
-          <SectionLabel icon="insights" label="ການວິເຄາະຂັ້ນສູງ" accent="#7c3aed" />
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
-            <WeekdayStats timeframe={timeframe} typeId={selectedType} />
-            <PairingStats timeframe={timeframe} typeId={selectedType} />
+        <DeferredSection minHeight="320px">
+          <div>
+            <SectionLabel icon="insights" label="ການວິເຄາະຂັ້ນສູງ" accent="#7c3aed" />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
+              <WeekdayStats timeframe={timeframe} typeId={selectedType} />
+              <PairingStats timeframe={timeframe} typeId={selectedType} />
+            </div>
+            <ConsecutivePairs timeframe={timeframe} typeId={selectedType} />
           </div>
-          <ConsecutivePairs timeframe={timeframe} typeId={selectedType} />
-        </div>
+        </DeferredSection>
 
         {/* ─── Section 5: Trend Intelligence ─── */}
-        <div>
-          <SectionLabel icon="trending_up" label="Trend Intelligence" accent="#006c49" />
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
-            <TrendMomentum timeframe={timeframe} typeId={selectedType} />
-            <GapAnalysis timeframe={timeframe} typeId={selectedType} />
+        <DeferredSection minHeight="320px">
+          <div>
+            <SectionLabel icon="trending_up" label="Trend Intelligence" accent="#006c49" />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
+              <TrendMomentum timeframe={timeframe} typeId={selectedType} />
+              <GapAnalysis timeframe={timeframe} typeId={selectedType} />
+            </div>
+            <RepeatPattern timeframe={timeframe} typeId={selectedType} />
           </div>
-          <RepeatPattern timeframe={timeframe} typeId={selectedType} />
-        </div>
+        </DeferredSection>
 
         {/* ─── Section 6: Frequency ─── */}
-        <div>
-          <SectionLabel icon="format_list_numbered" label="ຄວາມຖີ່ທຸກຕົວເລກ" accent="#0891b2" />
-          <CustomFrequency timeframe={timeframe} typeId={selectedType} />
-        </div>
+        <DeferredSection minHeight="200px">
+          <div>
+            <SectionLabel icon="format_list_numbered" label="ຄວາມຖີ່ທຸກຕົວເລກ" accent="#0891b2" />
+            <CustomFrequency timeframe={timeframe} typeId={selectedType} />
+          </div>
+        </DeferredSection>
       </>}
 
     </div>

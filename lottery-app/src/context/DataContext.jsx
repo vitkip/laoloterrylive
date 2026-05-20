@@ -34,6 +34,17 @@ function writeCache(payload) {
   }
 }
 
+function expireDrawsCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return;
+    const cache = JSON.parse(raw);
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ...cache, ts: 0 }));
+  } catch {
+    // silently ignore
+  }
+}
+
 export const DataProvider = ({ children }) => {
   // Seed state from cache immediately so first render has data (no spinner on return visits)
   const cached = readCache();
@@ -156,8 +167,13 @@ export const DataProvider = ({ children }) => {
     };
   }, [fetchData, fetchLiveOnly]);
 
+  const refreshData = useCallback(async () => {
+    expireDrawsCache();
+    return fetchData();
+  }, [fetchData]);
+
   return (
-    <DataContext.Provider value={{ animals, draws, types, liveSettings, loading, error, refreshData: fetchData }}>
+    <DataContext.Provider value={{ animals, draws, types, liveSettings, loading, error, refreshData }}>
       {children}
     </DataContext.Provider>
   );
