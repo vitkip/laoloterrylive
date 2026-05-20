@@ -913,13 +913,24 @@ export default function AnalyticsPage() {
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#475569] mb-3">ລາຍລະອຽດແຕ່ລະງວດ</p>
                   {aiBacktest.results.map((r, i) => (
-                    <div key={i} className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm flex-wrap
+                    <div key={i} className={`flex flex-col gap-2 rounded-xl px-3 py-2.5
                       ${r.hit1 ? 'bg-[#fbbf24]/10 border border-[#fbbf24]/25' : r.hit5 ? 'bg-[#818cf8]/10 border border-[#818cf8]/20' : r.hit10 ? 'bg-[#6cf8bb]/10 border border-[#6cf8bb]/15' : 'bg-[#0d1829] border border-[#1e2d4a]'}`}
                     >
-                      <span className="text-[10px] text-[#475569] w-4 shrink-0">{i + 1}</span>
-                      <span className="text-[10px] text-[#475569] shrink-0 w-16">#{r.drawNum}</span>
-                      <span className="text-[10px] text-[#475569] shrink-0 w-20">{r.date?.slice(0, 10)}</span>
-                      <div className="flex gap-1 flex-wrap flex-1 min-w-0">
+                      {/* ── Row 1: meta + result + verdict ── */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] text-[#475569] w-4 shrink-0">{i + 1}</span>
+                        <span className="text-[10px] font-bold text-[#475569] shrink-0">#{r.drawNum}</span>
+                        <span className="text-[10px] text-[#475569] shrink-0">{r.date?.slice(0, 10)}</span>
+                        <div className="flex-1" />
+                        <span className="font-black font-mono text-base text-white shrink-0">{r.actual}</span>
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0
+                          ${r.hit1 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : r.hit5 ? 'bg-[#818cf8]/20 text-[#818cf8]' : r.hit10 ? 'bg-[#6cf8bb]/20 text-[#6cf8bb]' : 'bg-[#1e2d4a] text-[#475569]'}`}
+                        >
+                          {r.hit1 ? '✓ #1' : r.hit5 ? '✓ Top5' : r.hit10 ? '✓ Top10' : '✗ Miss'}
+                        </span>
+                      </div>
+                      {/* ── Row 2: top10 number badges ── */}
+                      <div className="flex gap-1 flex-wrap">
                         {r.top10.map((num, j) => (
                           <span key={j} className={`font-black font-mono text-[11px] px-1.5 py-0.5 rounded-md
                             ${num === r.actual ? 'bg-[#fbbf24] text-black' : j === 0 ? 'bg-[#1e2d4a] text-[#818cf8]' : 'bg-[#1e2d4a] text-[#475569]'}`}
@@ -928,12 +939,6 @@ export default function AnalyticsPage() {
                           </span>
                         ))}
                       </div>
-                      <span className="font-black font-mono text-base text-white shrink-0 w-8 text-right">{r.actual}</span>
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 w-16 text-center
-                        ${r.hit1 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : r.hit5 ? 'bg-[#818cf8]/20 text-[#818cf8]' : r.hit10 ? 'bg-[#6cf8bb]/20 text-[#6cf8bb]' : 'bg-[#1e2d4a] text-[#475569]'}`}
-                      >
-                        {r.hit1 ? '✓ #1' : r.hit5 ? '✓ Top5' : r.hit10 ? '✓ Top10' : '✗ Miss'}
-                      </span>
                     </div>
                   ))}
                 </div>
