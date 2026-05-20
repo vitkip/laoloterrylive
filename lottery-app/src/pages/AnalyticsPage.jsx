@@ -145,6 +145,59 @@ function computeAIBacktest(draws, trials) {
   }
 }
 
+function computeDecisionBacktest(draws, trials = 21) {
+  if (!draws?.length || draws.length < trials + 5) return null
+  const results = []
+  for (let i = 0; i < trials; i++) {
+    const draw = draws[i]
+    const actual = draw?.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    if (!actual) continue
+    const training = draws.slice(i + 1)
+    if (training.length < 5) continue
+    const analytics = computeAnalytics(training, 'all')
+    if (!analytics) continue
+
+    const { scores } = analytics
+    // Build all decision-scored numbers sorted by tier desc then aiScore desc, cap at 21
+    const all21 = [...scores]
+      .filter(s => s.decisionScore > 0)
+      .sort((a, b) => b.decisionScore - a.decisionScore || b.aiScore - a.aiScore)
+      .slice(0, 21)
+      .map(s => ({ num: s.num, tier: s.decisionScore }))
+    const star3 = all21.filter(x => x.tier === 3).map(x => x.num)
+    const star2 = all21.filter(x => x.tier === 2).map(x => x.num)
+    const star1 = all21.filter(x => x.tier === 1).map(x => x.num)
+    const hitStar3 = star3.includes(actual)
+    const hitStar2 = star2.includes(actual)
+    const hitStar1 = star1.includes(actual)
+    const actualScore = scores.find(s => s.num === actual)
+    results.push({
+      drawNum: draw.draw_number,
+      date: draw.draw_date,
+      actual,
+      all21,
+      star3,
+      star2,
+      star1,
+      hitStar3,
+      hitStar2,
+      hitStar1,
+      hitAny: hitStar3 || hitStar2 || hitStar1,
+      actualDecisionScore: actualScore?.decisionScore ?? 0,
+      actualAiScore: actualScore?.aiScore ?? 0,
+    })
+  }
+  const t = results.length
+  return {
+    results,
+    trials: t,
+    hitsStar3: results.filter(r => r.hitStar3).length,
+    hitsStar2: results.filter(r => r.hitStar2).length,
+    hitsStar1: results.filter(r => r.hitStar1).length,
+    hitsAny:   results.filter(r => r.hitAny).length,
+  }
+}
+
 function computeBacktest(draws, range, targetNum) {
   if (!targetNum || !draws?.length) return null
   const n = range === 'all' ? draws.length : Math.min(parseInt(range), draws.length)
@@ -192,8 +245,9 @@ const MODES = [
   { value: 'charts',   label: 'Charts',     icon: 'show_chart' },
   { value: 'trend',    label: 'Trend',      icon: 'trending_up' },
   { value: 'ai',       label: 'AI Engine',  icon: 'psychology' },
-  { value: 'decision', label: 'ຕັດສິນໃຈ',  icon: 'stars' },
-  { value: 'backtest', label: 'Backtest',   icon: 'science' },
+  { value: 'decision',   label: 'ຕັດສິນໃຈ',  icon: 'stars' },
+  { value: 'dsbacktest', label: 'DS Backtest', icon: 'verified' },
+  { value: 'backtest',   label: 'Backtest',    icon: 'science' },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -378,6 +432,7 @@ export default function AnalyticsPage() {
   const [hoveredNum, setHoveredNum] = useState(null)
   const [backtestNum, setBacktestNum] = useState('')
   const [aiTrials, setAiTrials] = useState(10)
+  const [dsTrials, setDsTrials] = useState(21)
   const [selectedType, setSelectedType] = useState('all')
 
   const filteredDraws = useMemo(() => (
@@ -387,6 +442,7 @@ export default function AnalyticsPage() {
   const analytics    = useMemo(() => computeAnalytics(filteredDraws, range), [filteredDraws, range])
   const backtest     = useMemo(() => computeBacktest(filteredDraws, range, backtestNum), [filteredDraws, range, backtestNum])
   const aiBacktest   = useMemo(() => computeAIBacktest(filteredDraws, aiTrials), [filteredDraws, aiTrials])
+  const dsBacktest   = useMemo(() => computeDecisionBacktest(filteredDraws, dsTrials), [filteredDraws, dsTrials])
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -524,20 +580,22 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Mode tabs */}
-        <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-border overflow-x-auto">
-          {MODES.map(({ value, label, icon }) => (
-            <button
-              key={value}
-              onClick={() => setMode(value)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[12px] font-bold whitespace-nowrap transition-all
-                ${mode === value
-                  ? 'bg-card text-primary shadow-sm'
-                  : 'text-muted-foreground hover:text-primary'}`}
-            >
-              <span className="material-symbols-outlined text-[14px]">{icon}</span>
-              {label}
-            </button>
-          ))}
+        <div className="bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-border">
+          <div className="flex flex-wrap gap-1">
+            {MODES.map(({ value, label, icon }) => (
+              <button
+                key={value}
+                onClick={() => setMode(value)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] sm:text-[12px] font-bold whitespace-nowrap transition-all
+                  ${mode === value
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-primary'}`}
+              >
+                <span className="material-symbols-outlined text-[13px] sm:text-[14px]">{icon}</span>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -980,6 +1038,173 @@ export default function AnalyticsPage() {
                 )
               })}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB: DS BACKTEST ────────────────────────────────────────────────── */}
+      {mode === 'dsbacktest' && (
+        <div className="space-y-5">
+          {/* Header */}
+          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#0d1829] to-[#070d1a] border border-[#1a2540] p-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#6cf8bb] to-[#818cf8] flex items-center justify-center shadow-lg">
+                  <span className="material-symbols-outlined text-white text-[22px]">verified</span>
+                </div>
+                <div>
+                  <h3 className="font-black text-white text-xl">Decision Score Accuracy Backtest</h3>
+                  <p className="text-xs text-[#64748b]">ຖ້ານຳໃຊ້ Decision Score ຍ້ອນຫຼັງ — ★★★/★★/★ ທຳນາຍຖືກຈັກ %?</p>
+                </div>
+              </div>
+              <div className="flex gap-1.5 flex-wrap">
+                {[10, 21, 30, 50].map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setDsTrials(t)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all
+                      ${dsTrials === t ? 'bg-[#6cf8bb] text-black' : 'bg-[#1e2d4a] text-[#64748b] hover:text-white'}`}
+                  >
+                    {t} ງວດ
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {!dsBacktest ? (
+            <p className="text-[#475569] text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
+          ) : (
+            <>
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: '★★★ ຖືກ',    hits: dsBacktest.hitsStar3, color: '#fbbf24', sub: 'ສັນຍານຄົບ 3' },
+                  { label: '★★☆ ຖືກ',   hits: dsBacktest.hitsStar2, color: '#818cf8', sub: 'ສັນຍານ 2/3' },
+                  { label: '★☆☆ ຖືກ',   hits: dsBacktest.hitsStar1, color: '#94a3b8', sub: 'ສັນຍານ 1/3' },
+                  { label: 'ຮວມຖືກ (any)', hits: dsBacktest.hitsAny,  color: '#6cf8bb', sub: 'ຢ່າງໜ້ອຍ 1 ★' },
+                ].map(({ label, hits, color, sub }) => {
+                  const pct = Math.round((hits / dsBacktest.trials) * 100)
+                  return (
+                    <div key={label} className="bg-[#0d1829] rounded-2xl p-4 border border-[#1e2d4a] text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: color + 'aa' }}>{label}</p>
+                      <p className="text-4xl font-black" style={{ color }}>
+                        {hits}<span className="text-xl text-[#475569]">/{dsBacktest.trials}</span>
+                      </p>
+                      <div className="mt-2 h-1.5 bg-[#1e2d4a] rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                      </div>
+                      <p className="text-[11px] mt-1.5 font-bold" style={{ color }}>{pct}% · {sub}</p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Accuracy bar */}
+              <div className="bg-[#0d1829] rounded-2xl p-5 border border-[#1e2d4a]">
+                <p className="text-xs font-bold text-[#475569] uppercase tracking-widest mb-4">ສັດສ່ວນຄວາມຖືກຕ້ອງ</p>
+                <div className="space-y-3.5">
+                  {[
+                    { label: '★★★  ສັນຍານຄົບ', hits: dsBacktest.hitsStar3, color: '#fbbf24', total: dsBacktest.trials },
+                    { label: '★★  ສັນຍານ 2/3',  hits: dsBacktest.hitsStar2, color: '#818cf8', total: dsBacktest.trials },
+                    { label: '★  ສັນຍານ 1/3',   hits: dsBacktest.hitsStar1, color: '#94a3b8', total: dsBacktest.trials },
+                    { label: 'ຮວມ (any signal)',  hits: dsBacktest.hitsAny,   color: '#6cf8bb', total: dsBacktest.trials },
+                  ].map(({ label, hits, color, total }) => {
+                    const pct = Math.round((hits / total) * 100)
+                    return (
+                      <div key={label} className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-[#64748b] w-40 shrink-0">{label}</span>
+                        <div className="flex-1 h-5 bg-[#1e2d4a] rounded-full overflow-hidden relative">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${pct}%`, background: color }}
+                          />
+                          <span className="absolute inset-0 flex items-center px-3 text-[11px] font-black text-white/80">
+                            {hits}/{total} ງວດ
+                          </span>
+                        </div>
+                        <span className="text-sm font-black w-12 text-right shrink-0" style={{ color }}>{pct}%</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Per-draw list — 21 rows */}
+              <div className="bg-[#0d1829] rounded-2xl p-5 border border-[#1e2d4a]">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#475569] mb-4">
+                  ລາຍລະອຽດ {dsBacktest.results.length} ງວດ
+                </p>
+                <div className="space-y-2">
+                  {dsBacktest.results.map((r, i) => {
+                    const tier = r.hitStar3 ? 3 : r.hitStar2 ? 2 : r.hitStar1 ? 1 : 0
+                    const rowColor = tier === 3 ? '#fbbf24' : tier === 2 ? '#818cf8' : tier === 1 ? '#94a3b8' : null
+                    const rowBg   = tier === 3 ? 'bg-[#fbbf24]/10 border-[#fbbf24]/25'
+                                  : tier === 2 ? 'bg-[#818cf8]/10 border-[#818cf8]/20'
+                                  : tier === 1 ? 'bg-[#1e2d4a]/80 border-[#334155]/50'
+                                  : 'bg-[#0d1117] border-[#1e2d4a]'
+                    return (
+                      <div key={i} className={`rounded-xl px-3 py-2.5 border flex flex-col gap-2 ${rowBg}`}>
+                        {/* ── Row 1: meta + result + verdict ── */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* rank */}
+                          <span className="text-[10px] text-[#475569] w-4 shrink-0 text-right">{i + 1}</span>
+                          {/* draw info */}
+                          <span className="text-[10px] font-bold text-[#475569] shrink-0">#{r.drawNum}</span>
+                          <span className="text-[10px] text-[#475569] shrink-0">{r.date?.slice(0, 10)}</span>
+                          <div className="flex-1" />
+                          {/* actual result */}
+                          <span className="font-black font-mono text-base text-white shrink-0">{r.actual}</span>
+                          {/* DS stars of actual */}
+                          <div className="flex gap-0.5 shrink-0">
+                            {[0,1,2].map(j => (
+                              <span key={j} className={`text-sm ${j < r.actualDecisionScore ? (rowColor ? '' : 'text-[#334155]') : 'text-[#1e2d4a]'}`}
+                                style={j < r.actualDecisionScore && rowColor ? { color: rowColor } : {}}>
+                                ★
+                              </span>
+                            ))}
+                          </div>
+                          {/* verdict badge */}
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0
+                            ${tier === 3 ? 'bg-[#fbbf24]/20 text-[#fbbf24]'
+                              : tier === 2 ? 'bg-[#818cf8]/20 text-[#818cf8]'
+                              : tier === 1 ? 'bg-[#94a3b8]/20 text-[#94a3b8]'
+                              : 'bg-[#1e2d4a] text-[#475569]'}`}
+                          >
+                            {tier === 3 ? '★★★ ຖືກ' : tier === 2 ? '★★ ຖືກ' : tier === 1 ? '★ ຖືກ' : '✗ Miss'}
+                          </span>
+                        </div>
+                        {/* ── Row 2: all 21 number badges ── */}
+                        <div className="flex gap-1 flex-wrap">
+                          {r.all21.map((item, j) => (
+                            <span
+                              key={j}
+                              title={`★${item.tier}`}
+                              className={`font-black font-mono text-[11px] px-1.5 py-0.5 rounded-md transition-all
+                                ${item.num === r.actual
+                                  ? item.tier === 3 ? 'bg-[#fbbf24] text-black ring-1 ring-[#fbbf24]'
+                                    : item.tier === 2 ? 'bg-[#818cf8] text-white ring-1 ring-[#818cf8]'
+                                    : 'bg-[#94a3b8] text-black ring-1 ring-[#94a3b8]'
+                                  : item.tier === 3 ? 'bg-[#1e2d4a] text-[#fbbf24]/80'
+                                    : item.tier === 2 ? 'bg-[#1e2d4a] text-[#818cf8]/65'
+                                    : 'bg-[#1e2d4a] text-[#475569]'}`}
+                            >
+                              {item.num}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Disclaimer */}
+              <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/25 rounded-xl px-4 py-2.5 text-xs text-[#fbbf24] flex items-start gap-2">
+                <span className="material-symbols-outlined text-[14px] mt-0.5 shrink-0">warning</span>
+                ຫວຍລາວເປັນການສຸ່ມ — ຕົວເລກ Decision Score ★★★ ຮວມຢູ່ໃນກຸ່ມທຳນາຍ ບໍ່ໄດ້ໝາຍຄວາມວ່າຈະຖືກທຸກງວດ
+              </div>
+            </>
           )}
         </div>
       )}
