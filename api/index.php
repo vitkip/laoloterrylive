@@ -116,9 +116,12 @@ switch ($action) {
     case 'animals':
         // Static data — cache for 5 minutes
         header('Cache-Control: public, max-age=300');
-        $result = $conn->query("SELECT * FROM animals ORDER BY animal_id ASC");
-        $data = $result->fetch_all(MYSQLI_ASSOC);
-        echo json_encode($data);
+        $result = $conn->query("
+            SELECT animal_id, animal_name_lao, animal_numbers, image_url
+            FROM   animals
+            ORDER  BY animal_id ASC
+        ");
+        echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
 
     case 'draws':
@@ -143,18 +146,27 @@ switch ($action) {
         // Default 600 draws (~2 years of 3x/week), max 2000. Pass ?limit=N to override.
         $limit = isset($_GET['limit']) ? min(max((int)$_GET['limit'], 1), 2000) : 600;
 
-        // Single JOIN query instead of N+1 (was 1 query per draw)
+        // Single JOIN query instead of N+1 — explicit columns, prepared statement
         $sql = "
-            SELECT d.*, dr.detail_id, dr.prize_type, dr.result_value, dr.animal_id AS detail_animal_id
+            SELECT
+                d.draw_id, d.type_id, d.draw_number, d.draw_date,
+                d.full_result, d.status, d.created_by, d.youtube_url,
+                dr.detail_id, dr.prize_type, dr.result_value,
+                dr.animal_id AS detail_animal_id
             FROM (
-                SELECT * FROM lottery_draws
-                ORDER BY draw_date DESC, draw_number DESC
-                LIMIT $limit
+                SELECT draw_id, type_id, draw_number, draw_date,
+                       full_result, status, created_by, youtube_url
+                FROM   lottery_draws
+                ORDER  BY draw_date DESC, draw_number DESC
+                LIMIT  ?
             ) d
             LEFT JOIN draw_results_detail dr ON dr.draw_id = d.draw_id
             ORDER BY d.draw_date DESC, d.draw_number DESC, dr.detail_id ASC
         ";
-        $result = $conn->query($sql);
+        $drawStmt = $conn->prepare($sql);
+        $drawStmt->bind_param('i', $limit);
+        $drawStmt->execute();
+        $result = $drawStmt->get_result();
         $drawsMap = [];
         $drawOrder = [];
         while ($row = $result->fetch_assoc()) {
@@ -187,15 +199,19 @@ switch ($action) {
         foreach ($drawOrder as $did) {
             $draws[] = $drawsMap[$did];
         }
+        $drawStmt->close();
         echo json_encode($draws);
         break;
 
     case 'types':
         // Static data — cache for 10 minutes
         header('Cache-Control: public, max-age=600');
-        $result = $conn->query("SELECT * FROM lottery_types");
-        $data = $result->fetch_all(MYSQLI_ASSOC);
-        echo json_encode($data);
+        $result = $conn->query("
+            SELECT type_id, type_name, schedule, color, is_active
+            FROM   lottery_types
+            ORDER  BY type_id ASC
+        ");
+        echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
 
     case 'create_draw':
@@ -691,8 +707,12 @@ switch ($action) {
         $roleStmt->close();
         if ($currentRow && $currentRow['role'] === 'admin') {
             if ($role !== 'admin' || $is_active === 0) {
-                $adminCount = (int)$conn->query("SELECT COUNT(*) AS cnt FROM users WHERE role='admin' AND is_active=1")->fetch_assoc()['cnt'];
-                if ($adminCount <= 1) {
+                $acStmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE role='admin' AND is_active=1");
+                $acStmt->execute();
+                $acStmt->bind_result($adminCount);
+                $acStmt->fetch();
+                $acStmt->close();
+                if ((int)$adminCount <= 1) {
                     http_response_code(400);
                     echo json_encode(["error" => "ບໍ່ສາມາດ demote/disable Admin ຄົນສຸດທ້າຍໄດ້"]);
                     break;
@@ -738,8 +758,12 @@ switch ($action) {
         $roleStmt->close();
         $targetRole = $roleRow['role'] ?? '';
         if ($targetRole === 'admin') {
-            $adminCount = (int) $conn->query("SELECT COUNT(*) AS cnt FROM users WHERE role='admin' AND is_active=1")->fetch_assoc()['cnt'];
-            if ($adminCount <= 1) {
+            $acStmt2 = $conn->prepare("SELECT COUNT(*) FROM users WHERE role='admin' AND is_active=1");
+            $acStmt2->execute();
+            $acStmt2->bind_result($adminCount2);
+            $acStmt2->fetch();
+            $acStmt2->close();
+            if ((int)$adminCount2 <= 1) {
                 http_response_code(400);
                 echo json_encode(["error" => "ບໍ່ສາມາດລຶບ Admin ຄົນສຸດທ້າຍໄດ້"]);
                 break;
@@ -869,14 +893,17 @@ switch ($action) {
         requireAuth('admin');
 
         // Consolidated: 6 COUNT queries → 1 query with conditional aggregation
+        // Range conditions on visited_at allow index usage (idx_vs_visited_at)
+        // DATE_FORMAT for month-start avoids YEAR()/MONTH() functions on column
         $summaryRow = $conn->query("
             SELECT
                 COUNT(*) AS total,
-                COUNT(DISTINCT CASE WHEN session_id != '' THEN session_id END) AS unique_sessions,
-                SUM(CASE WHEN DATE(visited_at) = CURDATE() THEN 1 ELSE 0 END) AS today,
-                COUNT(DISTINCT CASE WHEN DATE(visited_at) = CURDATE() AND session_id != '' THEN session_id END) AS today_unique,
-                SUM(CASE WHEN visited_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) AS this_week,
-                SUM(CASE WHEN YEAR(visited_at) = YEAR(CURDATE()) AND MONTH(visited_at) = MONTH(CURDATE()) THEN 1 ELSE 0 END) AS this_month
+                COUNT(DISTINCT NULLIF(session_id, '')) AS unique_sessions,
+                SUM(visited_at >= CURDATE()) AS today,
+                COUNT(DISTINCT CASE WHEN visited_at >= CURDATE()
+                                    THEN NULLIF(session_id, '') END) AS today_unique,
+                SUM(visited_at >= CURDATE() - INTERVAL 7 DAY) AS this_week,
+                SUM(visited_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')) AS this_month
             FROM visitor_stats
         ")->fetch_assoc();
 
@@ -922,31 +949,40 @@ switch ($action) {
 
     case 'list_types':
         requireAuth('staff');
-        $result = $conn->query("SELECT * FROM lottery_types ORDER BY type_id ASC");
-        $data = $result->fetch_all(MYSQLI_ASSOC);
-        // Attach draw count for each type
-        foreach ($data as &$row) {
-            $tid = (int)$row['type_id'];
-            $cnt = $conn->query("SELECT COUNT(*) AS c FROM lottery_draws WHERE type_id=$tid")->fetch_assoc()['c'];
-            $row['draw_count'] = (int)$cnt;
-        }
-        unset($row);
-        echo json_encode($data);
+        // Single LEFT JOIN + GROUP BY replaces N+1 loop
+        $result = $conn->query("
+            SELECT
+                lt.type_id,
+                lt.type_name,
+                lt.schedule,
+                lt.color,
+                lt.is_active,
+                lt.description,
+                COUNT(ld.draw_id) AS draw_count
+            FROM lottery_types lt
+            LEFT JOIN lottery_draws ld ON ld.type_id = lt.type_id
+            GROUP BY lt.type_id, lt.type_name, lt.schedule, lt.color, lt.is_active, lt.description
+            ORDER BY lt.type_id ASC
+        ");
+        echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
 
     case 'get_type':
         requireAuth('staff');
         $tid = (int)($_GET['type_id'] ?? 0);
         if ($tid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid type_id"]); break; }
-        $stmt = $conn->prepare("SELECT * FROM lottery_types WHERE type_id = ?");
+        // Single query with subquery draw_count — no N+1
+        $stmt = $conn->prepare("
+            SELECT lt.*,
+                   (SELECT COUNT(*) FROM lottery_draws WHERE type_id = lt.type_id) AS draw_count
+            FROM lottery_types lt
+            WHERE lt.type_id = ?
+        ");
         $stmt->bind_param("i", $tid);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
         if (!$row) { http_response_code(404); echo json_encode(["error" => "ບໍ່ພົບປະເພດຫວຍ"]); break; }
-        // Also attach draw count
-        $cnt = $conn->query("SELECT COUNT(*) AS c FROM lottery_draws WHERE type_id=$tid")->fetch_assoc()['c'];
-        $row['draw_count'] = (int)$cnt;
         echo json_encode($row);
         break;
 
@@ -1028,15 +1064,24 @@ switch ($action) {
         $tid   = (int)($input['type_id'] ?? 0);
         if ($tid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid type_id"]); break; }
 
-        // Prevent deleting if draws exist for this type
-        $cntRow = $conn->query("SELECT COUNT(*) AS c FROM lottery_draws WHERE type_id=$tid")->fetch_assoc();
-        if ((int)$cntRow['c'] > 0) {
+        // Prevent deleting if draws exist for this type — prepared statement
+        $cntStmt = $conn->prepare("SELECT COUNT(*) FROM lottery_draws WHERE type_id = ?");
+        $cntStmt->bind_param('i', $tid);
+        $cntStmt->execute();
+        $cntStmt->bind_result($drawCnt);
+        $cntStmt->fetch();
+        $cntStmt->close();
+        if ($drawCnt > 0) {
             http_response_code(400);
-            echo json_encode(["error" => "ບໍ່ສາມາດລຶບໄດ້ — ມີງວດຫວຍ {$cntRow['c']} ງວດຢູ່ໃນປະເພດນີ້"]);
+            echo json_encode(["error" => "ບໍ່ສາມາດລຶບໄດ້ — ມີງວດຫວຍ {$drawCnt} ງວດຢູ່ໃນປະເພດນີ້"]);
             break;
         }
         // Prevent deleting the last type
-        $totalTypes = (int)$conn->query("SELECT COUNT(*) AS c FROM lottery_types")->fetch_assoc()['c'];
+        $ttStmt = $conn->prepare("SELECT COUNT(*) FROM lottery_types");
+        $ttStmt->execute();
+        $ttStmt->bind_result($totalTypes);
+        $ttStmt->fetch();
+        $ttStmt->close();
         if ($totalTypes <= 1) {
             http_response_code(400);
             echo json_encode(["error" => "ບໍ່ສາມາດລຶບໄດ້ — ຕ້ອງມີຢ່າງໜ້ອຍ 1 ປະເພດຫວຍ"]);
