@@ -53,8 +53,11 @@
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 
-  # Preconnect hints for external resources
-  Header add Link "</lottery-app/dist/assets/index.css>; rel=preload; as=style"
+  # NOTE: Do NOT add a hardcoded preload Link header for index.css here.
+  # Vite appends a content hash (e.g. index-BW4Wz7aI.css) so the filename
+  # changes on every build. A wrong preload URL returns HTML (404 fallback)
+  # with text/html MIME type, triggering a browser error.
+  # The <link rel="stylesheet"> in index.html handles CSS loading correctly.
 </IfModule>
 
 # ── MIME Types ────────────────────────────────────────────────────

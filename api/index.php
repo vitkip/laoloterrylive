@@ -146,16 +146,27 @@ switch ($action) {
         // Default 600 draws (~2 years of 3x/week), max 2000. Pass ?limit=N to override.
         $limit = isset($_GET['limit']) ? min(max((int)$_GET['limit'], 1), 2000) : 600;
 
+        // Check if youtube_url column exists (not in base schema — added by migration)
+        $hasYoutubeCol = $conn->query(
+            "SELECT COUNT(*) AS c FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME   = 'lottery_draws'
+               AND COLUMN_NAME  = 'youtube_url'"
+        )->fetch_assoc()['c'] > 0;
+
         // Single JOIN query instead of N+1 — explicit columns, prepared statement
+        // youtube_url is optional: degrade gracefully if column not yet migrated
+        $ytInner = $hasYoutubeCol ? ', youtube_url' : '';
+        $ytOuter = $hasYoutubeCol ? 'd.youtube_url,' : 'NULL AS youtube_url,';
         $sql = "
             SELECT
                 d.draw_id, d.type_id, d.draw_number, d.draw_date,
-                d.full_result, d.status, d.created_by, d.youtube_url,
+                d.full_result, d.status, d.created_by, {$ytOuter}
                 dr.detail_id, dr.prize_type, dr.result_value,
                 dr.animal_id AS detail_animal_id
             FROM (
                 SELECT draw_id, type_id, draw_number, draw_date,
-                       full_result, status, created_by, youtube_url
+                       full_result, status, created_by{$ytInner}
                 FROM   lottery_draws
                 ORDER  BY draw_date DESC, draw_number DESC
                 LIMIT  ?
