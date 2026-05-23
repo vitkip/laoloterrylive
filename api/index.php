@@ -223,7 +223,13 @@ switch ($action) {
             FROM   lottery_types
             ORDER  BY type_id ASC
         ");
-        echo json_encode($result->fetch_all(MYSQLI_ASSOC));
+        $typeRows = $result->fetch_all(MYSQLI_ASSOC);
+        foreach ($typeRows as &$tr) {
+            $tr['type_id']   = (int) $tr['type_id'];
+            $tr['is_active'] = (int) $tr['is_active'];
+        }
+        unset($tr);
+        echo json_encode($typeRows);
         break;
 
     case 'create_draw':

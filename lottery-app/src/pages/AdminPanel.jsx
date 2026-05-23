@@ -119,7 +119,7 @@ export default function AdminPanel() {
   const selectedType = types?.find(t => t.type_id === formData.type_id);
 
   const filteredDraws = useMemo(() =>
-    (draws || []).filter(d => d.type_id === formData.type_id),
+    (draws || []).filter(d => Number(d.type_id) === Number(formData.type_id)),
     [draws, formData.type_id]
   );
 
