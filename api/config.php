@@ -7,7 +7,7 @@ if ($isLocal) {
     define('DB_USER', 'root');
     define('DB_PASS', '');
     define('DB_NAME', 'lao_lottery_pro');
-    define('ALLOWED_ORIGINS', ['http://localhost:5173', 'http://localhost:5174', 'http://localhost']);
+    define('ALLOWED_ORIGINS', ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost']);
     define('PRODUCTION', false);
 
     // Local dev: SMTP not used (OTP returned in API response)
