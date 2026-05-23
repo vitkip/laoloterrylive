@@ -59,24 +59,26 @@ export const DataProvider = ({ children }) => {
   // Track previous draw data to avoid unnecessary re-renders
   const prevDrawsJsonRef = useRef(cached ? JSON.stringify(cached.draws) : '');
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (force = false) => {
     // Stale-while-revalidate: check if ALL data is still within its fresh window
     const now = Date.now();
     const cache = readCache();
-    const drawsFresh  = cache && (now - cache.ts) < DRAWS_TTL;
-    const staticFresh = cache && (now - cache.ts) < STATIC_TTL;
+    const drawsFresh  = !force && cache && (now - cache.ts) < DRAWS_TTL;
+    const staticFresh = !force && cache && (now - cache.ts) < STATIC_TTL;
+    // force=true bypasses browser HTTP cache (e.g. after saving a new draw)
+    const fetchOpts = force ? { cache: 'no-cache' } : undefined;
 
     try {
       // Only fetch what's stale — avoid unnecessary requests
       const fetches = [];
       if (!staticFresh) {
         fetches.push(
-          fetch(`${API}/index.php?action=animals`),
-          fetch(`${API}/index.php?action=types`),
+          fetch(`${API}/index.php?action=animals`, fetchOpts),
+          fetch(`${API}/index.php?action=types`, fetchOpts),
         );
       }
       if (!drawsFresh) {
-        fetches.push(fetch(`${API}/index.php?action=draws`));
+        fetches.push(fetch(`${API}/index.php?action=draws`, fetchOpts));
       }
       // live_settings always polled (lightweight, handled separately)
       fetches.push(fetch(`${API}/index.php?action=live_settings`));
@@ -169,7 +171,7 @@ export const DataProvider = ({ children }) => {
 
   const refreshData = useCallback(async () => {
     expireDrawsCache();
-    return fetchData();
+    return fetchData(true); // force=true bypasses browser HTTP cache
   }, [fetchData]);
 
   return (

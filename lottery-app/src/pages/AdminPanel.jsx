@@ -243,7 +243,7 @@ export default function AdminPanel() {
             youtube_url: ''
           });
         }
-        if (refreshData) refreshData();
+        if (refreshData) await refreshData();
       } else {
         setMessage({ text: data.error || 'ຂໍ້ຜິດພາດໃນການບັນທຶກ', ok: false });
       }
