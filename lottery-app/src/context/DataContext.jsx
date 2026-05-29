@@ -5,6 +5,7 @@ const DataContext = createContext({
   animals: [],
   draws: [],
   types: [],
+  yearsByType: {},
   loading: true,
   error: null
 });
@@ -48,9 +49,10 @@ function expireDrawsCache() {
 export const DataProvider = ({ children }) => {
   // Seed state from cache immediately so first render has data (no spinner on return visits)
   const cached = readCache();
-  const [animals, setAnimals] = useState(cached?.animals ?? []);
-  const [draws, setDraws]     = useState(cached?.draws   ?? []);
-  const [types, setTypes]     = useState(cached?.types   ?? []);
+  const [animals, setAnimals]       = useState(cached?.animals     ?? []);
+  const [draws, setDraws]           = useState(cached?.draws       ?? []);
+  const [types, setTypes]           = useState(cached?.types       ?? []);
+  const [yearsByType, setYearsByType] = useState(cached?.yearsByType ?? {});
   const [liveSettings, setLiveSettings] = useState({ youtube_live_url: '', is_live: '0' });
   // loading=false if we already have cached data to show
   const [loading, setLoading] = useState(!cached?.draws?.length);
@@ -79,6 +81,7 @@ export const DataProvider = ({ children }) => {
       }
       if (!drawsFresh) {
         fetches.push(fetch(`${API}/index.php?action=draws`, fetchOpts));
+        fetches.push(fetch(`${API}/index.php?action=draw_years`, fetchOpts));
       }
       // live_settings always polled (lightweight, handled separately)
       fetches.push(fetch(`${API}/index.php?action=live_settings`));
@@ -98,16 +101,18 @@ export const DataProvider = ({ children }) => {
 
       // Parse each response by which fetches we triggered
       let idx = 0;
-      let animalsData = cache?.animals;
-      let typesData   = cache?.types;
-      let drawsData   = cache?.draws;
+      let animalsData    = cache?.animals;
+      let typesData      = cache?.types;
+      let drawsData      = cache?.draws;
+      let yearsByTypeData = cache?.yearsByType ?? {};
 
       if (!staticFresh) {
         animalsData = await responses[idx++].json();
         typesData   = await responses[idx++].json();
       }
       if (!drawsFresh) {
-        drawsData = await responses[idx++].json();
+        drawsData      = await responses[idx++].json();
+        yearsByTypeData = await responses[idx++].json();
       }
       const liveData = await responses[idx].json();
 
@@ -120,6 +125,10 @@ export const DataProvider = ({ children }) => {
         drawsData = sortedDraws;
       }
 
+      if (!drawsFresh) {
+        setYearsByType(yearsByTypeData);
+      }
+
       if (!staticFresh) {
         setAnimals(animalsData);
         setTypes(typesData);
@@ -127,7 +136,7 @@ export const DataProvider = ({ children }) => {
       setLiveSettings(liveData);
 
       // Persist to cache
-      writeCache({ animals: animalsData, draws: drawsData, types: typesData });
+      writeCache({ animals: animalsData, draws: drawsData, types: typesData, yearsByType: yearsByTypeData });
       setLoading(false);
     } catch (err) {
       console.error(err);
@@ -175,7 +184,7 @@ export const DataProvider = ({ children }) => {
   }, [fetchData]);
 
   return (
-    <DataContext.Provider value={{ animals, draws, types, liveSettings, loading, error, refreshData }}>
+    <DataContext.Provider value={{ animals, draws, types, yearsByType, liveSettings, loading, error, refreshData }}>
       {children}
     </DataContext.Provider>
   );

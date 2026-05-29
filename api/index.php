@@ -232,6 +232,29 @@ switch ($action) {
         echo json_encode($typeRows);
         break;
 
+    case 'draw_years':
+        // Returns distinct years grouped by type_id from the full table
+        // Response: { "1": ["2026","2025",...], "2": ["2026",...], ..., "all": ["2026","2025",...] }
+        header('Cache-Control: public, max-age=60, stale-while-revalidate=300');
+        $res = $conn->query(
+            "SELECT type_id, YEAR(draw_date) AS y
+             FROM lottery_draws
+             GROUP BY type_id, y
+             ORDER BY type_id ASC, y DESC"
+        );
+        $byType = [];
+        $allSet = [];
+        while ($row = $res->fetch_assoc()) {
+            $tid = (string)(int) $row['type_id'];
+            $yr  = (string)(int) $row['y'];
+            $byType[$tid][] = $yr;
+            $allSet[$yr]    = true;
+        }
+        krsort($allSet);
+        $byType['all'] = array_keys($allSet);
+        echo json_encode($byType);
+        break;
+
     case 'create_draw':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);

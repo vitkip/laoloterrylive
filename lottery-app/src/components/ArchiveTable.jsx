@@ -180,7 +180,7 @@ const LAO_MONTHS = [
 // ── Main component ─────────────────────────────────────────────────
 
 export default function ArchiveTable({ compact = false }) {
-  const { draws, animals, types } = useData()
+  const { draws, animals, types, yearsByType } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState('all')
   const [filterYear, setFilterYear] = useState('')
@@ -199,10 +199,10 @@ export default function ArchiveTable({ compact = false }) {
   useEffect(() => { setFilterDay('') }, [filterMonth])
 
   // ── Available options derived from data (must be before early return) ──
-  const availableYears = useMemo(() =>
-    draws ? [...new Set(draws.map(d => d.draw_date.slice(0, 4)))].sort((a, b) => b - a) : [],
-    [draws]
-  )
+  const availableYears = useMemo(() => {
+    if (yearsByType?.all?.length) return yearsByType.all;
+    return draws ? [...new Set(draws.map(d => d.draw_date.slice(0, 4)))].sort((a, b) => b - a) : [];
+  }, [yearsByType, draws])
 
   const availableMonths = useMemo(() => {
     if (!draws) return []

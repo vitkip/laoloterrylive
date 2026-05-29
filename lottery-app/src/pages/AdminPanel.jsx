@@ -68,7 +68,7 @@ const HISTORY_PAGE_SIZE = 10;
 // ── Main Component ────────────────────────────────────────────────
 
 export default function AdminPanel() {
-  const { animals, types, draws, refreshData } = useData();
+  const { animals, types, draws, yearsByType, refreshData } = useData();
   const { authFetch } = useAuth();
   const digitRefs = useRef([]);
 
@@ -123,10 +123,10 @@ export default function AdminPanel() {
     [draws, formData.type_id]
   );
 
-  const historyAvailYears = useMemo(() =>
-    [...new Set(filteredDraws.map(d => d.draw_date.slice(0, 4)))].sort((a, b) => b - a),
-    [filteredDraws]
-  );
+  const historyAvailYears = useMemo(() => {
+    const tid = String(formData.type_id);
+    return yearsByType?.[tid] ?? [...new Set(filteredDraws.map(d => d.draw_date.slice(0, 4)))].sort((a, b) => b - a);
+  }, [yearsByType, formData.type_id, filteredDraws]);
 
   const historyAvailMonths = useMemo(() => {
     const src = historyYear ? filteredDraws.filter(d => d.draw_date.startsWith(historyYear)) : filteredDraws;
