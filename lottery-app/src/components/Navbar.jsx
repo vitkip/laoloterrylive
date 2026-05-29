@@ -103,7 +103,7 @@ export default function Navbar() {
       className={cn(
         'sticky top-0 z-50 w-full transition-all duration-300',
         scrolled
-          ? 'bg-background/80 backdrop-blur-xl shadow-[0_1px_24px_rgba(0,63,177,0.10)] border-b border-border/80'
+          ? 'bg-background/80 backdrop-blur-xl shadow-[0_1px_24px_rgba(27,58,45,0.12)] border-b border-border/80'
           : 'bg-background border-b border-border/50'
       )}
     >
@@ -111,7 +111,7 @@ export default function Navbar() {
 
         {/* ── Logo ── */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#003fb1] to-[#1a56db] flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1b3a2d] to-[#2d6a4f] flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
             <Star className="text-white w-[18px] h-[18px] fill-white" />
           </div>
           <span className="text-[15px] font-extrabold tracking-tight text-foreground">
@@ -128,7 +128,7 @@ export default function Navbar() {
               className={cn(
                 'relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200',
                 isActive(href)
-                  ? 'bg-secondary text-primary dark:text-[#93b4ff]'
+                  ? 'bg-secondary text-primary dark:text-[#5daf82]'
                   : 'text-muted-foreground hover:bg-secondary hover:text-primary dark:hover:text-foreground'
               )}
             >
@@ -171,7 +171,7 @@ export default function Navbar() {
                     variant="outline"
                     className="flex items-center gap-2 px-3 py-1.5 h-auto rounded-xl border-border hover:border-primary/30"
                   >
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#003fb1] to-[#1a56db] flex items-center justify-center shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#1b3a2d] to-[#2d6a4f] flex items-center justify-center shrink-0">
                       <span className="text-white text-[11px] font-black">{userInitial}</span>
                     </div>
                     <span className="text-[12px] font-bold max-w-[80px] truncate">
@@ -241,7 +241,7 @@ export default function Navbar() {
             <SheetContent side="left" className="w-[280px] p-0 flex flex-col">
               {/* Sheet header */}
               <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#003fb1] to-[#1a56db] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1b3a2d] to-[#2d6a4f] flex items-center justify-center">
                   <Star className="text-white w-4 h-4 fill-white" />
                 </div>
                 <span className="text-[15px] font-extrabold text-foreground">
@@ -258,7 +258,7 @@ export default function Navbar() {
                     className={cn(
                       'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200',
                       isActive(href)
-                        ? 'bg-secondary text-primary dark:text-[#93b4ff]'
+                        ? 'bg-secondary text-primary dark:text-[#5daf82]'
                         : 'text-muted-foreground hover:bg-secondary hover:text-primary dark:hover:text-foreground'
                     )}
                   >
@@ -316,7 +316,7 @@ export default function Navbar() {
                 {user ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#003fb1] to-[#1a56db] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1b3a2d] to-[#2d6a4f] flex items-center justify-center">
                         <span className="text-white text-xs font-black">{userInitial}</span>
                       </div>
                       <div>

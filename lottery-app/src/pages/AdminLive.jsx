@@ -219,38 +219,41 @@ export default function AdminLive() {
             </div>
 
             {formData.youtube_live_url && previewUrl ? (
-              <div className="aspect-video bg-black">
+              <div className="relative w-full bg-black" style={{ paddingTop: '56.25%' }}>
                 <iframe
-                  width="100%"
-                  height="100%"
+                  className="absolute inset-0 w-full h-full"
                   src={previewUrl}
                   title="Live Preview"
                   frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                   allowFullScreen
                 />
               </div>
             ) : formData.youtube_live_url && !previewUrl ? (
-              <div className="aspect-video flex flex-col items-center justify-center gap-3 bg-[#f5f7ff] dark:bg-[#1a2844]">
-                <span className="material-symbols-outlined text-4xl text-muted-foreground">link_off</span>
-                <p className="text-sm text-muted-foreground font-medium">ບໍ່ສາມາດ Preview URL ນີ້ໄດ້</p>
-                <p className="text-xs text-muted-foreground">ກວດສອບ URL ໃຫ້ຖືກຕ້ອງ</p>
+              <div className="relative w-full bg-[#f5f7ff] dark:bg-[#1a2844]" style={{ paddingTop: '56.25%' }}>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <span className="material-symbols-outlined text-4xl text-muted-foreground">link_off</span>
+                  <p className="text-sm text-muted-foreground font-medium">ບໍ່ສາມາດ Preview URL ນີ້ໄດ້</p>
+                  <p className="text-xs text-muted-foreground">ກວດສອບ URL ໃຫ້ຖືກຕ້ອງ</p>
+                </div>
               </div>
             ) : (
-              <div className="aspect-video flex flex-col items-center justify-center gap-4 bg-[#f5f7ff] dark:bg-[#1a2844]">
-                <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center shadow-sm">
-                  <span className="material-symbols-outlined text-[32px] text-[#ba1a1a]" style={{ fontVariationSettings: "'FILL' 1" }}>smart_display</span>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-bold text-foreground">ຍັງບໍ່ມີ URL</p>
-                  <p className="text-xs text-muted-foreground mt-1">ໃສ່ URL ທາງຊ້າຍ ແລ້ວ Preview ຈະປາກົດທີ່ນີ້</p>
-                </div>
-                {formData.is_live === '1' && (
-                  <div className="flex items-center gap-2 bg-[#ffdad6]/50 dark:bg-[#7f1d1d]/30 text-[#ba1a1a] text-xs font-bold px-4 py-2 rounded-full border border-[#ffdad6]">
-                    <span className="w-2 h-2 rounded-full bg-[#ba1a1a] animate-pulse" />
-                    ກຳລັງ Live — ຕ້ອງໃສ່ URL
+              <div className="relative w-full bg-[#f5f7ff] dark:bg-[#1a2844]" style={{ paddingTop: '56.25%' }}>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center shadow-sm">
+                    <span className="material-symbols-outlined text-[32px] text-[#ba1a1a]" style={{ fontVariationSettings: "'FILL' 1" }}>smart_display</span>
                   </div>
-                )}
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-foreground">ຍັງບໍ່ມີ URL</p>
+                    <p className="text-xs text-muted-foreground mt-1">ໃສ່ URL ທາງຊ້າຍ ແລ້ວ Preview ຈະປາກົດທີ່ນີ້</p>
+                  </div>
+                  {formData.is_live === '1' && (
+                    <div className="flex items-center gap-2 bg-[#ffdad6]/50 dark:bg-[#7f1d1d]/30 text-[#ba1a1a] text-xs font-bold px-4 py-2 rounded-full border border-[#ffdad6]">
+                      <span className="w-2 h-2 rounded-full bg-[#ba1a1a] animate-pulse" />
+                      ກຳລັງ Live — ຕ້ອງໃສ່ URL
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

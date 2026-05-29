@@ -143,6 +143,9 @@ switch ($action) {
         // Cache 60s — most users see cached response; new draws invalidate within 1 min
         header('Cache-Control: public, max-age=60, stale-while-revalidate=300');
 
+        // ?year=YYYY — fetch all draws for a specific year (no LIMIT; a year has ~150 draws max)
+        $yearFilter = isset($_GET['year']) ? (int)$_GET['year'] : 0;
+
         // Limit rows to prevent unbounded growth as DB accumulates years of data.
         // Default 600 draws (~2 years of 3x/week), max 2000. Pass ?limit=N to override.
         $limit = isset($_GET['limit']) ? min(max((int)$_GET['limit'], 1), 2000) : 600;
@@ -159,24 +162,47 @@ switch ($action) {
         // youtube_url is optional: degrade gracefully if column not yet migrated
         $ytInner = $hasYoutubeCol ? ', youtube_url' : '';
         $ytOuter = $hasYoutubeCol ? 'd.youtube_url,' : 'NULL AS youtube_url,';
-        $sql = "
-            SELECT
-                d.draw_id, d.type_id, d.draw_number, d.draw_date,
-                d.full_result, d.status, d.created_by, {$ytOuter}
-                dr.detail_id, dr.prize_type, dr.result_value,
-                dr.animal_id AS detail_animal_id
-            FROM (
-                SELECT draw_id, type_id, draw_number, draw_date,
-                       full_result, status, created_by{$ytInner}
-                FROM   lottery_draws
-                ORDER  BY draw_date DESC, draw_number DESC
-                LIMIT  ?
-            ) d
-            LEFT JOIN draw_results_detail dr ON dr.draw_id = d.draw_id
-            ORDER BY d.draw_date DESC, d.draw_number DESC, dr.detail_id ASC
-        ";
-        $drawStmt = $conn->prepare($sql);
-        $drawStmt->bind_param('i', $limit);
+
+        if ($yearFilter > 0) {
+            // Fetch ALL draws for the requested year (used by frontend lazy-loading)
+            $sql = "
+                SELECT
+                    d.draw_id, d.type_id, d.draw_number, d.draw_date,
+                    d.full_result, d.status, d.created_by, {$ytOuter}
+                    dr.detail_id, dr.prize_type, dr.result_value,
+                    dr.animal_id AS detail_animal_id
+                FROM (
+                    SELECT draw_id, type_id, draw_number, draw_date,
+                           full_result, status, created_by{$ytInner}
+                    FROM   lottery_draws
+                    WHERE  YEAR(draw_date) = ?
+                    ORDER  BY draw_date DESC, draw_number DESC
+                ) d
+                LEFT JOIN draw_results_detail dr ON dr.draw_id = d.draw_id
+                ORDER BY d.draw_date DESC, d.draw_number DESC, dr.detail_id ASC
+            ";
+            $drawStmt = $conn->prepare($sql);
+            $drawStmt->bind_param('i', $yearFilter);
+        } else {
+            $sql = "
+                SELECT
+                    d.draw_id, d.type_id, d.draw_number, d.draw_date,
+                    d.full_result, d.status, d.created_by, {$ytOuter}
+                    dr.detail_id, dr.prize_type, dr.result_value,
+                    dr.animal_id AS detail_animal_id
+                FROM (
+                    SELECT draw_id, type_id, draw_number, draw_date,
+                           full_result, status, created_by{$ytInner}
+                    FROM   lottery_draws
+                    ORDER  BY draw_date DESC, draw_number DESC
+                    LIMIT  ?
+                ) d
+                LEFT JOIN draw_results_detail dr ON dr.draw_id = d.draw_id
+                ORDER BY d.draw_date DESC, d.draw_number DESC, dr.detail_id ASC
+            ";
+            $drawStmt = $conn->prepare($sql);
+            $drawStmt->bind_param('i', $limit);
+        }
         $drawStmt->execute();
         $result = $drawStmt->get_result();
         $drawsMap = [];

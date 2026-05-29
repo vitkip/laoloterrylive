@@ -279,11 +279,18 @@ export default function DashboardPage() {
         <DeferredSection minHeight="320px">
           <div>
             <SectionLabel icon="insights" label="ການວິເຄາະຂັ້ນສູງ" accent="#7c3aed" />
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
+            <div className="mb-5">
               <WeekdayStats timeframe={timeframe} typeId={selectedType} />
-              <PairingStats timeframe={timeframe} typeId={selectedType} />
             </div>
             <ConsecutivePairs timeframe={timeframe} typeId={selectedType} />
+          </div>
+        </DeferredSection>
+
+        {/* ─── Section 4b: Pairing Stats ─── */}
+        <DeferredSection minHeight="320px">
+          <div>
+            <SectionLabel icon="magic_button" label="ຈັບຄູ່ເລກ ແລະ ລຳດັບນາມສັດ" accent="#00897b" />
+            <PairingStats timeframe={timeframe} typeId={selectedType} />
           </div>
         </DeferredSection>
 

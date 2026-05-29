@@ -32,8 +32,11 @@ function getEmbedUrl(url, source) {
   return '';
 }
 
-function getPreconnectHost(source) {
+function getPreconnectHost(source, url = '') {
   if (source === 'facebook') return ['https://www.facebook.com', 'https://static.xx.fbcdn.net'];
+  if (source === 'web') {
+    try { return [new URL(url).origin]; } catch { return []; }
+  }
   return ['https://www.youtube.com', 'https://i.ytimg.com'];
 }
 
@@ -53,6 +56,8 @@ export default function LiveVdoBanner() {
   const source = liveSettings?.live_source || 'youtube';
   const rawUrl = liveSettings?.youtube_live_url;
   const isLive = liveSettings?.is_live === '1' && rawUrl;
+  // Web URLs load immediately — no thumbnail to lazy-load
+  const isWebSource = source === 'web';
 
   // Preconnect to video host when banner enters viewport
   useEffect(() => {
@@ -63,7 +68,7 @@ export default function LiveVdoBanner() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
-        getPreconnectHost(source).forEach(host => {
+        getPreconnectHost(source, rawUrl).forEach(host => {
           if (document.querySelector(`link[href="${host}"]`)) return;
           const link = document.createElement('link');
           link.rel = 'preconnect';
@@ -105,16 +110,16 @@ export default function LiveVdoBanner() {
           {/* Video section — AspectRatio prevents CLS */}
           <div className="lg:col-span-2 bg-black">
             <AspectRatio ratio={16 / 9}>
-              {playerLoaded && embedUrl ? (
+              {(playerLoaded || isWebSource) && embedUrl ? (
                 <iframe
                   className="absolute inset-0 w-full h-full"
                   src={embedUrl}
                   title="laolots.com Live Stream"
                   frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                   allowFullScreen
                 />
-              ) : playerLoaded && !embedUrl ? (
+              ) : (playerLoaded || isWebSource) && !embedUrl ? (
                 /* Cannot embed — direct link fallback */
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
                   <Tv className="w-12 h-12 text-white/40" />

@@ -38,8 +38,8 @@ function NavItem({ item, isActive, collapsed, onClick }) {
       title={collapsed ? item.label : undefined}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold transition-all duration-150 group relative ${
         isActive
-          ? 'bg-[#003fb1] text-white shadow-md shadow-[#003fb1]/20'
-          : 'text-muted-foreground hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] hover:text-primary'
+          ? 'bg-white/15 text-white shadow-md shadow-black/20'
+          : 'text-white/60 hover:bg-white/10 hover:text-white'
       }`}
     >
       <span className="material-symbols-outlined text-[20px] shrink-0" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
@@ -48,7 +48,7 @@ function NavItem({ item, isActive, collapsed, onClick }) {
       {!collapsed && <span className="text-sm truncate">{item.label}</span>}
       {collapsed && (
         <div className="absolute left-full ml-3 hidden group-hover:flex items-center z-50">
-          <div className="bg-[#121c2a] dark:bg-[#e8edf8] text-white dark:text-[#121c2a] text-xs font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl">
+          <div className="bg-[#0f1f15] text-white text-xs font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl">
             {item.label}
           </div>
         </div>
@@ -74,17 +74,17 @@ function UserDropdown({ user, onLogout, collapsed }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2.5 w-full p-2 rounded-xl hover:bg-accent transition-colors"
+        className="flex items-center gap-2.5 w-full p-2 rounded-xl hover:bg-white/10 transition-colors"
       >
         <UserAvatar name={user?.name} username={user?.username} size="sm" />
         {!collapsed && (
           <div className="flex-1 text-left overflow-hidden">
-            <p className="text-sm font-bold text-foreground truncate">{user?.name || user?.username}</p>
-            <p className="text-[10px] text-muted-foreground capitalize">{user?.role}</p>
+            <p className="text-sm font-bold text-white truncate">{user?.name || user?.username}</p>
+            <p className="text-[10px] text-white/50 capitalize">{user?.role}</p>
           </div>
         )}
         {!collapsed && (
-          <span className="material-symbols-outlined text-[16px] text-[#737686] shrink-0 transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'none' }}>
+          <span className="material-symbols-outlined text-[16px] text-white/40 shrink-0 transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'none' }}>
             expand_more
           </span>
         )}
@@ -107,7 +107,7 @@ function UserDropdown({ user, onLogout, collapsed }) {
           ].map(item => (
             <button key={item.label} onClick={item.action}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent transition-colors">
-              <span className="material-symbols-outlined text-[16px] text-[#003fb1]">{item.icon}</span>
+              <span className="material-symbols-outlined text-[16px] text-[#2d6a4f]">{item.icon}</span>
               {item.label}
             </button>
           ))}
@@ -171,25 +171,25 @@ export default function AdminLayout() {
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
 
       {/* ── Desktop Sidebar ─────────────────────────── */}
-      <aside className={`hidden md:flex flex-col bg-card border-r border-border transition-all duration-300 ease-in-out shrink-0 ${
+      <aside className={`hidden md:flex flex-col bg-[#1b3a2d] border-r border-[#2d6a4f]/30 transition-all duration-300 ease-in-out shrink-0 ${
         collapsed ? 'w-16' : 'w-60'
       }`}>
         {/* Logo */}
-        <div className={`flex items-center border-b border-border h-16 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-4 gap-2'}`}>
+        <div className={`flex items-center border-b border-[#2d6a4f]/30 h-16 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-4 gap-2'}`}>
           {!collapsed && (
-            <Link to="/" className="text-lg font-black text-[#003fb1] tracking-tighter flex items-center gap-1.5 flex-1">
+            <Link to="/" className="text-lg font-black text-white tracking-tighter flex items-center gap-1.5 flex-1">
               <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
               LaoLots
             </Link>
           )}
           {collapsed && (
-            <Link to="/" className="text-[#003fb1]">
+            <Link to="/" className="text-white">
               <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
             </Link>
           )}
           <button
             onClick={() => setCollapsed(v => !v)}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center text-[#737686] hover:bg-accent hover:text-[#003fb1] transition-colors ${collapsed ? 'mx-auto mt-1' : ''}`}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-colors ${collapsed ? 'mx-auto mt-1' : ''}`}
             title={collapsed ? 'ຂະຫຍາຍ sidebar' : 'ຫຍໍ້ sidebar'}
           >
             <span className="material-symbols-outlined text-[18px]">{collapsed ? 'menu_open' : 'menu'}</span>
@@ -199,7 +199,7 @@ export default function AdminLayout() {
         {/* Nav */}
         <nav className="flex-1 p-2 flex flex-col gap-1 overflow-y-auto">
           {!collapsed && (
-            <p className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest px-3 py-2">ເມນູຫຼັກ</p>
+            <p className="text-[9px] font-extrabold text-white/40 uppercase tracking-widest px-3 py-2">ເມນູຫຼັກ</p>
           )}
           {navItems.map(item => (
             <NavItem
@@ -212,7 +212,7 @@ export default function AdminLayout() {
         </nav>
 
         {/* Footer */}
-        <div className="p-2 border-t border-border">
+        <div className="p-2 border-t border-[#2d6a4f]/30">
           <UserDropdown user={user} onLogout={handleLogout} collapsed={collapsed} />
         </div>
       </aside>
@@ -221,13 +221,13 @@ export default function AdminLayout() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-card flex flex-col shadow-2xl">
-            <div className="flex items-center justify-between px-4 h-16 border-b border-border">
-              <Link to="/" className="text-lg font-black text-[#003fb1] tracking-tighter flex items-center gap-1.5">
+          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-[#1b3a2d] flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between px-4 h-16 border-b border-[#2d6a4f]/30">
+              <Link to="/" className="text-lg font-black text-white tracking-tighter flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
                 LaoLots
               </Link>
-              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#737686] hover:bg-accent">
+              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:bg-white/10">
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
             </div>
@@ -236,7 +236,7 @@ export default function AdminLayout() {
                 <NavItem key={item.path} item={item} isActive={location.pathname === item.path} collapsed={false} onClick={() => setMobileOpen(false)} />
               ))}
             </nav>
-            <div className="p-3 border-t border-border">
+            <div className="p-3 border-t border-[#2d6a4f]/30">
               <UserDropdown user={user} onLogout={handleLogout} collapsed={false} />
             </div>
           </aside>
@@ -260,12 +260,12 @@ export default function AdminLayout() {
           {/* Quick actions */}
           <div className="flex items-center gap-1">
             <Link to="/" target="_blank"
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#737686] hover:bg-accent hover:text-[#003fb1] transition-colors"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-[#1b3a2d] transition-colors"
               title="ເບິ່ງໜ້າເວັບ">
               <span className="material-symbols-outlined text-[18px]">open_in_new</span>
             </Link>
             <Link to="/admin/profile"
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#737686] hover:bg-accent hover:text-[#003fb1] transition-colors"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-[#1b3a2d] transition-colors"
               title="Profile ຂອງຂ້ອຍ">
               <span className="material-symbols-outlined text-[18px]">account_circle</span>
             </Link>

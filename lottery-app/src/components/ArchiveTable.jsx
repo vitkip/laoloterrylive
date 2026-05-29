@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Search, X, PlayCircle, ExternalLink, VideoOff, Loader2, CalendarDays, SlidersHorizontal } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import { formatLaoDate } from '../utils/date'
-import { resolveAnimalImage } from '../utils/api'
+import { resolveAnimalImage, API } from '../utils/api'
 import Pagination from './Pagination'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -189,39 +189,101 @@ export default function ArchiveTable({ compact = false }) {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(compact ? 5 : 10)
   const [videoModalDraw, setVideoModalDraw] = useState(null)
+  // Lazy-loaded draws for years older than the 600-row cache
+  const [lazyDraws, setLazyDraws] = useState([])
+  const [lazyYear, setLazyYear] = useState('')
+  const [lazyLoading, setLazyLoading] = useState(false)
 
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1) }, [searchTerm, selectedType, filterYear, filterMonth, filterDay])
+
+  // Reset year/month/day when type changes (year may not exist in new type)
+  useEffect(() => { setFilterYear(''); setFilterMonth(''); setFilterDay('') }, [selectedType])
 
   // Reset month/day when year changes (avoid stale selection)
   useEffect(() => { setFilterMonth(''); setFilterDay('') }, [filterYear])
   // Reset day when month changes
   useEffect(() => { setFilterDay('') }, [filterMonth])
 
+  // Lazy-load draws for a year that is not in the local 600-row cache.
+  // Written as a plain useEffect with cleanup to avoid stale-closure issues.
+  useEffect(() => {
+    if (!filterYear) {
+      setLazyDraws([])
+      setLazyYear('')
+      return
+    }
+    // Year already present in the local cache — no fetch needed
+    const inCache = draws?.some(d => d.draw_date.startsWith(filterYear))
+    if (inCache) {
+      setLazyDraws([])
+      setLazyYear('')
+      return
+    }
+    // Already loaded for this exact year — skip re-fetch
+    if (lazyYear === filterYear) return
+
+    let cancelled = false
+    setLazyLoading(true)
+    fetch(`${API}/index.php?action=draws&year=${filterYear}`)
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (!cancelled) {
+          setLazyDraws(Array.isArray(data) ? data : [])
+          setLazyYear(filterYear)
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLazyLoading(false) })
+    return () => { cancelled = true }
+  }, [filterYear, draws, lazyYear]) // lazyYear dep: after set it re-runs but hits early-return
+
+  // Merged draw source: use lazy-loaded data when available, otherwise local cache
+  const allDraws = useMemo(() => {
+    if (lazyDraws.length > 0 && lazyYear === filterYear) return lazyDraws
+    return draws || []
+  }, [draws, lazyDraws, lazyYear, filterYear])
+
   // ── Available options derived from data (must be before early return) ──
   const availableYears = useMemo(() => {
-    if (yearsByType?.all?.length) return yearsByType.all;
-    return draws ? [...new Set(draws.map(d => d.draw_date.slice(0, 4)))].sort((a, b) => b - a) : [];
-  }, [yearsByType, draws])
+    // Use type-specific years when a type is active so only valid years appear
+    const tid = selectedType === 'all' ? 'all' : String(selectedType)
+    const fromServer = yearsByType?.[tid]
+    if (fromServer?.length) return fromServer
+    // Fallback: derive from local cache (filtered to selected type)
+    const src = selectedType === 'all' ? allDraws : allDraws.filter(d => String(d.type_id) === String(selectedType))
+    return [...new Set(src.map(d => d.draw_date.slice(0, 4)))].sort((a, b) => b - a)
+  }, [yearsByType, allDraws, selectedType])
 
   const availableMonths = useMemo(() => {
-    if (!draws) return []
-    const src = filterYear ? draws.filter(d => d.draw_date.startsWith(filterYear)) : draws
+    let src = filterYear ? allDraws.filter(d => d.draw_date.startsWith(filterYear)) : allDraws
+    // Filter by active type so only months with real data for that type appear
+    if (selectedType !== 'all') src = src.filter(d => String(d.type_id) === String(selectedType))
     return [...new Set(src.map(d => parseInt(d.draw_date.slice(5, 7))))].sort((a, b) => a - b)
-  }, [draws, filterYear])
+  }, [allDraws, filterYear, selectedType])
 
   const availableDays = useMemo(() => {
-    if (!draws) return []
-    let src = filterYear ? draws.filter(d => d.draw_date.startsWith(filterYear)) : draws
+    let src = filterYear ? allDraws.filter(d => d.draw_date.startsWith(filterYear)) : allDraws
+    // Filter by active type so only days with real data for that type appear
+    if (selectedType !== 'all') src = src.filter(d => String(d.type_id) === String(selectedType))
     if (filterMonth) src = src.filter(d => d.draw_date.slice(5, 7) === filterMonth.padStart(2, '0'))
     return [...new Set(src.map(d => parseInt(d.draw_date.slice(8, 10))))].sort((a, b) => a - b)
-  }, [draws, filterYear, filterMonth])
+  }, [allDraws, filterYear, filterMonth, selectedType])
 
   if (!draws || draws.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
         <p className="text-sm text-muted-foreground font-medium">ກຳລັງໂຫຼດຂໍ້ມູນ...</p>
+      </div>
+    )
+  }
+
+  if (lazyLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-sm text-muted-foreground font-medium">ກຳລັງໂຫຼດຂໍ້ມູນປີ {filterYear}...</p>
       </div>
     )
   }
@@ -234,7 +296,7 @@ export default function ArchiveTable({ compact = false }) {
     setFilterYear(''); setFilterMonth(''); setFilterDay('')
   }
 
-  const filteredDraws = draws.filter(d => {
+  const filteredDraws = allDraws.filter(d => {
     const matchType = selectedType === 'all' || String(d.type_id) === String(selectedType)
     if (!matchType) return false
 

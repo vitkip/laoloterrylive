@@ -65,50 +65,50 @@
 
 /* ─── shadcn/ui CSS variables — light mode ─── */
 :root {
-  --background: #f9f9ff;
-  --foreground: #121c2a;
+  --background: #f7faf8;
+  --foreground: #0f1f15;
   --card: #ffffff;
-  --card-foreground: #121c2a;
+  --card-foreground: #0f1f15;
   --popover: #ffffff;
-  --popover-foreground: #121c2a;
-  --primary: #003fb1;
+  --popover-foreground: #0f1f15;
+  --primary: #1b3a2d;
   --primary-foreground: #ffffff;
-  --secondary: #eff3ff;
-  --secondary-foreground: #003fb1;
-  --muted: #f5f7ff;
-  --muted-foreground: #737686;
-  --accent: #eff3ff;
-  --accent-foreground: #003fb1;
+  --secondary: #f0f7f3;
+  --secondary-foreground: #1b3a2d;
+  --muted: #f0f7f3;
+  --muted-foreground: #4d6b57;
+  --accent: #e8f5ee;
+  --accent-foreground: #1b3a2d;
   --destructive: #ba1a1a;
   --destructive-foreground: #ffffff;
-  --border: #dee9fd;
-  --input: #dee9fd;
-  --ring: #003fb1;
+  --border: #d4e8dc;
+  --input: #d4e8dc;
+  --ring: #1b3a2d;
   --radius: 0.75rem;
   --color-green-success: #6cf8bb;
 }
 
 /* ─── shadcn/ui CSS variables — dark mode ─── */
 .dark {
-  --background: #0b1120;
-  --foreground: #f8fafc;
-  --card: #152033;
-  --card-foreground: #f8fafc;
-  --popover: #152033;
-  --popover-foreground: #f8fafc;
-  --primary: #93b4ff;
-  --primary-foreground: #00174d;
-  --secondary: #1e2d4a;
-  --secondary-foreground: #c7d2fe;
-  --muted: #1e2d4a;
-  --muted-foreground: #94a3b8;
-  --accent: #1e2d4a;
-  --accent-foreground: #c7d2fe;
+  --background: #0c1a12;
+  --foreground: #eaf5ee;
+  --card: #122018;
+  --card-foreground: #eaf5ee;
+  --popover: #122018;
+  --popover-foreground: #eaf5ee;
+  --primary: #5daf82;
+  --primary-foreground: #0c1a12;
+  --secondary: #1a2e20;
+  --secondary-foreground: #a8d5b7;
+  --muted: #1a2e20;
+  --muted-foreground: #7fb09a;
+  --accent: #1a2e20;
+  --accent-foreground: #a8d5b7;
   --destructive: #ff6b6b;
   --destructive-foreground: #ffffff;
-  --border: #2b3a54;
-  --input: #2b3a54;
-  --ring: #93b4ff;
+  --border: #28402e;
+  --input: #28402e;
+  --ring: #5daf82;
 }
 
 /* ─── Map CSS variables → Tailwind v4 utilities (override M3 values above) ─── */
@@ -156,14 +156,14 @@
 body {
   margin: 0;
   font-family: 'Noto Sans Lao Looped', sans-serif;
-  background-color: #f9f9ff;
-  color: #121c2a;
+  background-color: #f7faf8;
+  color: #0f1f15;
   -webkit-font-smoothing: antialiased;
 }
 
 .dark body {
-  background-color: #0b1120;
-  color: #f8fafc;
+  background-color: #0c1a12;
+  color: #eaf5ee;
 }
 
 #root {
