@@ -128,9 +128,12 @@ function sendOTPEmail($email, $fullName, $otp)
         $mail = createMailer();
         $mail->addAddress($email, $fullName);
         $mail->Subject = 'ລະຫັດ OTP ຢືນຢັນຕົວຕົນ - Lao Lottery Live';
-        $mail->Body    = "ສະບາຍດີ $fullName,\n\nລະຫັດ OTP ຂອງທ່ານ: $otp\n\nໝົດອາຍຸ: 10 ນາທີ\n\nLao Lottery Live";
+        $mail->isHTML(true);
+        $mail->Body    = "<p>ສະບາຍດີ <b>$fullName</b>,</p><p>ລະຫັດ OTP ຂອງທ່ານ:</p><h2 style='letter-spacing:8px;color:#003fb1;'>$otp</h2><p>ໝົດອາຍຸ: 10 ນາທີ</p><p>Lao Lottery Live</p>";
+        $mail->AltBody = "ສະບາຍດີ $fullName,\n\nລະຫັດ OTP: $otp\n\nໝົດອາຍຸ: 10 ນາທີ";
         return $mail->send();
     } catch (\Exception $e) {
+        error_log('[SMTP][sendOTPEmail] ' . $e->getMessage());
         return false;
     }
 }
@@ -142,10 +145,13 @@ function sendPasswordResetEmail($email, $fullName, $token)
         $mail = createMailer();
         $mail->addAddress($email, $fullName);
         $mail->Subject = 'ລີເຊັດລະຫັດຜ່ານ - Lao Lottery Live';
-        $url = "https://laolots.com/reset-password?token=$token";
-        $mail->Body    = "ສະບາຍດີ $fullName,\n\nຄລິກລິ້ງດ້ານລຸ່ມ:\n$url\n\nໝົດອາຍຸ: 1 ຊົ່ວໂມງ\n\nLao Lottery Live";
+        $url = APP_URL . "/reset-password?token=$token";
+        $mail->isHTML(true);
+        $mail->Body    = "<p>ສະບາຍດີ <b>$fullName</b>,</p><p><a href='$url' style='background:#003fb1;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;'>ລີເຊັດລະຫັດຜ່ານ</a></p><p>ຫຼື copy ລິ້ງ: $url</p><p>ໝົດອາຍຸ: 1 ຊົ່ວໂມງ</p>";
+        $mail->AltBody = "ສະບາຍດີ $fullName,\n\nລິ້ງລີເຊັດ: $url\n\nໝົດອາຍຸ: 1 ຊົ່ວໂມງ";
         return $mail->send();
     } catch (\Exception $e) {
+        error_log('[SMTP][sendPasswordResetEmail] ' . $e->getMessage());
         return false;
     }
 }
@@ -157,10 +163,13 @@ function sendVerificationEmail($email, $fullName, $token)
         $mail = createMailer();
         $mail->addAddress($email, $fullName);
         $mail->Subject = 'ຢືນຢັນ Email - Lao Lottery Live';
-        $url = "https://laolots.com/verify-email?token=$token";
-        $mail->Body    = "ສະບາຍດີ $fullName,\n\nຄລິກລິ້ງດ້ານລຸ່ມ:\n$url\n\nໝົດອາຍຸ: 24 ຊົ່ວໂມງ\n\nLao Lottery Live";
+        $url = APP_URL . "/verify-email?token=$token";
+        $mail->isHTML(true);
+        $mail->Body    = "<p>ສະບາຍດີ <b>$fullName</b>,</p><p><a href='$url' style='background:#003fb1;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;'>ຢືນຢັນ Email</a></p><p>ຫຼື copy ລິ້ງ: $url</p><p>ໝົດອາຍຸ: 24 ຊົ່ວໂມງ</p>";
+        $mail->AltBody = "ສະບາຍດີ $fullName,\n\nລິ້ງຢືນຢັນ: $url\n\nໝົດອາຍຸ: 24 ຊົ່ວໂມງ";
         return $mail->send();
     } catch (\Exception $e) {
+        error_log('[SMTP][sendVerificationEmail] ' . $e->getMessage());
         return false;
     }
 }
