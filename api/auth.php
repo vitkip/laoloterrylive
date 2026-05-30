@@ -96,6 +96,16 @@ function generateSecureToken(): string
 function createMailer()
 {
     $mail = new PHPMailer(true);
+    $mail->CharSet = 'UTF-8';
+    $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
+
+    // If no SMTP credentials → use server's sendmail (cPanel default, always works)
+    if (SMTP_USER === '' || SMTP_HOST === 'localhost' || SMTP_HOST === '127.0.0.1') {
+        $mail->isSendmail();
+        return $mail;
+    }
+
+    // External SMTP (e.g. Gmail, Mailgun, Brevo)
     $mail->isSMTP();
     $mail->Host       = SMTP_HOST;
     $mail->SMTPAuth   = true;
@@ -104,10 +114,8 @@ function createMailer()
     $mail->SMTPSecure = (SMTP_PORT === 465)
         ? PHPMailer::ENCRYPTION_SMTPS
         : PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port       = SMTP_PORT;
-    $mail->CharSet    = 'UTF-8';
-    // Only disable SSL peer verification on local dev
-    // On production: use a valid cert (Let's Encrypt / cPanel AutoSSL)
+    $mail->Port = SMTP_PORT;
+
     if (!PRODUCTION) {
         $mail->SMTPOptions = [
             'ssl' => [
@@ -117,7 +125,6 @@ function createMailer()
             ],
         ];
     }
-    $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
     return $mail;
 }
 
