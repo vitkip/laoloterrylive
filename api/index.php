@@ -298,42 +298,64 @@ switch ($action) {
             break;
         }
 
-        $type_id = isset($input['type_id']) ? (int) $input['type_id'] : 1;
-        $draw_number = isset($input['draw_number']) ? (int) $input['draw_number'] : 0;
-        $draw_date = isset($input['draw_date']) ? $conn->real_escape_string($input['draw_date']) : '';
-        $full_result = isset($input['full_result']) ? $conn->real_escape_string($input['full_result']) : '';
-        $animal_id = isset($input['animal_id']) && $input['animal_id'] ? (int) $input['animal_id'] : null;
-        $youtube_url = isset($input['youtube_url']) && $input['youtube_url'] !== '' ? $conn->real_escape_string($input['youtube_url']) : null;
+        $type_id     = isset($input['type_id'])     ? (int)$input['type_id']     : 1;
+        $draw_number = isset($input['draw_number']) ? (int)$input['draw_number'] : 0;
+        $draw_date   = trim($input['draw_date']   ?? '');
+        $full_result = trim($input['full_result'] ?? '');
+        $animal_id   = isset($input['animal_id']) && $input['animal_id'] ? (int)$input['animal_id'] : null;
+        $youtube_url = isset($input['youtube_url']) && $input['youtube_url'] !== '' ? trim($input['youtube_url']) : null;
 
-        if (!$draw_number || !$draw_date || strlen($full_result) !== 6) {
+        // ✅ Validate draw_number
+        if ($draw_number <= 0) {
             http_response_code(400);
-            echo json_encode(["error" => "Missing required fields or full_result length is not 6"]);
+            echo json_encode(["error" => "draw_number ຕ້ອງເປັນຕົວເລກບວກ"]);
             break;
+        }
+        // ✅ Validate draw_date format Y-m-d
+        $dt = DateTime::createFromFormat('Y-m-d', $draw_date);
+        if (!$dt || $dt->format('Y-m-d') !== $draw_date) {
+            http_response_code(400);
+            echo json_encode(["error" => "draw_date ຣູບແບບຕ້ອງເປັນ YYYY-MM-DD"]);
+            break;
+        }
+        // ✅ Validate full_result: exactly 6 digits
+        if (!preg_match('/^\d{6}$/', $full_result)) {
+            http_response_code(400);
+            echo json_encode(["error" => "full_result ຕ້ອງເປັນຕົວເລກ 6 ໂຕເທົ່ານັ້ນ"]);
+            break;
+        }
+        // ✅ Validate youtube_url if provided
+        if ($youtube_url !== null) {
+            if (!filter_var($youtube_url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\//i', $youtube_url)) {
+                http_response_code(400);
+                echo json_encode(["error" => "youtube_url ຕ້ອງເປັນ URL ທີ່ຖືກຕ້ອງ"]);
+                break;
+            }
         }
 
         $conn->begin_transaction();
         try {
             // 1. Insert into lottery_draws
             $stmt = $conn->prepare("INSERT INTO lottery_draws (type_id, draw_number, draw_date, full_result, status, created_by, youtube_url) VALUES (?, ?, ?, ?, 'published', ?, ?)");
-            $stmt->bind_param("iissis", $type_id, $draw_number, $draw_date, $full_result, $userId, $youtube_url);
+            $stmt->bind_param('iissis', $type_id, $draw_number, $draw_date, $full_result, $userId, $youtube_url);
             $stmt->execute();
             $draw_id = $conn->insert_id;
             $stmt->close();
 
             // 2. Insert details
-            $stmt_detail = $conn->prepare("INSERT INTO draw_results_detail (draw_id, prize_type, result_value, animal_id) VALUES (?, ?, ?, ?)");
+            $stmt_detail = $conn->prepare('INSERT INTO draw_results_detail (draw_id, prize_type, result_value, animal_id) VALUES (?, ?, ?, ?)');
 
             $prizes = [
-                "6_digits" => $full_result,
-                "5_digits" => substr($full_result, 1, 5),
-                "4_digits" => substr($full_result, 2, 4),
-                "3_digits" => substr($full_result, 3, 3),
-                "2_digits" => substr($full_result, 4, 2)
+                '6_digits' => $full_result,
+                '5_digits' => substr($full_result, 1, 5),
+                '4_digits' => substr($full_result, 2, 4),
+                '3_digits' => substr($full_result, 3, 3),
+                '2_digits' => substr($full_result, 4, 2),
             ];
 
             foreach ($prizes as $ptype => $val) {
                 $a_id = ($ptype === '2_digits') ? $animal_id : null;
-                $stmt_detail->bind_param("issi", $draw_id, $ptype, $val, $a_id);
+                $stmt_detail->bind_param('issi', $draw_id, $ptype, $val, $a_id);
                 $stmt_detail->execute();
             }
             $stmt_detail->close();
@@ -342,8 +364,9 @@ switch ($action) {
             echo json_encode(["success" => true, "message" => "Draw added successfully"]);
         } catch (Exception $e) {
             $conn->rollback();
+            error_log('[create_draw] ' . $e->getMessage());
             http_response_code(500);
-            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+            echo json_encode(["error" => PRODUCTION ? "ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່" : $e->getMessage()]);
         }
         break;
 
@@ -363,18 +386,26 @@ switch ($action) {
             break;
         }
 
-        $draw_id = (int) $input['draw_id'];
-        $type_id = isset($input['type_id']) ? (int) $input['type_id'] : 1;
-        $draw_number = isset($input['draw_number']) ? (int) $input['draw_number'] : 0;
-        $draw_date = isset($input['draw_date']) ? $conn->real_escape_string($input['draw_date']) : '';
-        $full_result = isset($input['full_result']) ? $conn->real_escape_string($input['full_result']) : '';
-        $animal_id = isset($input['animal_id']) && $input['animal_id'] ? (int) $input['animal_id'] : null;
-        $youtube_url = isset($input['youtube_url']) && $input['youtube_url'] !== '' ? $conn->real_escape_string($input['youtube_url']) : null;
+        $draw_id     = (int)$input['draw_id'];
+        $type_id     = isset($input['type_id'])     ? (int)$input['type_id']     : 1;
+        $draw_number = isset($input['draw_number']) ? (int)$input['draw_number'] : 0;
+        $draw_date   = trim($input['draw_date']   ?? '');
+        $full_result = trim($input['full_result'] ?? '');
+        $animal_id   = isset($input['animal_id']) && $input['animal_id'] ? (int)$input['animal_id'] : null;
+        $youtube_url = isset($input['youtube_url']) && $input['youtube_url'] !== '' ? trim($input['youtube_url']) : null;
 
-        if (!$draw_number || !$draw_date || strlen($full_result) !== 6) {
-            http_response_code(400);
-            echo json_encode(["error" => "Missing required fields or full_result length is not 6"]);
-            break;
+        if ($draw_number <= 0) {
+            http_response_code(400); echo json_encode(["error" => "draw_number ຕ້ອງເປັນຕົວເລກບວກ"]); break;
+        }
+        $dt = DateTime::createFromFormat('Y-m-d', $draw_date);
+        if (!$dt || $dt->format('Y-m-d') !== $draw_date) {
+            http_response_code(400); echo json_encode(["error" => "draw_date ຣູບແບບຕ້ອງເປັນ YYYY-MM-DD"]); break;
+        }
+        if (!preg_match('/^\d{6}$/', $full_result)) {
+            http_response_code(400); echo json_encode(["error" => "full_result ຕ້ອງເປັນຕົວເລກ 6 ໂຕເທົ່ານັ້ນ"]); break;
+        }
+        if ($youtube_url !== null && (!filter_var($youtube_url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\//i', $youtube_url))) {
+            http_response_code(400); echo json_encode(["error" => "youtube_url ຕ້ອງເປັນ URL ທີ່ຖືກຕ້ອງ"]); break;
         }
 
         $conn->begin_transaction();
@@ -412,8 +443,9 @@ switch ($action) {
             echo json_encode(["success" => true, "message" => "Draw updated successfully"]);
         } catch (Exception $e) {
             $conn->rollback();
+            error_log('[update_draw] ' . $e->getMessage());
             http_response_code(500);
-            echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+            echo json_encode(["error" => PRODUCTION ? "ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່" : $e->getMessage()]);
         }
         break;
 
@@ -433,21 +465,42 @@ switch ($action) {
             break;
         }
 
-        $uploadDir = __DIR__ . '/../uploads/animals/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-
-        $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        if (!in_array($ext, $allowed)) {
+        // ✅ File size limit: 2 MB
+        if ($_FILES['image']['size'] > 2 * 1024 * 1024) {
             http_response_code(400);
-            echo json_encode(["error" => "Invalid file type"]);
+            echo json_encode(["error" => "ໄຟລ໌ໃຫຍ່ເກີນ 2MB"]);
             break;
         }
 
+        // ✅ Check actual MIME type (not user-supplied extension)
+        $finfo    = new finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($_FILES['image']['tmp_name']);
+        $mimeToExt = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
+        if (!isset($mimeToExt[$mimeType])) {
+            http_response_code(400);
+            echo json_encode(["error" => "ປະເພດໄຟລ໌ບໍ່ຮອງຮັບ (ຕ້ອງເປັນ JPG, PNG, GIF ຫຼື WebP)"]);
+            break;
+        }
+        $ext = $mimeToExt[$mimeType];
+
+        $uploadDir = __DIR__ . '/../uploads/animals/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        // ✅ Block PHP execution in uploads dir
+        $htaccessPath = $uploadDir . '.htaccess';
+        if (!file_exists($htaccessPath)) {
+            file_put_contents($htaccessPath, "php_flag engine off\nOptions -ExecCGI\n<Files *>\n  SetHandler default-handler\n</Files>\n");
+        }
+
         $fileName = 'animal_' . $animal_id . '_' . time() . '.' . $ext;
-        $dest = $uploadDir . $fileName;
+        $dest     = $uploadDir . $fileName;
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $dest)) {
             $imageUrl = '/uploads/animals/' . $fileName;

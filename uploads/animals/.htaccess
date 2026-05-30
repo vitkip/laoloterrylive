@@ -1,0 +1,20 @@
+# Block PHP execution in the uploads directory
+php_flag engine off
+Options -ExecCGI -Indexes
+
+# Force all files to be served as plain binary/text
+<Files *>
+    SetHandler default-handler
+</Files>
+
+# Only allow image file types to be served
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Deny everything else
+<FilesMatch "^(?!.*\.(jpg|jpeg|png|gif|webp)$).*">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

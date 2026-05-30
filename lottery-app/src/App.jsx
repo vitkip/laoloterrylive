@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import ErrorBoundary from './components/ErrorBoundary'
 import { useVisitorTrack } from './hooks/useVisitorTrack'
 
 // ── Pages ────────────────────────────────────────────────────────
@@ -72,6 +73,7 @@ function PublicLayout() {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <Router basename="/">
       <Toaster
         position="top-right"
@@ -148,5 +150,6 @@ export default function App() {
         </Routes>
       </Suspense>
     </Router>
+    </ErrorBoundary>
   )
 }

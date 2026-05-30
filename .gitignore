@@ -1,0 +1,35 @@
+# ── Credentials / Secrets (NEVER commit) ─────────────────────────
+api/.env
+api/.env.local
+api/.env.production
+
+# ── PHP / Server ──────────────────────────────────────────────────
+*.log
+*.cache
+
+# ── Node / React build ────────────────────────────────────────────
+lottery-app/node_modules/
+lottery-app/dist/
+lottery-app/.env
+lottery-app/.env.local
+lottery-app/.env.production
+
+# ── Uploads (user content, not source code) ───────────────────────
+uploads/animals/*.jpg
+uploads/animals/*.jpeg
+uploads/animals/*.png
+uploads/animals/*.gif
+uploads/animals/*.webp
+
+# ── OS / Editor ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.sw?
+
+# ── Screenshots / temp files ──────────────────────────────────────
+*.png.bak
+"Screenshot *.png"
+Screenshot*.png

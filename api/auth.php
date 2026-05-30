@@ -37,13 +37,18 @@ define('SECRET_KEY', JWT_SECRET);
 
 // ── JWT helpers ────────────────────────────────────────────────────
 
+/**
+ * Generate a short-lived access token (15 minutes by default).
+ * Access token contains: user_id, role, type=access, exp
+ */
 function generateToken($user)
 {
     $header  = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
     $payload = json_encode([
-        'user_id' => $user['user_id'],
+        'user_id' => (int)$user['user_id'],
         'role'    => $user['role'],
-        'exp'     => time() + 86400,
+        'type'    => 'access',
+        'exp'     => time() + JWT_ACCESS_TTL,
     ]);
     $b64h = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
     $b64p = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
@@ -52,14 +57,36 @@ function generateToken($user)
     return "$b64h.$b64p.$b64s";
 }
 
-// ── Crypto helpers ─────────────────────────────────────────────────
-
-function generateOTP()
+/**
+ * Issue a refresh token, store its hash in refresh_tokens, return raw token.
+ */
+function issueRefreshToken($conn, int $userId): string
 {
-    return str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $raw    = bin2hex(random_bytes(32));  // 64-char hex — sent to client
+    $hashed = hash('sha256', $raw);       // stored in DB
+    $expiry = date('Y-m-d H:i:s', time() + JWT_REFRESH_TTL);
+    $ip     = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+    $ua     = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255);
+
+    $stmt = $conn->prepare(
+        "INSERT INTO refresh_tokens (user_id, token_hash, expires_at, ip_address, user_agent)
+         VALUES (?, ?, ?, ?, ?)"
+    );
+    $stmt->bind_param("issss", $userId, $hashed, $expiry, $ip, $ua);
+    $stmt->execute();
+    $stmt->close();
+    return $raw;
 }
 
-function generateSecureToken()
+// ── Crypto helpers ─────────────────────────────────────────────────
+
+function generateOTP(): string
+{
+    return str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+}
+
+/** Returns the raw token (for email) — caller must store hash('sha256', $token) in DB */
+function generateSecureToken(): string
 {
     return bin2hex(random_bytes(32));
 }
@@ -79,14 +106,17 @@ function createMailer()
         : PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port       = SMTP_PORT;
     $mail->CharSet    = 'UTF-8';
-    // cPanel uses self-signed SSL cert — disable peer verification
-    $mail->SMTPOptions = [
-        'ssl' => [
-            'verify_peer'       => false,
-            'verify_peer_name'  => false,
-            'allow_self_signed' => true,
-        ],
-    ];
+    // Only disable SSL peer verification on local dev
+    // On production: use a valid cert (Let's Encrypt / cPanel AutoSSL)
+    if (!PRODUCTION) {
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer'       => false,
+                'verify_peer_name'  => false,
+                'allow_self_signed' => true,
+            ],
+        ];
+    }
     $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
     return $mail;
 }
@@ -213,20 +243,23 @@ switch ($action) {
                 echo json_encode(["error" => "ບັນຊີຍັງບໍ່ໄດ້ຢືນຢັນ ຫຼື ຖືກລະງັບການໃຊ້ງານ"]);
                 break;
             }
-            $token = generateToken($user);
+            $accessToken  = generateToken($user);
+            $refreshToken = issueRefreshToken($conn, (int)$user['user_id']);
             $act = 'Login success';
-            $logS = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?, ?, ?)");
-            $logS->bind_param("iss", $user['user_id'], $act, $ip);
+            $logS = $conn->prepare('INSERT INTO user_logs (user_id, action, ip_address) VALUES (?, ?, ?)');
+            $logS->bind_param('iss', $user['user_id'], $act, $ip);
             $logS->execute();
             $logS->close();
 
             echo json_encode([
-                "token" => $token,
-                "user"  => [
-                    "id"       => $user['user_id'],
-                    "username" => $user['username'],
-                    "name"     => $user['full_name'],
-                    "role"     => $user['role'],
+                'token'         => $accessToken,
+                'refresh_token' => $refreshToken,
+                'expires_in'    => JWT_ACCESS_TTL,
+                'user'          => [
+                    'id'       => $user['user_id'],
+                    'username' => $user['username'],
+                    'name'     => $user['full_name'],
+                    'role'     => $user['role'],
                 ],
             ]);
         } else {
@@ -374,23 +407,25 @@ switch ($action) {
         $stmt->close();
 
         // ── OTP ─────────────────────────────────────────────────────
-        $otp       = generateOTP();
+        $otp       = generateOTP();                          // raw — sent in email / dev response
+        $otpHash   = hash('sha256', $otp);                   // stored in DB
         $otpExpiry = date('Y-m-d H:i:s', time() + 600);
         $purpose   = 'register';
         $stmt = $conn->prepare(
-            "INSERT INTO otp_codes (user_id, otp_code, purpose, expires_at) VALUES (?, ?, ?, ?)"
+            "INSERT INTO otp_codes (user_id, otp_code_hash, purpose, expires_at) VALUES (?, ?, ?, ?)"
         );
-        $stmt->bind_param("isss", $userId, $otp, $purpose, $otpExpiry);
+        $stmt->bind_param('isss', $userId, $otpHash, $purpose, $otpExpiry);
         $stmt->execute();
         $stmt->close();
 
         // ── Email verification token ────────────────────────────────
-        $evToken  = generateSecureToken();
-        $evExpiry = date('Y-m-d H:i:s', time() + 86400);
+        $evToken     = generateSecureToken();                // raw — sent in email
+        $evTokenHash = hash('sha256', $evToken);             // stored in DB
+        $evExpiry    = date('Y-m-d H:i:s', time() + 86400);
         $stmt = $conn->prepare(
-            "INSERT INTO email_verifications (user_id, token, expires_at) VALUES (?, ?, ?)"
+            "INSERT INTO email_verifications (user_id, token_hash, expires_at) VALUES (?, ?, ?)"
         );
-        $stmt->bind_param("iss", $userId, $evToken, $evExpiry);
+        $stmt->bind_param('iss', $userId, $evTokenHash, $evExpiry);
         $stmt->execute();
         $stmt->close();
 
@@ -465,12 +500,12 @@ switch ($action) {
 
         // Fetch latest unused register OTP for this user
         $stmt = $conn->prepare(
-            "SELECT otp_id, otp_code, expires_at, attempt_count
+            "SELECT otp_id, otp_code_hash, expires_at, attempt_count
              FROM otp_codes
              WHERE user_id = ? AND purpose = 'register' AND used_at IS NULL
              ORDER BY created_at DESC LIMIT 1"
         );
-        $stmt->bind_param("i", $userId);
+        $stmt->bind_param('i', $userId);
         $stmt->execute();
         $res = $stmt->get_result();
         $stmt->close();
@@ -492,8 +527,8 @@ switch ($action) {
 
         // Increment attempt
         $otpId = (int)$row['otp_id'];
-        $upd   = $conn->prepare("UPDATE otp_codes SET attempt_count = attempt_count + 1 WHERE otp_id = ?");
-        $upd->bind_param("i", $otpId);
+        $upd   = $conn->prepare('UPDATE otp_codes SET attempt_count = attempt_count + 1 WHERE otp_id = ?');
+        $upd->bind_param('i', $otpId);
         $upd->execute();
         $upd->close();
 
@@ -504,8 +539,9 @@ switch ($action) {
             break;
         }
 
-        // Check code
-        if ($row['otp_code'] !== $otpCode) {
+        // Compare hash (constant-time)
+        $inputHash = hash('sha256', $otpCode);
+        if (!hash_equals($row['otp_code_hash'], $inputHash)) {
             $remaining = 4 - (int)$row['attempt_count'];
             http_response_code(400);
             echo json_encode(["error" => "OTP ບໍ່ຖືກຕ້ອງ (ຍັງເຫຼືອ $remaining ຄັ້ງ)"]);
@@ -609,14 +645,15 @@ switch ($action) {
         $del->execute();
         $del->close();
 
-        // New OTP
-        $newOtp  = generateOTP();
-        $expiry  = date('Y-m-d H:i:s', time() + 600);
-        $purpose = 'register';
-        $stmt    = $conn->prepare(
-            "INSERT INTO otp_codes (user_id, otp_code, purpose, expires_at) VALUES (?,?,?,?)"
+        // New OTP — store hash
+        $newOtp     = generateOTP();
+        $newOtpHash = hash('sha256', $newOtp);
+        $expiry     = date('Y-m-d H:i:s', time() + 600);
+        $purpose    = 'register';
+        $stmt       = $conn->prepare(
+            'INSERT INTO otp_codes (user_id, otp_code_hash, purpose, expires_at) VALUES (?,?,?,?)'
         );
-        $stmt->bind_param("isss", $userId, $newOtp, $purpose, $expiry);
+        $stmt->bind_param('isss', $userId, $newOtpHash, $purpose, $expiry);
         $stmt->execute();
         $stmt->close();
 
@@ -667,12 +704,13 @@ switch ($action) {
             $del->execute();
             $del->close();
 
-            $resetToken = generateSecureToken();
-            $expiry     = date('Y-m-d H:i:s', time() + 3600);
+            $resetToken     = generateSecureToken();          // raw — sent in email URL
+            $resetTokenHash = hash('sha256', $resetToken);    // stored in DB
+            $expiry         = date('Y-m-d H:i:s', time() + 3600);
             $stmt = $conn->prepare(
-                "INSERT INTO password_resets (user_id, token, expires_at) VALUES (?,?,?)"
+                'INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?,?,?)'
             );
-            $stmt->bind_param("iss", $userRes['user_id'], $resetToken, $expiry);
+            $stmt->bind_param('iss', $userRes['user_id'], $resetTokenHash, $expiry);
             $stmt->execute();
             $stmt->close();
 
@@ -714,12 +752,13 @@ switch ($action) {
             break;
         }
 
-        // Find valid token
+        // Find valid token — lookup by SHA-256 hash
+        $tokenLookupHash = hash('sha256', $token);
         $stmt = $conn->prepare(
-            "SELECT reset_id, user_id, expires_at FROM password_resets
-             WHERE token = ? AND used_at IS NULL LIMIT 1"
+            'SELECT reset_id, user_id, expires_at FROM password_resets
+             WHERE token_hash = ? AND used_at IS NULL LIMIT 1'
         );
-        $stmt->bind_param("s", $token);
+        $stmt->bind_param('s', $tokenLookupHash);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
@@ -782,11 +821,12 @@ switch ($action) {
             break;
         }
 
+        $tokenLookupHash = hash('sha256', $token);
         $stmt = $conn->prepare(
-            "SELECT verification_id, user_id, expires_at, verified_at
-             FROM email_verifications WHERE token = ? LIMIT 1"
+            'SELECT verification_id, user_id, expires_at, verified_at
+             FROM email_verifications WHERE token_hash = ? LIMIT 1'
         );
-        $stmt->bind_param("s", $token);
+        $stmt->bind_param('s', $tokenLookupHash);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
@@ -822,6 +862,80 @@ switch ($action) {
         $upd->close();
 
         echo json_encode(["success" => true, "message" => "ຢືນຢັນ Email ສຳເລັດ"]);
+        break;
+
+    // ================================================================
+    // REFRESH TOKEN — issue new access token using a valid refresh token
+    // POST: { "refresh_token": "<raw 64-char token>" }
+    // ================================================================
+    case 'refresh_token':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Only POST allowed']);
+            break;
+        }
+
+        $input        = json_decode(file_get_contents('php://input'), true);
+        $rawRefresh   = trim($input['refresh_token'] ?? '');
+
+        if (!$rawRefresh) {
+            http_response_code(400);
+            echo json_encode(['error' => 'refresh_token ຫວ່າງ']);
+            break;
+        }
+
+        $refreshHash = hash('sha256', $rawRefresh);
+
+        $stmt = $conn->prepare(
+            'SELECT rt_id, user_id, expires_at, revoked_at
+             FROM refresh_tokens WHERE token_hash = ? LIMIT 1'
+        );
+        $stmt->bind_param('s', $refreshHash);
+        $stmt->execute();
+        $rtRow = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$rtRow || $rtRow['revoked_at'] !== null) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Refresh token ບໍ່ຖືກຕ້ອງ ຫຼື ຖືກຍົກເລີກແລ້ວ', 'code' => 'REFRESH_INVALID']);
+            break;
+        }
+
+        if (strtotime($rtRow['expires_at']) < time()) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Refresh token ໝົດອາຍຸ ກະລຸນາ login ໃໝ່', 'code' => 'REFRESH_EXPIRED']);
+            break;
+        }
+
+        // Rotate refresh token (revoke old, issue new)
+        $now = date('Y-m-d H:i:s');
+        $revokeStmt = $conn->prepare('UPDATE refresh_tokens SET revoked_at = ? WHERE rt_id = ?');
+        $revokeStmt->bind_param('si', $now, $rtRow['rt_id']);
+        $revokeStmt->execute();
+        $revokeStmt->close();
+
+        // Fetch user
+        $userId = (int)$rtRow['user_id'];
+        $uStmt  = $conn->prepare('SELECT user_id, username, full_name, role, is_active FROM users WHERE user_id = ? AND deleted_at IS NULL');
+        $uStmt->bind_param('i', $userId);
+        $uStmt->execute();
+        $userRow = $uStmt->get_result()->fetch_assoc();
+        $uStmt->close();
+
+        if (!$userRow || !$userRow['is_active']) {
+            http_response_code(403);
+            echo json_encode(['error' => 'ບັນຊີຖືກລະງັບ']);
+            break;
+        }
+
+        $newAccessToken  = generateToken($userRow);
+        $newRefreshToken = issueRefreshToken($conn, $userId);
+
+        echo json_encode([
+            'token'         => $newAccessToken,
+            'refresh_token' => $newRefreshToken,
+            'expires_in'    => JWT_ACCESS_TTL,
+        ]);
         break;
 
     // ================================================================
