@@ -950,7 +950,7 @@ export default function AnalyticsPage() {
 
       {/* ── TAB: DECISION ───────────────────────────────────────────────────── */}
       {mode === 'decision' && (
-        <div className="space-y-5">
+        <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-5 border border-white/[0.09] shadow-2xl shadow-black/50 space-y-5">
           {/* Header */}
           <div className="relative rounded-2xl overflow-hidden bg-zinc-950/90 backdrop-blur-2xl border border-white/[0.09] p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -1049,7 +1049,7 @@ export default function AnalyticsPage() {
 
       {/* ── TAB: DS BACKTEST ────────────────────────────────────────────────── */}
       {mode === 'dsbacktest' && (
-        <div className="space-y-5">
+        <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-5 border border-white/[0.09] shadow-2xl shadow-black/50 space-y-5">
           {/* Header */}
           <div className="relative rounded-2xl overflow-hidden bg-zinc-950/90 backdrop-blur-2xl border border-white/[0.09] p-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
