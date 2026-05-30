@@ -68,7 +68,7 @@ function VideoDialog({ draw, onClose }) {
 
   return (
     <Dialog open={!!draw} onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-[#0d1829] border-white/10 gap-0">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-zinc-950/95 backdrop-blur-2xl border-white/[0.09] gap-0 shadow-2xl shadow-black/50">
         <DialogHeader className="flex flex-row items-center gap-3 px-5 py-4 border-b border-white/10 space-y-0">
           <div className="w-8 h-8 rounded-xl bg-destructive/20 flex items-center justify-center shrink-0">
             <PlayCircle className="w-4 h-4 text-destructive" />
@@ -142,7 +142,7 @@ function DigitPair({ value }) {
       {value.split('').map((d, i) => (
         <span
           key={i}
-          className="w-6 h-8 flex items-center justify-center rounded-md bg-secondary text-primary text-sm font-black"
+          className="w-6 h-8 flex items-center justify-center rounded-md bg-foreground/[0.07] text-foreground text-sm font-black ring-1 ring-foreground/[0.08]"
         >
           {d}
         </span>
@@ -156,8 +156,8 @@ function DigitPair({ value }) {
 function EmptySearch({ term, onClear }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
-      <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
-        <Search className="w-6 h-6 text-muted-foreground" />
+      <div className="w-14 h-14 rounded-2xl bg-muted/50 backdrop-blur-sm border border-border/60 flex items-center justify-center">
+        <Search className="w-6 h-6 text-muted-foreground/70" />
       </div>
       <p className="text-sm font-bold text-muted-foreground">ບໍ່ພົບຂໍ້ມູນສຳລັບ</p>
       <p className="text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-full font-mono">
@@ -327,8 +327,8 @@ export default function ArchiveTable({ compact = false }) {
         {/* ─── Section Header ─── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#003fb1]/10 flex items-center justify-center">
-              <CalendarDays className="w-4 h-4 text-[#003fb1]" />
+            <div className="w-8 h-8 rounded-xl bg-primary/10 backdrop-blur-sm ring-1 ring-primary/15 flex items-center justify-center">
+              <CalendarDays className="w-4 h-4 text-primary" />
             </div>
             <h3 className="text-base sm:text-lg font-extrabold text-foreground">ຜົນທັງໝົດ</h3>
             <Badge variant="secondary" className="text-primary font-bold text-xs px-2.5">
@@ -358,7 +358,7 @@ export default function ArchiveTable({ compact = false }) {
         </div>
 
         {/* ─── Filter Bar ─── */}
-        <div className="bg-card border border-border rounded-2xl p-4 space-y-3.5">
+        <div className="bg-card/70 backdrop-blur-md border border-border/70 rounded-2xl p-4 space-y-3.5 shadow-sm">
 
           {/* Type Filter Tabs */}
           {types && types.length > 1 && (
@@ -369,8 +369,8 @@ export default function ArchiveTable({ compact = false }) {
                   onClick={() => setSelectedType('all')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                     selectedType === 'all'
-                      ? 'bg-[#003fb1] text-white border-[#003fb1] shadow-sm'
-                      : 'bg-background text-muted-foreground border-border hover:border-[#003fb1]/40 hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/25'
+                    : 'bg-background/80 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
                   }`}
                 >
                   ທັງໝົດ
@@ -411,7 +411,7 @@ export default function ArchiveTable({ compact = false }) {
             {/* Year */}
             <Select value={filterYear || '__all__'} onValueChange={v => setFilterYear(v === '__all__' ? '' : v)}>
               <SelectTrigger className={`h-8 w-36 text-xs font-bold rounded-xl border transition-all ${
-                filterYear ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border'
+                filterYear ? 'border-primary/60 text-primary bg-primary/[0.08]' : 'border-border bg-background/60'
               }`}>
                 <SelectValue placeholder="ປີທັງໝົດ" />
               </SelectTrigger>
@@ -426,7 +426,7 @@ export default function ArchiveTable({ compact = false }) {
             {/* Month */}
             <Select value={filterMonth || '__all__'} onValueChange={v => setFilterMonth(v === '__all__' ? '' : v)}>
               <SelectTrigger className={`h-8 w-40 text-xs font-bold rounded-xl border transition-all ${
-                filterMonth ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border'
+                filterMonth ? 'border-primary/60 text-primary bg-primary/[0.08]' : 'border-border bg-background/60'
               }`}>
                 <SelectValue placeholder="ເດືອນທັງໝົດ" />
               </SelectTrigger>
@@ -443,7 +443,7 @@ export default function ArchiveTable({ compact = false }) {
             {/* Day */}
             <Select value={filterDay || '__all__'} onValueChange={v => setFilterDay(v === '__all__' ? '' : v)}>
               <SelectTrigger className={`h-8 w-36 text-xs font-bold rounded-xl border transition-all ${
-                filterDay ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border'
+                filterDay ? 'border-primary/60 text-primary bg-primary/[0.08]' : 'border-border bg-background/60'
               }`}>
                 <SelectValue placeholder="ວັນທັງໝົດ" />
               </SelectTrigger>
@@ -462,7 +462,7 @@ export default function ArchiveTable({ compact = false }) {
               {filterYear && (
                 <button
                   onClick={() => setFilterYear('')}
-                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-[#003fb1]/10 text-[#003fb1] border border-[#003fb1]/25 text-[11px] font-bold hover:bg-[#003fb1]/20 transition-colors"
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold hover:bg-primary/[0.18] transition-colors"
                 >
                   {filterYear} <X className="w-3 h-3" />
                 </button>
@@ -470,7 +470,7 @@ export default function ArchiveTable({ compact = false }) {
               {filterMonth && (
                 <button
                   onClick={() => setFilterMonth('')}
-                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-[#003fb1]/10 text-[#003fb1] border border-[#003fb1]/25 text-[11px] font-bold hover:bg-[#003fb1]/20 transition-colors"
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold hover:bg-primary/[0.18] transition-colors"
                 >
                   {LAO_MONTHS[parseInt(filterMonth)]} <X className="w-3 h-3" />
                 </button>
@@ -478,7 +478,7 @@ export default function ArchiveTable({ compact = false }) {
               {filterDay && (
                 <button
                   onClick={() => setFilterDay('')}
-                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-[#003fb1]/10 text-[#003fb1] border border-[#003fb1]/25 text-[11px] font-bold hover:bg-[#003fb1]/20 transition-colors"
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold hover:bg-primary/[0.18] transition-colors"
                 >
                   ວັນທີ {filterDay.toString().padStart(2, '0')} <X className="w-3 h-3" />
                 </button>
@@ -497,10 +497,10 @@ export default function ArchiveTable({ compact = false }) {
         </div>
 
         {/* ─── Table ─── */}
-        <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
+        <div className="rounded-2xl border border-border/60 overflow-hidden shadow-lg ring-1 ring-border/20">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/60 hover:bg-muted/60 border-border">
+              <TableRow className="bg-muted/40 hover:bg-muted/40 border-border/60">
                 <TableHead className="w-10 text-[10px] uppercase tracking-widest">#</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-widest">ງວດວັນທີ</TableHead>
                 {types && types.length > 1 && (
@@ -525,7 +525,7 @@ export default function ArchiveTable({ compact = false }) {
                 return (
                   <TableRow
                     key={row.draw_id}
-                    className="group border-border hover:bg-accent/40 transition-colors duration-150"
+                    className="group border-border/50 hover:bg-muted/35 transition-colors duration-100"
                   >
                     {/* Row number */}
                     <TableCell className="text-[11px] font-bold text-muted-foreground/60 w-10">
@@ -577,7 +577,7 @@ export default function ArchiveTable({ compact = false }) {
                             <img
                               src={animalImg}
                               alt={animal.animal_name_lao}
-                              className="w-8 h-8 rounded-lg object-contain bg-secondary p-0.5 shrink-0"
+                              className="w-8 h-8 rounded-lg object-contain bg-muted/60 p-0.5 shrink-0 ring-1 ring-border/30"
                               onError={e => { e.target.style.display = 'none' }}
                             />
                           )}
@@ -618,8 +618,8 @@ export default function ArchiveTable({ compact = false }) {
         {filteredDraws.length === 0 && (
           hasAnyFilter ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
-                <Search className="w-6 h-6 text-muted-foreground" />
+              <div className="w-14 h-14 rounded-2xl bg-muted/50 backdrop-blur-sm border border-border/60 flex items-center justify-center">
+                <Search className="w-6 h-6 text-muted-foreground/70" />
               </div>
               <p className="text-sm font-bold text-muted-foreground">ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັນ</p>
               <p className="text-xs text-muted-foreground/70">ລອງປ່ຽນຄ່າ filter ຫຼືລ້າງການຄົ້ນຫາ</p>

@@ -44,7 +44,7 @@ function DeferredSection({ children, minHeight = '200px' }) {
     <div ref={ref}>
       {hasEntered
         ? children
-        : <div style={{ minHeight }} className="rounded-2xl bg-card border border-border animate-pulse" />
+        : <div style={{ minHeight }} className="rounded-2xl bg-muted/40 backdrop-blur-sm border border-border/50 animate-pulse" />
       }
     </div>
   )
@@ -54,15 +54,15 @@ function SectionLabel({ icon, label, accent = '#003fb1' }) {
   return (
     <div className="flex items-center gap-2.5 mb-6">
       <div
-        className="w-8 h-8 rounded-xl flex items-center justify-center"
-        style={{ background: `${accent}18` }}
+        className="w-8 h-8 rounded-xl flex items-center justify-center ring-1"
+        style={{ background: `${accent}14`, ringColor: `${accent}20` }}
       >
         <span className="material-symbols-outlined text-[18px]" style={{ color: accent }}>{icon}</span>
       </div>
       <h2 className="text-base font-extrabold text-foreground uppercase tracking-widest text-[11px]">
         {label}
       </h2>
-      <div className="flex-1 h-px bg-gradient-to-r from-[#e8edf8] to-transparent dark:from-[#2b3a54]" />
+      <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent" />
     </div>
   )
 }
@@ -120,26 +120,27 @@ export default function DashboardPage() {
       />
 
       {/* ─── Hero Header ─── */}
-      <div className="relative rounded-3xl overflow-hidden">
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/[0.05]">
         <div className="absolute inset-0" style={{
           background: selectedType === 'all'
-            ? 'linear-gradient(135deg, #001d6e, #003fb1, #4f46e5)'
-            : `linear-gradient(135deg, #001d6e, ${typeColor})`
+            ? 'linear-gradient(135deg, #09090b, #0e0e16, #0d0d13)'
+            : `linear-gradient(135deg, #09090b, ${typeColor}22, #0d0d13)`
         }} />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(108,248,187,0.12),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.3),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(139,92,246,0.22),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(56,189,248,0.14),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.06),transparent_70%)]" />
         <div className="absolute right-0 bottom-0 text-[9rem] sm:text-[13rem] font-black text-white/[0.04] leading-none select-none pointer-events-none pr-4 pb-1">
           STATS
         </div>
 
         <div className="relative z-10 px-8 sm:px-12 py-10 sm:py-12 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <div>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3.5 py-1 mb-5">
-              <span className="material-symbols-outlined text-[#6cf8bb] text-[14px]">analytics</span>
+            <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl border border-white/[0.15] rounded-full px-3.5 py-1 mb-5 shadow-lg shadow-violet-500/10">
+              <span className="material-symbols-outlined text-violet-300 text-[14px]">analytics</span>
               <span className="text-white/90 text-[11px] font-bold uppercase tracking-widest">Analytics Dashboard</span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight mb-3">
-              ວິເຄາະ<span className="text-[#b5c4ff] ml-2">ສະຖິຕິ</span>
+              ວິເຄາະ<span className="text-violet-300 ml-2">ສະຖິຕິ</span>
             </h1>
             <p className="text-white/60 text-sm max-w-lg leading-relaxed">
               ບົດວິເຄາະຄວາມຖີ່ ແລະ ແນວໂນ້ມຕົວເລກຫວຍລາວ ຈາກຖານຂໍ້ມູນ {totalDraws} ງວດ
@@ -154,7 +155,7 @@ export default function DashboardPage() {
               { label: 'ເລກ Hot', value: hotTop?.number ?? '-', sub: `${hotTop?.count ?? 0} ຄັ້ງ`, color: '#6cf8bb' },
               { label: 'ເລກ Cold', value: coldTop?.number ?? '-', sub: `${coldTop?.missedRounds ?? 0} ງວດ`, color: '#fbbf24' },
             ].map(({ label, value, sub, color }) => (
-              <div key={label} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3.5 text-center min-w-[90px]">
+              <div key={label} className="bg-white/[0.07] backdrop-blur-xl border border-white/[0.11] rounded-2xl px-5 py-3.5 text-center min-w-[90px] shadow-lg shadow-black/30">
                 <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: `${color}99` }}>{label}</p>
                 <p className="text-2xl font-black text-white leading-none">{value}</p>
                 <p className="text-[10px] mt-1" style={{ color: `${color}80` }}>{sub}</p>
@@ -169,14 +170,14 @@ export default function DashboardPage() {
         {/* Type selector */}
         {types && types.length > 1 && (
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="w-1 h-5 rounded-full bg-gradient-to-b from-[#003fb1] to-[#4f46e5]" />
+            <span className="w-1 h-5 rounded-full bg-gradient-to-b from-primary to-primary/40" />
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mr-1">ປະເພດຫວຍ</p>
             <button
               onClick={() => setSelectedType('all')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                 selectedType === 'all'
-                  ? 'bg-[#003fb1] text-white border-[#003fb1] shadow-sm'
-                  : 'bg-card text-muted-foreground border-border hover:border-[#003fb1]/50'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
+                  : 'bg-card/70 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
               }`}
             >
               ທັງໝົດ ({draws?.length ?? 0})
@@ -205,12 +206,12 @@ export default function DashboardPage() {
         {/* Timeframe picker */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <span className="w-1 h-5 rounded-full bg-gradient-to-b from-[#003fb1] to-[#4f46e5]" />
+            <span className="w-1 h-5 rounded-full bg-gradient-to-b from-primary to-primary/40" />
             <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
               ຊ່ວງເວລາ
             </p>
           </div>
-          <div className="flex items-center gap-1 bg-accent p-1.5 rounded-2xl border border-border">
+          <div className="flex items-center gap-1 bg-card/60 backdrop-blur-md p-1.5 rounded-2xl border border-border/60 shadow-sm">
             {TIMEFRAMES.map(({ value, label, icon }) => (
               <button
                 key={value}
@@ -231,12 +232,12 @@ export default function DashboardPage() {
 
       {/* ─── Empty state when no data for type ─── */}
       {!stats && (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card rounded-3xl border border-border">
+        <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/60 backdrop-blur-md rounded-3xl border border-border/60 shadow-sm">
           <span className="material-symbols-outlined text-5xl text-muted-foreground/40">bar_chart</span>
           <p className="text-base font-bold text-muted-foreground">ຍັງບໍ່ມີຂໍ້ມູນສຳລັບປະເພດ / ຊ່ວງເວລານີ້</p>
           <button
             onClick={() => { setSelectedType('all'); setTimeframe('all') }}
-            className="px-4 py-2 rounded-xl bg-[#eff3ff] dark:bg-[#1e2d4a] text-primary text-sm font-bold"
+            className="px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-bold border border-primary/20 hover:bg-primary/[0.18] transition-colors"
           >ເບິ່ງທັງໝົດ</button>
         </div>
       )}
@@ -257,11 +258,9 @@ export default function DashboardPage() {
           <div>
             <SectionLabel icon="bar_chart" label="ການກະຈາຍຕົວເລກ" accent="#0369a1" />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm">
-                <DigitDistribution timeframe={timeframe} typeId={selectedType} />
+              <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 sm:p-8 border border-border/60 shadow-sm">
               </div>
-              <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm">
-                <HistoricalVolatility timeframe={timeframe} typeId={selectedType} />
+              <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 sm:p-8 border border-border/60 shadow-sm">
               </div>
             </div>
           </div>

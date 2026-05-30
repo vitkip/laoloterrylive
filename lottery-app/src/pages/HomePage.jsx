@@ -9,10 +9,10 @@ import SEO from '../components/SEO'
 import { websiteSchema, lotteryResultSchema, breadcrumbSchema } from '../components/schemas'
 
 function HomePageSkeleton() {
-  const shimmer = "bg-[#e8edf8] dark:bg-[#2b3a54] animate-pulse rounded-lg"
+  const shimmer = "bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse rounded-lg"
   return (
     <div className="space-y-10">
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#001d6e] via-[#003fb1] to-[#1a56db] px-8 sm:px-12 py-10 sm:py-14 min-h-[240px]">
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#09090b] via-[#0e0e16] to-[#0d0d13] px-8 sm:px-12 py-10 sm:py-14 min-h-[240px]">
         <div className={`w-40 h-3 mb-5 ${shimmer} opacity-30`} />
         <div className={`w-64 h-12 mb-4 ${shimmer} opacity-20`} />
         <div className={`w-72 h-4 mb-8 ${shimmer} opacity-15`} />
@@ -36,7 +36,7 @@ function FeatureCard({ icon, title, desc, to, accent, bg, badge }) {
   return (
     <Link
       to={to}
-      className="group relative bg-card border border-border rounded-2xl p-5 sm:p-6 flex flex-col gap-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden"
+      className="group relative bg-card/60 backdrop-blur-md border border-white/[0.08] dark:border-white/[0.06] rounded-2xl p-5 sm:p-6 flex flex-col gap-4 hover:shadow-xl hover:shadow-black/[0.06] hover:-translate-y-1 transition-all duration-200 overflow-hidden shadow-sm"
     >
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -73,7 +73,7 @@ function FeatureCard({ icon, title, desc, to, accent, bg, badge }) {
 // ── Stat card (redesigned) ─────────────────────────────────────────
 function StatCard({ icon, label, value, image, accent = '#003fb1' }) {
   return (
-    <div className="group relative bg-card rounded-2xl p-5 border border-border hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
+    <div className="group relative bg-card/70 backdrop-blur-sm rounded-2xl p-5 border border-border/60 hover:shadow-lg hover:shadow-black/[0.05] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
       <div
         className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-[0.06] -translate-y-8 translate-x-8"
         style={{ background: accent }}
@@ -98,7 +98,7 @@ function StatCard({ icon, label, value, image, accent = '#003fb1' }) {
 // ── Result ticker item ─────────────────────────────────────────────
 function TickerItem({ draw, color }) {
   return (
-    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 shrink-0">
+    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.07] backdrop-blur-sm border border-white/[0.12] shrink-0">
       {color && <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />}
       <span className="text-white/70 text-[10px] font-bold">ງວດ {draw.draw_number}</span>
       <span className="text-white font-black text-xs tracking-widest" style={{ fontFamily: 'Inter, monospace' }}>{draw.full_result}</span>
@@ -221,12 +221,12 @@ export default function HomePage() {
       <LiveVdoBanner />
 
       {/* ─── Hero ─── */}
-      <div className="relative rounded-3xl overflow-hidden">
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/[0.05]">
         {/* Layered background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#001040] via-[#003fb1] to-[#1565c0]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.07),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(108,248,187,0.15),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.2),transparent_55%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#09090b] via-[#0e0e16] to-[#0d0d13]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.20),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,189,248,0.14),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.07),transparent_70%)]" />
 
         {/* Grid pattern overlay */}
         <div
@@ -242,20 +242,20 @@ export default function HomePage() {
         <div className="relative z-10 px-8 sm:px-12 pt-10 sm:pt-14 pb-6">
           {/* Badge row */}
           <div className="flex flex-wrap items-center gap-2 mb-6">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#6cf8bb] animate-pulse" />
+            <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl border border-white/[0.15] rounded-full px-4 py-1.5 shadow-lg shadow-violet-500/10">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-300 animate-pulse" />
               <span className="text-white/90 text-[11px] font-bold uppercase tracking-widest">ຄັງຂໍ້ມູນຫວຍ — ລາວ</span>
             </div>
-            <div className="inline-flex items-center gap-1.5 bg-[#6cf8bb]/15 border border-[#6cf8bb]/30 rounded-full px-3 py-1.5">
-              <span className="material-symbols-outlined text-[#6cf8bb] text-[12px]">database</span>
-              <span className="text-[#6cf8bb] text-[10px] font-bold">{draws.length}+ ງວດ</span>
+            <div className="inline-flex items-center gap-1.5 bg-sky-400/[0.12] border border-sky-400/25 rounded-full px-3 py-1.5">
+              <span className="material-symbols-outlined text-sky-300 text-[12px]">database</span>
+              <span className="text-sky-300 text-[10px] font-bold">{draws.length}+ ງວດ</span>
             </div>
           </div>
 
           {/* Title */}
           <h1 className="text-4xl sm:text-6xl font-black text-white leading-tight mb-4">
             ຜົນຫວຍ
-            <span className="text-[#b5c4ff] sm:ml-3 block sm:inline">ລ່າສຸດ</span>
+            <span className="text-violet-300 sm:ml-3 block sm:inline">ລ່າສຸດ</span>
           </h1>
           <p className="text-white/65 text-sm sm:text-base max-w-xl mb-8 leading-relaxed">
             ກວດສອບຜົນຫວຍ, ສະຖິຕິ, ນາມສັດ ແລະ ວິເຄາະຕົວເລກ ຈາກຖານຂໍ້ມູນທີ່ຄົບຖ້ວນ ແລະ ທັນສະໄໝ
@@ -265,21 +265,21 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-3 mb-10">
             <Link
               to="/statistics"
-              className="inline-flex items-center gap-2 bg-white text-[#003fb1] px-6 py-2.5 rounded-full font-bold text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+              className="inline-flex items-center gap-2 bg-white/95 text-zinc-900 px-6 py-2.5 rounded-full font-bold text-sm shadow-lg hover:shadow-xl hover:bg-white hover:-translate-y-0.5 transition-all duration-200"
             >
               <span className="material-symbols-outlined text-[16px]">bar_chart</span>
               ເບິ່ງສະຖິຕິ
             </Link>
             <Link
               to="/search"
-              className="inline-flex items-center gap-2 bg-[#6cf8bb]/20 border border-[#6cf8bb]/40 text-[#6cf8bb] px-6 py-2.5 rounded-full font-bold text-sm hover:bg-[#6cf8bb]/30 transition-all duration-200"
+              className="inline-flex items-center gap-2 bg-sky-400/[0.15] border border-sky-400/30 text-sky-300 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-sky-400/[0.25] transition-all duration-200"
             >
               <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
               ຕຳລາຄວາມຝັນ
             </Link>
             <Link
               to="/history"
-              className="inline-flex items-center gap-2 border border-white/25 bg-white/10 backdrop-blur-sm text-white px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white/20 transition-all duration-200"
+              className="inline-flex items-center gap-2 border border-white/[0.18] bg-white/[0.07] backdrop-blur-sm text-white/80 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white/[0.14] hover:text-white transition-all duration-200"
             >
               <span className="material-symbols-outlined text-[16px]">history</span>
               ປະຫວັດ
@@ -288,7 +288,7 @@ export default function HomePage() {
 
           {/* ── Ticker strip ── */}
           {tickerDraws.length > 0 && (
-            <div className="border-t border-white/10 pt-5 pb-1 overflow-hidden">
+            <div className="border-t border-white/[0.07] pt-5 pb-1 overflow-hidden">
               <div className="flex items-center gap-3 mb-2.5">
                 <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest shrink-0">ຜົນຫຼ້າສຸດ</span>
                 <div className="flex-1 h-px bg-white/10" />
@@ -307,14 +307,14 @@ export default function HomePage() {
       {/* ─── Feature Showcase ─── */}
       <section>
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-8 h-8 rounded-xl bg-[#003fb1]/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[#003fb1] text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>apps</span>
+          <div className="w-8 h-8 rounded-xl bg-primary/10 backdrop-blur-sm ring-1 ring-primary/15 flex items-center justify-center">
+            <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>apps</span>
           </div>
           <div>
             <h2 className="text-base font-extrabold text-foreground uppercase tracking-wider text-[11px]">ຄຸນສົມບັດ</h2>
             <p className="text-[11px] text-muted-foreground mt-0.5">ທຸກສ່ວນທີ່ທ່ານຕ້ອງການ ຢູ່ໃນທີ່ດຽວ</p>
           </div>
-          <div className="flex-1 h-px bg-gradient-to-r from-[#e8edf8] to-transparent dark:from-[#2b3a54]" />
+          <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map(f => <FeatureCard key={f.title} {...f} />)}
@@ -329,8 +329,8 @@ export default function HomePage() {
             onClick={() => setSelectedType('all')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all ${
               selectedType === 'all'
-                ? 'bg-[#003fb1] text-white border-[#003fb1] shadow-sm'
-                : 'bg-card text-muted-foreground border-border hover:border-[#003fb1]/40'
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
+                : 'bg-card/70 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
             }`}
           >
             ທັງໝົດ ({draws.length})
@@ -360,10 +360,10 @@ export default function HomePage() {
       {latest ? (
         <section>
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#003fb1] to-[#1a56db]" />
+            <div className="w-1 h-7 rounded-full bg-gradient-to-b from-primary to-primary/40" />
             <h2 className="text-xl sm:text-2xl font-extrabold text-foreground">ຜົນລ່າສຸດ</h2>
-            <span className="inline-flex items-center gap-1.5 bg-[#edfdf5] text-[#00714d] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-[#6cf8bb]/40">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00714d] animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/50">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
               Live
             </span>
           </div>
@@ -403,7 +403,7 @@ export default function HomePage() {
               return (
                 <div
                   key={number}
-                  className="relative bg-card border border-border rounded-2xl p-3 flex flex-col items-center gap-1.5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                  className="relative bg-card/70 backdrop-blur-sm border border-border/60 rounded-2xl p-3 flex flex-col items-center gap-1.5 hover:shadow-lg hover:shadow-black/[0.06] hover:-translate-y-0.5 transition-all duration-200"
                 >
                   {i < 3 && (
                     <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gradient-to-br from-[#ff6b35] to-[#f7931e] rounded-full flex items-center justify-center shadow-sm">
@@ -426,12 +426,12 @@ export default function HomePage() {
         <section>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#006c49] to-[#00a36c]" />
+              <div className="w-1 h-7 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-400/40" />
               <h2 className="text-xl font-extrabold text-foreground">ງວດຜ່ານມາ</h2>
             </div>
             <Link
               to="/history"
-              className="inline-flex items-center gap-1.5 text-[#003fb1] text-sm font-bold hover:gap-2.5 transition-all duration-200 group"
+              className="inline-flex items-center gap-1.5 text-primary text-sm font-bold hover:gap-2.5 transition-all duration-200 group"
             >
               ທັງໝົດ
               <span className="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
@@ -448,7 +448,7 @@ export default function HomePage() {
       {/* ─── Quick Stats ─── */}
       <section>
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#7c3aed] to-[#a855f7]" />
+          <div className="w-1 h-7 rounded-full bg-gradient-to-b from-violet-500 to-violet-400/40" />
           <h2 className="text-xl font-extrabold text-foreground">ສະຫຼຸບຂໍ້ມູນ</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -459,10 +459,11 @@ export default function HomePage() {
       </section>
 
       {/* ─── CTA Banner ─── */}
-      <section className="relative rounded-3xl overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#7c3aed] via-[#4f46e5] to-[#003fb1]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.08),transparent_50%)]" />
-        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[7rem] font-black text-white/[0.05] leading-none select-none pointer-events-none">
+      <section className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/[0.05]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#09090b] via-[#0e0e16] to-[#0d0d13]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(139,92,246,0.22),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(56,189,248,0.15),transparent_55%)]" />
+        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[7rem] font-black text-white/[0.03] leading-none select-none pointer-events-none">
           STATS
         </div>
         <div className="relative z-10 px-8 sm:px-12 py-8 sm:py-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -476,14 +477,14 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-3 shrink-0">
             <Link
               to="/statistics"
-              className="inline-flex items-center gap-2 bg-white text-[#4f46e5] px-6 py-2.5 rounded-full font-bold text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+              className="inline-flex items-center gap-2 bg-white/95 text-zinc-900 px-6 py-2.5 rounded-full font-bold text-sm shadow-lg hover:shadow-xl hover:bg-white hover:-translate-y-0.5 transition-all duration-200"
             >
               <span className="material-symbols-outlined text-[16px]">analytics</span>
               ເຂົ້າ Dashboard
             </Link>
             <Link
               to="/analytics"
-              className="inline-flex items-center gap-2 border border-white/30 bg-white/10 text-white px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white/20 transition-all duration-200"
+              className="inline-flex items-center gap-2 border border-white/[0.18] bg-white/[0.07] backdrop-blur-sm text-white/80 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white/[0.14] hover:text-white transition-all duration-200"
             >
               <span className="material-symbols-outlined text-[16px]">trending_up</span>
               AI Analytics

@@ -50,22 +50,23 @@ export default function SearchPage() {
       />
 
       {/* ─── Hero Header ─── */}
-      <div className="relative rounded-3xl overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2e1065] via-[#4f46e5] to-[#7c3aed]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(108,248,187,0.15),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(251,191,36,0.1),transparent_55%)]" />
-        <div className="absolute right-0 bottom-0 text-[8rem] sm:text-[12rem] font-black text-white/[0.04] leading-none select-none pointer-events-none pr-4 pb-1">
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/[0.05]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#09090b] via-[#0e0e16] to-[#0d0d13]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.22),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,189,248,0.14),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.06),transparent_70%)]" />
+        <div className="absolute right-0 bottom-0 text-[8rem] sm:text-[12rem] font-black text-white/[0.03] leading-none select-none pointer-events-none pr-4 pb-1">
           {activeTab === 'monthly' ? 'ເດືອນ' : 'ຝັນ'}
         </div>
 
         <div className="relative z-10 px-8 sm:px-12 py-9 sm:py-11">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3.5 py-1 mb-5">
-            <span className="material-symbols-outlined text-[#c4b5fd] text-[14px]">auto_awesome</span>
+          <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl border border-white/[0.15] rounded-full px-3.5 py-1 mb-5 shadow-lg shadow-violet-500/10">
+            <span className="material-symbols-outlined text-violet-300 text-[14px]">auto_awesome</span>
             <span className="text-white/90 text-[11px] font-bold uppercase tracking-widest">Dream · Search · Analytics</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight mb-3">
             ຄົ້ນຫາ
-            <span className="text-[#c4b5fd] ml-3">& ວິເຄາະ</span>
+            <span className="text-violet-300 ml-3">& ວິເຄາະ</span>
           </h1>
           <p className="text-white/60 text-sm max-w-lg leading-relaxed">
             ຕຳລາແປຄວາມຝັນ · ຄົ້ນຫາປະຫວັດຕົວເລກ · ວິເຄາະສະຖິຕິຕາມເດືອນ
@@ -74,7 +75,7 @@ export default function SearchPage() {
           {/* Feature pills */}
           <div className="flex flex-wrap gap-2 mt-5">
             {['ຝັນເຫັນ 40 ສັດ', 'ຄົ້ນຫາ 00–99', 'ປະຫວັດຍ້ອນຫຼັງ', 'ສະຖິຕິຄວາມຖີ່', 'ວິເຄາະຕາມເດືອນ'].map(f => (
-              <span key={f} className="text-[10px] font-bold text-white/70 bg-white/10 border border-white/15 px-2.5 py-1 rounded-full">
+              <span key={f} className="text-[10px] font-bold text-white/70 bg-white/[0.05] border border-white/[0.09] backdrop-blur-sm px-2.5 py-1 rounded-full">
                 {f}
               </span>
             ))}
@@ -85,14 +86,14 @@ export default function SearchPage() {
       {/* ─── Type Selector (hidden for dream tab) ─── */}
       {activeTab !== 'dream' && types && types.length > 1 && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="w-1 h-5 rounded-full bg-gradient-to-b from-[#7c3aed] to-[#4f46e5]" />
+          <span className="w-1 h-5 rounded-full bg-gradient-to-b from-primary to-primary/40" />
           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mr-1">ປະເພດຫວຍ</span>
           <button
             onClick={() => setSelectedType('all')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
               selectedType === 'all'
-                ? 'bg-[#7c3aed] text-white border-[#7c3aed] shadow-sm'
-                : 'bg-card text-muted-foreground border-border hover:border-[#7c3aed]/50'
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
+                : 'bg-card/70 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
             }`}
           >
             ທັງໝົດ ({draws?.length ?? 0})
@@ -119,15 +120,15 @@ export default function SearchPage() {
       )}
 
       {/* ─── Tab Switcher ─── */}
-      <div className="flex items-center gap-1 bg-accent p-1.5 rounded-2xl border border-border w-full">
+      <div className="flex items-center gap-1 bg-card/60 backdrop-blur-md p-1.5 rounded-2xl border border-border/60 shadow-sm w-full">
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-[12px] font-bold transition-all duration-200
               ${activeTab === tab.id
-                ? 'bg-card shadow-sm'
-                : 'text-muted-foreground hover:text-[#121c2a] dark:hover:text-primary-foreground'
+                ? 'bg-card/80 backdrop-blur-sm shadow-sm ring-1 ring-border/30'
+                : 'text-muted-foreground hover:text-foreground'
               }`}
             style={activeTab === tab.id ? { color: tab.color } : {}}
           >

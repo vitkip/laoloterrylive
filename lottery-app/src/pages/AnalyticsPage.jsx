@@ -258,10 +258,10 @@ function ChartTip({ active, payload }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="bg-[#0d1829] border border-[#2b3a54] rounded-xl px-4 py-2.5 shadow-xl text-xs pointer-events-none">
-      <p className="text-[#93b4ff] font-bold mb-0.5">ງວດ #{d.drawNum}</p>
+    <div className="bg-zinc-950/90 backdrop-blur-xl border border-white/[0.10] rounded-xl px-4 py-2.5 shadow-xl text-xs pointer-events-none">
+      <p className="text-violet-300 font-bold mb-0.5">ງວດ #{d.drawNum}</p>
       <p className="text-white font-black text-xl font-mono">{d.label}</p>
-      <p className="text-[#94a3b8]">{d.date}</p>
+      <p className="text-white/50">{d.date}</p>
     </div>
   )
 }
@@ -270,7 +270,7 @@ function FreqTip({ active, payload }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="bg-[#0d1829] border border-[#2b3a54] rounded-xl px-4 py-2 shadow-xl text-xs pointer-events-none">
+    <div className="bg-zinc-950/90 backdrop-blur-xl border border-white/[0.10] rounded-xl px-4 py-2 shadow-xl text-xs pointer-events-none">
       <p className="text-white font-black text-base">{d.num}</p>
       <p className="text-[#6cf8bb]">{d.freq} ຄັ້ງ</p>
     </div>
@@ -284,14 +284,14 @@ function FreqTip({ active, payload }) {
 function RankTable({ title, accent, data, field, unit }) {
   const max = data[0]?.[field] ?? 1
   return (
-    <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
+    <div className="bg-card/70 backdrop-blur-md rounded-2xl p-5 border border-border/60 shadow-sm">
       <h3 className="font-black text-foreground text-sm mb-4">{title}</h3>
       <div className="space-y-2.5">
         {data.map((s, i) => (
           <div key={s.num} className="flex items-center gap-2 text-sm">
-            <span className="text-[10px] text-[#94a3b8] w-4 text-right">{i + 1}</span>
+            <span className="text-[10px] text-muted-foreground/60 w-4 text-right">{i + 1}</span>
             <span className="font-black font-mono text-foreground w-8 text-center">{s.num}</span>
-            <div className="flex-1 h-3 bg-accent rounded-full overflow-hidden">
+            <div className="flex-1 h-3 bg-muted/60 rounded-full overflow-hidden">
               <div className="h-full rounded-full transition-all" style={{ width: `${(s[field] / Math.max(max, 1)) * 100}%`, background: accent }} />
             </div>
             <span className="text-[11px] font-bold text-muted-foreground w-16 text-right shrink-0">{s[field]} {unit}</span>
@@ -305,14 +305,14 @@ function RankTable({ title, accent, data, field, unit }) {
 function TrendList({ title, accent, data, field, fieldLabel }) {
   const max = Math.max(...data.map(s => Math.abs(s[field])), 0.001)
   return (
-    <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
+    <div className="bg-card/70 backdrop-blur-md rounded-2xl p-5 border border-border/60 shadow-sm">
       <h3 className="font-black text-foreground text-sm mb-4">{title}</h3>
       <div className="space-y-2.5">
-        {data.length === 0 && <p className="text-xs text-[#94a3b8]">ບໍ່ມີຂໍ້ມູນ</p>}
+        {data.length === 0 && <p className="text-xs text-muted-foreground/60">ບໍ່ມີຂໍ້ມູນ</p>}
         {data.map(s => (
           <div key={s.num} className="flex items-center gap-3">
             <span className="font-black font-mono text-foreground text-sm w-8 text-center">{s.num}</span>
-            <div className="flex-1 h-3 bg-accent rounded-full overflow-hidden">
+            <div className="flex-1 h-3 bg-muted/60 rounded-full overflow-hidden">
               <div className="h-full rounded-full transition-all" style={{ width: `${(Math.abs(s[field]) / max) * 100}%`, background: accent }} />
             </div>
             <span className="text-[11px] font-bold w-14 text-right shrink-0" style={{ color: accent }}>
@@ -329,7 +329,7 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
   const nums = Array.from({ length: 100 }, (_, i) => i.toString().padStart(2, '0'))
   return (
     <div className="space-y-5">
-      <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+      <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60 shadow-sm">
         <h3 className="font-black text-foreground text-lg mb-1">Simulation / Backtest</h3>
         <p className="text-xs text-muted-foreground mb-5">ທົດສອບຕົວເລກໃດໜຶ່ງໃນຂໍ້ມູນຍ້ອນຫຼັງ</p>
         <div className="flex gap-3 items-center flex-wrap">
@@ -337,7 +337,7 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
           <select
             value={backtestNum}
             onChange={e => setBacktestNum(e.target.value)}
-            className="bg-secondary border-none rounded-xl px-5 py-2.5 text-foreground font-black text-2xl focus:ring-2 focus:ring-[#003fb1] font-mono"
+            className="bg-muted/50 border border-border/60 rounded-xl px-5 py-2.5 text-foreground font-black text-2xl focus:ring-2 focus:ring-primary font-mono"
           >
             <option value="">-- ເລືອກ --</option>
             {nums.map(n => <option key={n} value={n}>{n}</option>)}
@@ -348,7 +348,7 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
       {!backtestNum && (
         <div className="text-center py-20">
           <span className="material-symbols-outlined text-6xl text-[#2b3a54] mb-3 block">science</span>
-          <p className="text-[#94a3b8]">ເລືອກຕົວເລກ ເພື່ອເລີ່ມ Simulation</p>
+          <p className="text-white/50">ເລືອກຕົວເລກ ເພື່ອເລີ່ມ Simulation</p>
         </div>
       )}
 
@@ -361,7 +361,7 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
               { label: 'Avg Gap',       val: backtest.avgGap,          sub: 'ງວດ ຕໍ່ ຄັ້ງ',            c: '#fbbf24' },
               { label: 'ຫ່າງສູງສຸດ',   val: backtest.maxGap,          sub: 'max gap (ງວດ)',           c: '#f87171' },
             ].map(({ label, val, sub, c }) => (
-              <div key={label} className="bg-card rounded-2xl p-5 border border-border text-center">
+              <div key={label} className="bg-card/70 backdrop-blur-md rounded-2xl p-5 border border-border/60 text-center">
                 <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: c + 'aa' }}>{label}</p>
                 <p className="text-3xl font-black text-foreground">{val}</p>
                 <p className="text-[10px] mt-0.5" style={{ color: c + '80' }}>{sub}</p>
@@ -369,7 +369,7 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
             ))}
           </div>
 
-          <div className="bg-card rounded-2xl p-6 border border-border">
+          <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60">
             <h3 className="font-black text-foreground mb-4 text-sm">Hit/Miss Timeline (50 ງວດລ່າສຸດ)</h3>
             <ResponsiveContainer width="100%" height={110}>
               <BarChart data={backtest.timeline} margin={{ top: 5, right: 5, bottom: 0, left: -30 }}>
@@ -381,18 +381,18 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
                     if (!active || !payload?.length) return null
                     const d = payload[0].payload
                     return (
-                      <div className="bg-[#0d1829] border border-[#2b3a54] rounded-xl px-3 py-2 text-xs pointer-events-none">
-                        <p className={`font-black ${d.hit ? 'text-[#6cf8bb]' : 'text-[#475569]'}`}>
+                      <div className="bg-zinc-950/90 border border-white/10 rounded-xl px-3 py-2 text-xs pointer-events-none">
+                        <p className={`font-black ${d.hit ? 'text-[#6cf8bb]' : 'text-white/30'}`}>
                           {d.hit ? `✓ ອອກ ${backtestNum}` : '✗ ບໍ່ອອກ'}
                         </p>
-                        <p className="text-[#94a3b8]">{d.date}</p>
+                        <p className="text-white/50">{d.date}</p>
                       </div>
                     )
                   }}
                 />
                 <Bar dataKey="hit" radius={[3, 3, 0, 0]}>
                   {backtest.timeline.map((entry, i) => (
-                    <Cell key={i} fill={entry.hit ? '#6cf8bb' : '#1e2d4a'} />
+                    <Cell key={i} fill={entry.hit ? '#a78bfa' : '#27272a'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -400,14 +400,14 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
           </div>
 
           {backtest.hits.length > 0 && (
-            <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60">
               <h3 className="font-black text-foreground mb-4 text-sm">
                 ປະຫວັດທີ່ອອກ ({backtest.hits.length} ຄັ້ງ)
               </h3>
               <div className="flex flex-wrap gap-2">
                 {[...backtest.hits].reverse().slice(0, 40).map((h, i) => (
                   <div key={i} className="bg-[#6cf8bb]/10 border border-[#6cf8bb]/30 rounded-lg px-3 py-1.5 text-center min-w-[70px]">
-                    <p className="text-[9px] text-[#94a3b8]">#{h.drawNum}</p>
+                    <p className="text-[9px] text-white/50">#{h.drawNum}</p>
                     <p className="text-[11px] font-bold text-[#6cf8bb]">{h.date?.slice(0, 10)}</p>
                   </div>
                 ))}
@@ -446,10 +446,10 @@ export default function AnalyticsPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#003fb1]" />
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-violet-400" />
     </div>
   )
-  if (!analytics) return <div className="text-center py-20 text-[#94a3b8]">ບໍ່ມີຂໍ້ມູນ</div>
+  if (!analytics) return <div className="text-center py-20 text-white/50">ບໍ່ມີຂໍ້ມູນ</div>
 
   const { n, scores, series, freqBars, hot, cold, aiTop, rising, falling, overdue, decisionTop } = analytics
 
@@ -490,12 +490,12 @@ export default function AnalyticsPage() {
         <div className="relative z-10 px-6 sm:px-10 py-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-3 py-1 mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#6cf8bb] animate-pulse" />
+              <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl border border-white/[0.15] rounded-full px-3 py-1 mb-4 shadow-lg shadow-violet-500/10">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-300 animate-pulse" />
                 <span className="text-white/70 text-[11px] font-bold uppercase tracking-widest">AI-Powered Analytics</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 leading-tight">
-                Analytics <span className="text-[#818cf8]">Dashboard</span>
+                Analytics <span className="text-violet-300">Dashboard</span>
               </h1>
               <p className="text-white/50 text-sm max-w-md">
                 ລະບົບວິເຄາະ Big Data — ຄວາມຖີ່ · Trend · Gap · AI Score
@@ -514,7 +514,7 @@ export default function AnalyticsPage() {
                 { label: 'ຊ້ານານ',         val: cold[0]?.num ?? '-',         sub: `${cold[0]?.gap ?? 0} ງວດ`,  c: '#fbbf24' },
                 { label: 'AI Pick',        val: aiTop[0]?.num ?? '-',        sub: `${aiTop[0]?.aiScore ?? 0} pts`, c: '#6cf8bb' },
               ].map(({ label, val, sub, c }) => (
-                <div key={label} className="bg-white/[0.07] backdrop-blur border border-white/10 rounded-2xl px-4 py-3 text-center">
+                <div key={label} className="bg-white/[0.07] backdrop-blur-xl border border-white/[0.11] rounded-2xl px-4 py-3 text-center shadow-lg shadow-black/30">
                   <p className="text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: c + 'aa' }}>{label}</p>
                   <p className="text-2xl font-black text-white font-mono">{val}</p>
                   <p className="text-[9px] mt-0.5" style={{ color: c + '80' }}>{sub}</p>
@@ -533,8 +533,8 @@ export default function AnalyticsPage() {
             onClick={() => setSelectedType('all')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
               selectedType === 'all'
-                ? 'bg-[#003fb1] text-white border-[#003fb1] shadow-sm'
-                : 'bg-card text-muted-foreground border-border hover:border-[#003fb1]/50'
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
+                : 'bg-card/70 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
             }`}
           >
             ທັງໝົດ ({draws?.length ?? 0})
@@ -563,15 +563,15 @@ export default function AnalyticsPage() {
       {/* ── Control Panel ───────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
         {/* Range */}
-        <div className="flex items-center gap-1 bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-border">
-          <span className="text-[10px] font-bold text-[#94a3b8] px-2 uppercase tracking-widest">ງວດ</span>
+        <div className="flex items-center gap-1 bg-card/60 backdrop-blur-md p-1 rounded-2xl border border-border/60 shadow-sm">
+          <span className="text-[10px] font-bold text-muted-foreground/60 px-2 uppercase tracking-widest">ງວດ</span>
           {RANGE_OPTIONS.map(({ value, label }) => (
             <button
               key={value}
               onClick={() => setRange(value)}
               className={`px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all
                 ${range === value
-                  ? 'bg-[#003fb1] text-white shadow-sm'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-primary'}`}
             >
               {label}
@@ -580,7 +580,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Mode tabs */}
-        <div className="bg-[#f0f4ff] dark:bg-[#1a2236] p-1 rounded-2xl border border-border">
+        <div className="bg-card/60 backdrop-blur-md p-1 rounded-2xl border border-border/60 shadow-sm">
           <div className="flex flex-wrap gap-1">
             {MODES.map(({ value, label, icon }) => (
               <button
@@ -602,7 +602,7 @@ export default function AnalyticsPage() {
       {/* ── TAB: HEATMAP ────────────────────────────────────────────────────── */}
       {mode === 'heatmap' && (
         <div className="space-y-5">
-          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+          <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60 shadow-sm">
             <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
               <div>
                 <h3 className="font-black text-foreground text-lg">Frequency Heatmap 00–99</h3>
@@ -616,7 +616,7 @@ export default function AnalyticsPage() {
                     key={v}
                     onClick={() => setHeatMode(v)}
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all
-                      ${heatMode === v ? 'bg-[#003fb1] text-white' : 'bg-secondary text-muted-foreground'}`}
+                      ${heatMode === v ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:text-foreground'}`}
                   >
                     {label}
                   </button>
@@ -630,7 +630,7 @@ export default function AnalyticsPage() {
                 const s = scores.find(x => x.num === hoveredNum)
                 if (!s) return null
                 return (
-                  <div className="p-3 bg-secondary rounded-xl flex items-center gap-5 flex-wrap text-sm">
+                  <div className="p-3 bg-muted/50 backdrop-blur-sm border border-border/60 rounded-xl flex items-center gap-5 flex-wrap text-sm">
                     <span className="text-3xl font-black text-primary font-mono w-12">{s.num}</span>
                     <span className="text-muted-foreground">ອອກ <b className="text-foreground">{s.freq}</b> ຄັ້ງ ({s.pct}%)</span>
                     <span className="text-muted-foreground">ຫ່າງ <b className="text-foreground">{s.gap}</b> ງວດ</span>
@@ -672,11 +672,11 @@ export default function AnalyticsPage() {
 
             {/* Legend */}
             <div className="flex items-center gap-2 mt-5 justify-end">
-              <span className="text-[10px] text-[#94a3b8]">ໜ້ອຍ</span>
+              <span className="text-[10px] text-white/50">ໜ້ອຍ</span>
               {[0.1, 0.3, 0.5, 0.7, 0.9].map((t, i) => (
                 <div key={i} className="w-7 h-3.5 rounded" style={{ background: heatBg(t) }} />
               ))}
-              <span className="text-[10px] text-[#94a3b8]">ຫຼາຍ</span>
+              <span className="text-[10px] text-white/50">ຫຼາຍ</span>
             </div>
           </div>
 
@@ -690,7 +690,7 @@ export default function AnalyticsPage() {
       {/* ── TAB: CHARTS ─────────────────────────────────────────────────────── */}
       {mode === 'charts' && (
         <div className="space-y-5">
-          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+          <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60 shadow-sm">
             <h3 className="font-black text-foreground text-lg mb-1">Time-Series: ຕົວເລກ 2 ໂຕ ຕາມງວດ</h3>
             <p className="text-xs text-muted-foreground mb-5">ແກນ Y = ຕົວເລກ 00–99 · ສະແດງ {series.length} ງວດລ່າສຸດ</p>
             <ResponsiveContainer width="100%" height={290}>
@@ -707,7 +707,7 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+          <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60 shadow-sm">
             <h3 className="font-black text-foreground text-lg mb-5">Top 20 ຄວາມຖີ່</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={freqBars} margin={{ top: 0, right: 10, bottom: 0, left: -10 }}>
@@ -734,7 +734,7 @@ export default function AnalyticsPage() {
             <TrendList title="📉 ກຳລັງລົງ (Falling)"  accent="#f87171" data={falling} field="momentum" fieldLabel="r10" />
           </div>
 
-          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+          <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#d97706] to-[#f59e0b] flex items-center justify-center shadow-sm">
                 <span className="material-symbols-outlined text-white text-[18px]">hourglass_top</span>
@@ -747,9 +747,9 @@ export default function AnalyticsPage() {
             <div className="space-y-2.5 mt-5">
               {overdue.map((s, i) => (
                 <div key={s.num} className="flex items-center gap-3">
-                  <span className="text-[10px] text-[#94a3b8] w-5 text-right">{i + 1}</span>
-                  <span className="font-black font-mono text-white bg-gradient-to-br from-[#1e2d4a] to-[#152033] rounded-lg px-3 py-1.5 text-sm w-12 text-center shadow-sm">{s.num}</span>
-                  <div className="flex-1 relative h-7 bg-[#1e2d4a] rounded-full overflow-hidden">
+                  <span className="text-[10px] text-white/50 w-5 text-right">{i + 1}</span>
+                  <span className="font-black font-mono text-white bg-muted/70 backdrop-blur-sm rounded-lg px-3 py-1.5 text-sm w-12 text-center shadow-sm ring-1 ring-border/40">{s.num}</span>
+                  <div className="flex-1 relative h-7 bg-muted/50 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{
@@ -778,14 +778,14 @@ export default function AnalyticsPage() {
       {/* ── TAB: AI ENGINE ──────────────────────────────────────────────────── */}
       {mode === 'ai' && (
         <div className="space-y-5">
-          <div className="bg-[#070d1a] rounded-2xl p-6 border border-[#1a2540] shadow-xl">
+          <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-6 border border-white/[0.09] shadow-2xl shadow-black/50">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#818cf8] to-[#6cf8bb] flex items-center justify-center shadow-lg">
                 <span className="material-symbols-outlined text-white text-[22px]">psychology</span>
               </div>
               <div>
                 <h3 className="font-black text-white text-xl">AI Prediction Engine</h3>
-                <p className="text-xs text-[#64748b]">Composite score: Frequency + Gap + Momentum</p>
+                <p className="text-xs text-white/40">Composite score: Frequency + Gap + Momentum</p>
               </div>
             </div>
 
@@ -798,13 +798,13 @@ export default function AnalyticsPage() {
               {aiTop.map((s, i) => (
                 <div key={s.num} className="flex items-center gap-3">
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0
-                    ${i === 0 ? 'bg-[#fbbf24] text-black' : i === 1 ? 'bg-[#94a3b8] text-black' : i === 2 ? 'bg-[#b45309] text-white' : 'bg-[#1e2d4a] text-[#64748b]'}`}
+                    ${i === 0 ? 'bg-[#fbbf24] text-black' : i === 1 ? 'bg-[#94a3b8] text-black' : i === 2 ? 'bg-[#b45309] text-white' : 'bg-white/[0.06] text-white/30'}`}
                   >
                     {i + 1}
                   </div>
                   <span className="font-black text-white text-2xl font-mono w-12 shrink-0">{s.num}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="relative h-5 bg-[#1e2d4a] rounded-full overflow-hidden mb-1">
+                    <div className="relative h-5 bg-white/[0.06] rounded-full overflow-hidden mb-1">
                       <div
                         className="h-full rounded-full"
                         style={{
@@ -816,17 +816,17 @@ export default function AnalyticsPage() {
                         {s.aiScore} pts
                       </span>
                     </div>
-                    <div className="flex gap-3 text-[10px] text-[#475569]">
-                      <span className="text-[#64748b]">Freq <span className="text-[#94a3b8]">{s.freq}× ({s.pct}%)</span></span>
-                      <span className="text-[#64748b]">Gap <span className="text-[#94a3b8]">{s.gap}/{s.avgGap}</span></span>
-                      <span className="text-[#64748b]">10ງວດ <span className="text-[#94a3b8]">{s.r10}×</span></span>
+                    <div className="flex gap-3 text-[10px] text-white/30">
+                      <span className="text-white/40">Freq <span className="text-white/50">{s.freq}× ({s.pct}%)</span></span>
+                      <span className="text-white/40">Gap <span className="text-white/50">{s.gap}/{s.avgGap}</span></span>
+                      <span className="text-white/40">10ງວດ <span className="text-white/50">{s.r10}×</span></span>
                       <span className={s.momentum > 0 ? 'text-[#6cf8bb]' : 'text-[#f87171]'}>
                         {s.momentum > 0 ? '↑' : '↓'} momentum
                       </span>
                     </div>
                   </div>
                   <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0
-                    ${s.aiScore >= 60 ? 'bg-[#6cf8bb]/15 text-[#6cf8bb]' : s.aiScore >= 40 ? 'bg-[#fbbf24]/15 text-[#fbbf24]' : 'bg-[#94a3b8]/10 text-[#94a3b8]'}`}
+                    ${s.aiScore >= 60 ? 'bg-[#6cf8bb]/15 text-[#6cf8bb]' : s.aiScore >= 40 ? 'bg-[#fbbf24]/15 text-[#fbbf24]' : 'bg-[#94a3b8]/10 text-white/50'}`}
                   >
                     {s.aiScore >= 60 ? 'HIGH' : s.aiScore >= 40 ? 'MID' : 'LOW'}
                   </span>
@@ -857,7 +857,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* AI Accuracy Backtest */}
-          <div className="bg-[#070d1a] rounded-2xl p-6 border border-[#1a2540] shadow-xl">
+          <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-6 border border-white/[0.09] shadow-2xl shadow-black/50">
             <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#fbbf24] to-[#f97316] flex items-center justify-center shadow-lg">
@@ -865,7 +865,7 @@ export default function AnalyticsPage() {
                 </div>
                 <div>
                   <h3 className="font-black text-white text-lg">AI Accuracy Backtest</h3>
-                  <p className="text-xs text-[#64748b]">ຖ້າຊື້ຕາມ AI ຍ້ອນຫຼັງ — ຈະຖືກຈັກຄັ້ງ?</p>
+                  <p className="text-xs text-white/40">ຖ້າຊື້ຕາມ AI ຍ້ອນຫຼັງ — ຈະຖືກຈັກຄັ້ງ?</p>
                 </div>
               </div>
               <div className="flex gap-1.5">
@@ -874,7 +874,7 @@ export default function AnalyticsPage() {
                     key={t}
                     onClick={() => setAiTrials(t)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all
-                      ${aiTrials === t ? 'bg-[#fbbf24] text-black' : 'bg-[#1e2d4a] text-[#64748b] hover:text-white'}`}
+                      ${aiTrials === t ? 'bg-[#fbbf24] text-black' : 'bg-white/[0.06] text-white/40 hover:text-white'}`}
                   >
                     {t} ຄັ້ງ
                   </button>
@@ -883,7 +883,7 @@ export default function AnalyticsPage() {
             </div>
 
             {!aiBacktest ? (
-              <p className="text-[#475569] text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
+              <p className="text-white/30 text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
             ) : (
               <>
                 {/* Summary cards */}
@@ -895,12 +895,12 @@ export default function AnalyticsPage() {
                   ].map(({ label, hits, color, sublabel }) => {
                     const pct = Math.round((hits / aiBacktest.trials) * 100)
                     return (
-                      <div key={label} className="bg-[#0d1829] rounded-2xl p-4 border border-[#1e2d4a] text-center">
+                      <div key={label} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl p-4 border border-white/[0.08] text-center">
                         <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: color + 'aa' }}>{label}</p>
                         <p className="text-4xl font-black" style={{ color }}>
-                          {hits}<span className="text-xl text-[#475569]">/{aiBacktest.trials}</span>
+                          {hits}<span className="text-xl text-white/30">/{aiBacktest.trials}</span>
                         </p>
-                        <div className="mt-2 h-1.5 bg-[#1e2d4a] rounded-full overflow-hidden">
+                        <div className="mt-2 h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
                           <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
                         </div>
                         <p className="text-[11px] mt-1.5 font-bold" style={{ color }}>{pct}% · {sublabel}</p>
@@ -911,20 +911,20 @@ export default function AnalyticsPage() {
 
                 {/* Per-draw results */}
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#475569] mb-3">ລາຍລະອຽດແຕ່ລະງວດ</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-3">ລາຍລະອຽດແຕ່ລະງວດ</p>
                   {aiBacktest.results.map((r, i) => (
                     <div key={i} className={`flex flex-col gap-2 rounded-xl px-3 py-2.5
-                      ${r.hit1 ? 'bg-[#fbbf24]/10 border border-[#fbbf24]/25' : r.hit5 ? 'bg-[#818cf8]/10 border border-[#818cf8]/20' : r.hit10 ? 'bg-[#6cf8bb]/10 border border-[#6cf8bb]/15' : 'bg-[#0d1829] border border-[#1e2d4a]'}`}
+                      ${r.hit1 ? 'bg-[#fbbf24]/10 border border-[#fbbf24]/25' : r.hit5 ? 'bg-[#818cf8]/10 border border-[#818cf8]/20' : r.hit10 ? 'bg-[#6cf8bb]/10 border border-[#6cf8bb]/15' : 'bg-white/[0.03] border border-white/[0.06]'}`}
                     >
                       {/* ── Row 1: meta + result + verdict ── */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] text-[#475569] w-4 shrink-0">{i + 1}</span>
-                        <span className="text-[10px] font-bold text-[#475569] shrink-0">#{r.drawNum}</span>
-                        <span className="text-[10px] text-[#475569] shrink-0">{r.date?.slice(0, 10)}</span>
+                        <span className="text-[10px] text-white/30 w-4 shrink-0">{i + 1}</span>
+                        <span className="text-[10px] font-bold text-white/30 shrink-0">#{r.drawNum}</span>
+                        <span className="text-[10px] text-white/30 shrink-0">{r.date?.slice(0, 10)}</span>
                         <div className="flex-1" />
                         <span className="font-black font-mono text-base text-white shrink-0">{r.actual}</span>
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0
-                          ${r.hit1 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : r.hit5 ? 'bg-[#818cf8]/20 text-[#818cf8]' : r.hit10 ? 'bg-[#6cf8bb]/20 text-[#6cf8bb]' : 'bg-[#1e2d4a] text-[#475569]'}`}
+                          ${r.hit1 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : r.hit5 ? 'bg-[#818cf8]/20 text-[#818cf8]' : r.hit10 ? 'bg-[#6cf8bb]/20 text-[#6cf8bb]' : 'bg-white/[0.04] text-white/30'}`}
                         >
                           {r.hit1 ? '✓ #1' : r.hit5 ? '✓ Top5' : r.hit10 ? '✓ Top10' : '✗ Miss'}
                         </span>
@@ -933,7 +933,7 @@ export default function AnalyticsPage() {
                       <div className="flex gap-1 flex-wrap">
                         {r.top10.map((num, j) => (
                           <span key={j} className={`font-black font-mono text-[11px] px-1.5 py-0.5 rounded-md
-                            ${num === r.actual ? 'bg-[#fbbf24] text-black' : j === 0 ? 'bg-[#1e2d4a] text-[#818cf8]' : 'bg-[#1e2d4a] text-[#475569]'}`}
+                            ${num === r.actual ? 'bg-[#fbbf24] text-black' : j === 0 ? 'bg-violet-500/10 text-violet-300' : 'bg-white/[0.04] text-white/30'}`}
                           >
                             {num}
                           </span>
@@ -952,14 +952,14 @@ export default function AnalyticsPage() {
       {mode === 'decision' && (
         <div className="space-y-5">
           {/* Header */}
-          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#0d1829] to-[#070d1a] border border-[#1a2540] p-6">
+          <div className="relative rounded-2xl overflow-hidden bg-zinc-950/90 backdrop-blur-2xl border border-white/[0.09] p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#fbbf24] to-[#f97316] flex items-center justify-center shadow-lg">
                 <span className="material-symbols-outlined text-white text-[22px]">stars</span>
               </div>
               <div>
                 <h3 className="font-black text-white text-xl">Decision Score</h3>
-                <p className="text-xs text-[#64748b]">ນັບ Signal ທີ່ຜ່ານ — ★★★ = ສັນຍານທຸກຢ່າງຊ້ອນກັນ</p>
+                <p className="text-xs text-white/40">ນັບ Signal ທີ່ຜ່ານ — ★★★ = ສັນຍານທຸກຢ່າງຊ້ອນກັນ</p>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -971,7 +971,7 @@ export default function AnalyticsPage() {
                 <div key={sig} className="bg-white/5 rounded-xl p-3 border border-white/10">
                   <p className="text-[10px] font-black mb-1" style={{ color }}>{sig}</p>
                   <p className="text-sm font-black text-white">{label}</p>
-                  <p className="text-[10px] text-[#475569] mt-0.5">{desc}</p>
+                  <p className="text-[10px] text-white/30 mt-0.5">{desc}</p>
                 </div>
               ))}
             </div>
@@ -982,7 +982,7 @@ export default function AnalyticsPage() {
             {[
               { stars: 3, label: '★★★ ສັນຍານຄົບ 3', bg: 'bg-[#fbbf24]/15 border-[#fbbf24]/40 text-[#fbbf24]', badge: 'ຊື້ໄດ້' },
               { stars: 2, label: '★★☆ ສັນຍານ 2/3',   bg: 'bg-[#818cf8]/15 border-[#818cf8]/40 text-[#818cf8]', badge: 'ເຝົ້າລໍ' },
-              { stars: 1, label: '★☆☆ ສັນຍານ 1/3',   bg: 'bg-[#475569]/15 border-[#475569]/40 text-[#94a3b8]', badge: 'ອ່ອນ' },
+              { stars: 1, label: '★☆☆ ສັນຍານ 1/3',   bg: 'bg-[#475569]/15 border-[#475569]/40 text-white/50', badge: 'ອ່ອນ' },
             ].map(({ stars, label, bg, badge }) => (
               <div key={stars} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold ${bg}`}>
                 <span>{label}</span>
@@ -993,7 +993,7 @@ export default function AnalyticsPage() {
 
           {/* Numbers list */}
           {decisionTop.length === 0 ? (
-            <p className="text-center text-[#475569] py-10">ບໍ່ມີຕົວເລກທີ່ຜ່ານ signal ໃດ</p>
+            <p className="text-center text-white/30 py-10">ບໍ່ມີຕົວເລກທີ່ຜ່ານ signal ໃດ</p>
           ) : (
             <div className="space-y-2.5">
               {decisionTop.map((s, i) => {
@@ -1001,42 +1001,42 @@ export default function AnalyticsPage() {
                 const is2 = s.decisionScore === 2
                 return (
                   <div key={s.num} className={`rounded-2xl p-4 border flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap transition-all
-                    ${is3 ? 'bg-[#fbbf24]/10 border-[#fbbf24]/30' : is2 ? 'bg-[#818cf8]/10 border-[#818cf8]/20' : 'bg-[#0d1829] border-[#1e2d4a]'}`}
+                    ${is3 ? 'bg-[#fbbf24]/10 border-[#fbbf24]/30' : is2 ? 'bg-[#818cf8]/10 border-[#818cf8]/20' : 'bg-white/[0.03] border-white/[0.06]'}`}
                   >
                     {/* Rank */}
-                    <span className="text-[10px] text-[#475569] w-4 shrink-0 text-right">{i + 1}</span>
+                    <span className="text-[10px] text-white/30 w-4 shrink-0 text-right">{i + 1}</span>
 
                     {/* Number */}
                     <span className={`font-black font-mono text-3xl w-14 text-center shrink-0
-                      ${is3 ? 'text-[#fbbf24]' : is2 ? 'text-[#818cf8]' : 'text-[#94a3b8]'}`}
+                      ${is3 ? 'text-[#fbbf24]' : is2 ? 'text-[#818cf8]' : 'text-white/50'}`}
                     >{s.num}</span>
 
                     {/* Stars */}
                     <div className="flex gap-1 shrink-0">
                       {[0, 1, 2].map(j => (
-                        <span key={j} className={`text-lg ${j < s.decisionScore ? (is3 ? 'text-[#fbbf24]' : is2 ? 'text-[#818cf8]' : 'text-[#94a3b8]') : 'text-[#1e2d4a]'}`}>★</span>
+                        <span key={j} className={`text-lg ${j < s.decisionScore ? (is3 ? 'text-[#fbbf24]' : is2 ? 'text-[#818cf8]' : 'text-white/50') : 'text-white/[0.08]'}`}>★</span>
                       ))}
                     </div>
 
                     {/* Signal badges */}
                     <div className="flex gap-1.5 flex-wrap flex-1">
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border
-                        ${s.sig1 ? 'bg-[#fbbf24]/15 border-[#fbbf24]/30 text-[#fbbf24]' : 'bg-transparent border-[#1e2d4a] text-[#334155]'}`}>
+                        ${s.sig1 ? 'bg-[#fbbf24]/15 border-[#fbbf24]/30 text-[#fbbf24]' : 'bg-transparent border-white/[0.06] text-white/20'}`}>
                         Overdue {s.overdue}×
                       </span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border
-                        ${s.sig2 ? 'bg-[#6cf8bb]/15 border-[#6cf8bb]/30 text-[#6cf8bb]' : 'bg-transparent border-[#1e2d4a] text-[#334155]'}`}>
+                        ${s.sig2 ? 'bg-[#6cf8bb]/15 border-[#6cf8bb]/30 text-[#6cf8bb]' : 'bg-transparent border-white/[0.06] text-white/20'}`}>
                         {s.momentum > 0 ? '↑' : '↓'} Momentum {s.r10}×/10ງວດ
                       </span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border
-                        ${s.sig3 ? 'bg-[#818cf8]/15 border-[#818cf8]/30 text-[#818cf8]' : 'bg-transparent border-[#1e2d4a] text-[#334155]'}`}>
+                        ${s.sig3 ? 'bg-[#818cf8]/15 border-[#818cf8]/30 text-[#818cf8]' : 'bg-transparent border-white/[0.06] text-white/20'}`}>
                         AI {s.aiScore} pts
                       </span>
                     </div>
 
                     {/* Verdict */}
                     <span className={`text-xs font-black px-3 py-1 rounded-full shrink-0
-                      ${is3 ? 'bg-[#fbbf24] text-black' : is2 ? 'bg-[#818cf8]/20 text-[#818cf8]' : 'bg-[#1e2d4a] text-[#475569]'}`}>
+                      ${is3 ? 'bg-[#fbbf24] text-black' : is2 ? 'bg-[#818cf8]/20 text-[#818cf8]' : 'bg-white/[0.04] text-white/30'}`}>
                       {is3 ? '✓ ຊື້ໄດ້' : is2 ? 'ເຝົ້າລໍ' : 'ອ່ອນ'}
                     </span>
                   </div>
@@ -1051,7 +1051,7 @@ export default function AnalyticsPage() {
       {mode === 'dsbacktest' && (
         <div className="space-y-5">
           {/* Header */}
-          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#0d1829] to-[#070d1a] border border-[#1a2540] p-6">
+          <div className="relative rounded-2xl overflow-hidden bg-zinc-950/90 backdrop-blur-2xl border border-white/[0.09] p-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#6cf8bb] to-[#818cf8] flex items-center justify-center shadow-lg">
@@ -1059,7 +1059,7 @@ export default function AnalyticsPage() {
                 </div>
                 <div>
                   <h3 className="font-black text-white text-xl">Decision Score Accuracy Backtest</h3>
-                  <p className="text-xs text-[#64748b]">ຖ້ານຳໃຊ້ Decision Score ຍ້ອນຫຼັງ — ★★★/★★/★ ທຳນາຍຖືກຈັກ %?</p>
+                  <p className="text-xs text-white/40">ຖ້ານຳໃຊ້ Decision Score ຍ້ອນຫຼັງ — ★★★/★★/★ ທຳນາຍຖືກຈັກ %?</p>
                 </div>
               </div>
               <div className="flex gap-1.5 flex-wrap">
@@ -1068,7 +1068,7 @@ export default function AnalyticsPage() {
                     key={t}
                     onClick={() => setDsTrials(t)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all
-                      ${dsTrials === t ? 'bg-[#6cf8bb] text-black' : 'bg-[#1e2d4a] text-[#64748b] hover:text-white'}`}
+                      ${dsTrials === t ? 'bg-[#6cf8bb] text-black' : 'bg-white/[0.06] text-white/40 hover:text-white'}`}
                   >
                     {t} ງວດ
                   </button>
@@ -1078,7 +1078,7 @@ export default function AnalyticsPage() {
           </div>
 
           {!dsBacktest ? (
-            <p className="text-[#475569] text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
+            <p className="text-white/30 text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
           ) : (
             <>
               {/* Summary cards */}
@@ -1091,12 +1091,12 @@ export default function AnalyticsPage() {
                 ].map(({ label, hits, color, sub }) => {
                   const pct = Math.round((hits / dsBacktest.trials) * 100)
                   return (
-                    <div key={label} className="bg-[#0d1829] rounded-2xl p-4 border border-[#1e2d4a] text-center">
+                    <div key={label} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl p-4 border border-white/[0.08] text-center">
                       <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: color + 'aa' }}>{label}</p>
                       <p className="text-4xl font-black" style={{ color }}>
-                        {hits}<span className="text-xl text-[#475569]">/{dsBacktest.trials}</span>
+                        {hits}<span className="text-xl text-white/30">/{dsBacktest.trials}</span>
                       </p>
-                      <div className="mt-2 h-1.5 bg-[#1e2d4a] rounded-full overflow-hidden">
+                      <div className="mt-2 h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
                         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
                       </div>
                       <p className="text-[11px] mt-1.5 font-bold" style={{ color }}>{pct}% · {sub}</p>
@@ -1106,8 +1106,8 @@ export default function AnalyticsPage() {
               </div>
 
               {/* Accuracy bar */}
-              <div className="bg-[#0d1829] rounded-2xl p-5 border border-[#1e2d4a]">
-                <p className="text-xs font-bold text-[#475569] uppercase tracking-widest mb-4">ສັດສ່ວນຄວາມຖືກຕ້ອງ</p>
+              <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl p-5 border border-white/[0.08]">
+                <p className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">ສັດສ່ວນຄວາມຖືກຕ້ອງ</p>
                 <div className="space-y-3.5">
                   {[
                     { label: '★★★  ສັນຍານຄົບ', hits: dsBacktest.hitsStar3, color: '#fbbf24', total: dsBacktest.trials },
@@ -1118,8 +1118,8 @@ export default function AnalyticsPage() {
                     const pct = Math.round((hits / total) * 100)
                     return (
                       <div key={label} className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-[#64748b] w-40 shrink-0">{label}</span>
-                        <div className="flex-1 h-5 bg-[#1e2d4a] rounded-full overflow-hidden relative">
+                        <span className="text-xs font-bold text-white/40 w-40 shrink-0">{label}</span>
+                        <div className="flex-1 h-5 bg-white/[0.08] rounded-full overflow-hidden relative">
                           <div
                             className="h-full rounded-full transition-all duration-700"
                             style={{ width: `${pct}%`, background: color }}
@@ -1136,8 +1136,8 @@ export default function AnalyticsPage() {
               </div>
 
               {/* Per-draw list — 21 rows */}
-              <div className="bg-[#0d1829] rounded-2xl p-5 border border-[#1e2d4a]">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#475569] mb-4">
+              <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl p-5 border border-white/[0.08]">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-4">
                   ລາຍລະອຽດ {dsBacktest.results.length} ງວດ
                 </p>
                 <div className="space-y-2">
@@ -1146,24 +1146,24 @@ export default function AnalyticsPage() {
                     const rowColor = tier === 3 ? '#fbbf24' : tier === 2 ? '#818cf8' : tier === 1 ? '#94a3b8' : null
                     const rowBg   = tier === 3 ? 'bg-[#fbbf24]/10 border-[#fbbf24]/25'
                                   : tier === 2 ? 'bg-[#818cf8]/10 border-[#818cf8]/20'
-                                  : tier === 1 ? 'bg-[#1e2d4a]/80 border-[#334155]/50'
-                                  : 'bg-[#0d1117] border-[#1e2d4a]'
+                                  : tier === 1 ? 'bg-white/[0.04] border-white/[0.07]'
+                                  : 'bg-zinc-950/80 border-white/[0.05]'
                     return (
                       <div key={i} className={`rounded-xl px-3 py-2.5 border flex flex-col gap-2 ${rowBg}`}>
                         {/* ── Row 1: meta + result + verdict ── */}
                         <div className="flex items-center gap-2 flex-wrap">
                           {/* rank */}
-                          <span className="text-[10px] text-[#475569] w-4 shrink-0 text-right">{i + 1}</span>
+                          <span className="text-[10px] text-white/30 w-4 shrink-0 text-right">{i + 1}</span>
                           {/* draw info */}
-                          <span className="text-[10px] font-bold text-[#475569] shrink-0">#{r.drawNum}</span>
-                          <span className="text-[10px] text-[#475569] shrink-0">{r.date?.slice(0, 10)}</span>
+                          <span className="text-[10px] font-bold text-white/30 shrink-0">#{r.drawNum}</span>
+                          <span className="text-[10px] text-white/30 shrink-0">{r.date?.slice(0, 10)}</span>
                           <div className="flex-1" />
                           {/* actual result */}
                           <span className="font-black font-mono text-base text-white shrink-0">{r.actual}</span>
                           {/* DS stars of actual */}
                           <div className="flex gap-0.5 shrink-0">
                             {[0,1,2].map(j => (
-                              <span key={j} className={`text-sm ${j < r.actualDecisionScore ? (rowColor ? '' : 'text-[#334155]') : 'text-[#1e2d4a]'}`}
+                              <span key={j} className={`text-sm ${j < r.actualDecisionScore ? (rowColor ? '' : 'text-white/[0.08]') : 'text-white/[0.08]'}`}
                                 style={j < r.actualDecisionScore && rowColor ? { color: rowColor } : {}}>
                                 ★
                               </span>
@@ -1173,8 +1173,8 @@ export default function AnalyticsPage() {
                           <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0
                             ${tier === 3 ? 'bg-[#fbbf24]/20 text-[#fbbf24]'
                               : tier === 2 ? 'bg-[#818cf8]/20 text-[#818cf8]'
-                              : tier === 1 ? 'bg-[#94a3b8]/20 text-[#94a3b8]'
-                              : 'bg-[#1e2d4a] text-[#475569]'}`}
+                              : tier === 1 ? 'bg-[#94a3b8]/20 text-white/50'
+                              : 'bg-white/[0.04] text-white/30'}`}
                           >
                             {tier === 3 ? '★★★ ຖືກ' : tier === 2 ? '★★ ຖືກ' : tier === 1 ? '★ ຖືກ' : '✗ Miss'}
                           </span>
@@ -1190,9 +1190,9 @@ export default function AnalyticsPage() {
                                   ? item.tier === 3 ? 'bg-[#fbbf24] text-black ring-1 ring-[#fbbf24]'
                                     : item.tier === 2 ? 'bg-[#818cf8] text-white ring-1 ring-[#818cf8]'
                                     : 'bg-[#94a3b8] text-black ring-1 ring-[#94a3b8]'
-                                  : item.tier === 3 ? 'bg-[#1e2d4a] text-[#fbbf24]/80'
-                                    : item.tier === 2 ? 'bg-[#1e2d4a] text-[#818cf8]/65'
-                                    : 'bg-[#1e2d4a] text-[#475569]'}`}
+                                  : item.tier === 3 ? 'bg-white/[0.04] text-[#fbbf24]/80'
+                                    : item.tier === 2 ? 'bg-white/[0.04] text-[#818cf8]/65'
+                                    : 'bg-white/[0.04] text-white/30'}`}
                             >
                               {item.num}
                             </span>
