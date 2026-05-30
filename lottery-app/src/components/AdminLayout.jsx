@@ -192,7 +192,7 @@ export default function AdminLayout() {
               </div>
               <div className="flex flex-col leading-none min-w-0">
                 <span className="text-[14px] font-extrabold tracking-tight text-white truncate">laolots<span className="text-[#5daf82]">.com</span></span>
-                <span className="text-[8.5px] font-medium text-white/50 tracking-widest uppercase">ນະພັດທະນາລາວ</span>
+                <span className="text-[8.5px] font-medium text-white/50 tracking-widest uppercase">ຫວຍພັດທະນາລາວ</span>
               </div>
             </Link>
           )}
