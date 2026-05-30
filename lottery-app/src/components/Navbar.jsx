@@ -124,7 +124,7 @@ export default function Navbar() {
             <span className="text-[15px] font-extrabold tracking-tight text-foreground">
               laolots<span className="text-primary">.com</span>
             </span>
-            <span className="text-[9.5px] font-medium text-muted-foreground tracking-widest uppercase">ນະພັດທະນາລາວ</span>
+            <span className="text-[9.5px] font-medium text-muted-foreground tracking-widest uppercase">ຫວຍພັດທະນາລາວ</span>
           </div>
         </Link>
 
@@ -262,7 +262,7 @@ export default function Navbar() {
                   <span className="text-[15px] font-extrabold text-foreground">
                     laolots<span className="text-primary">.com</span>
                   </span>
-                  <span className="text-[9.5px] font-medium text-muted-foreground tracking-widest uppercase">ນະພັດທະນາລາວ</span>
+                  <span className="text-[9.5px] font-medium text-muted-foreground tracking-widest uppercase">ຫວຍພັດທະນາລາວ</span>
                 </div>
               </div>
 
