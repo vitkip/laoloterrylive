@@ -13,10 +13,10 @@ import { useDebounce } from '../../../hooks/useDebounce';
 // ── Availability indicator ─────────────────────────────────────────
 function AvailBadge({ checking, available }) {
   if (checking) return (
-    <span className="w-4 h-4 border-2 border-[#003fb1]/30 border-t-[#003fb1] rounded-full animate-spin block" />
+    <span className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin block" />
   );
   if (available === true) return (
-    <span className="material-symbols-outlined text-[18px] text-[#006c49]" style={{ fontVariationSettings: "'FILL' 1" }}>
+    <span className="material-symbols-outlined text-[18px] text-emerald-500" style={{ fontVariationSettings: "'FILL' 1" }}>
       check_circle
     </span>
   );
@@ -32,7 +32,7 @@ function AvailBadge({ checking, available }) {
 function FieldHint({ error, available, takenMsg }) {
   if (error)                    return <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1"><span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>{error}</p>;
   if (available === false)      return <p className="mt-1.5 text-xs text-red-600 font-medium flex items-center gap-1"><span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>{takenMsg}</p>;
-  if (available === true)       return <p className="mt-1.5 text-xs text-[#006c49] font-medium flex items-center gap-1"><span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>ສາມາດໃຊ້ງານໄດ້</p>;
+  if (available === true)       return <p className="mt-1.5 text-xs text-emerald-500 font-medium flex items-center gap-1"><span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>ສາມາດໃຊ້ງານໄດ້</p>;
   return null;
 }
 
@@ -130,23 +130,22 @@ export default function RegisterPage() {
   if (authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#001d6e] via-[#003fb1] to-[#1a56db] flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center px-4 py-10 relative">
       {/* Ambient glows */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-48 -right-48 w-96 h-96 rounded-full bg-white/[0.04] blur-3xl" />
-        <div className="absolute -bottom-48 -left-48 w-96 h-96 rounded-full bg-white/[0.04] blur-3xl" />
-      </div>
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.08),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.12),transparent_60%)]" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,189,248,0.06),transparent_60%)]" />
 
       <div className="w-full max-w-lg relative">
         {/* Card */}
-        <div className="bg-card rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+<div className="bg-card/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/20 border border-border/60 ring-1 ring-white/[0.05] overflow-hidden">
 
           {/* ── Header ───────────────────────────────────────────── */}
-          <div className="relative bg-gradient-to-br from-[#001d6e] to-[#1a56db] px-8 py-8 text-center overflow-hidden">
-            <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-y-24 translate-x-24" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/5 translate-y-16 -translate-x-16" />
-            <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border border-white/20 shadow-lg">
+          <div className="relative px-8 py-8 text-center overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#09090b] via-[#0e0e16] to-[#0d0d13]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.25),transparent_60%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,189,248,0.12),transparent_60%)]" />
+            <div className="relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-white/[0.07] backdrop-blur-xl flex items-center justify-center mx-auto mb-4 border border-white/[0.15] shadow-lg shadow-violet-500/10">
                 <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                   person_add
                 </span>
@@ -165,7 +164,7 @@ export default function RegisterPage() {
                 Username <span className="text-red-500 normal-case font-normal text-[11px]">* 4-20 ຕົວ a-z 0-9 _</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#737686]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-muted-foreground/60">
                   person
                 </span>
                 <input
@@ -173,11 +172,11 @@ export default function RegisterPage() {
                   placeholder="ປ້ອນ username"
                   autoComplete="username"
                   spellCheck={false}
-                  className={`w-full bg-accent rounded-xl pl-9 pr-10 py-3 text-sm font-medium
-                    text-foreground focus:outline-none focus:ring-2 transition-all
+                  className={`w-full bg-muted/40 backdrop-blur-sm border border-border/60 rounded-xl pl-9 pr-10 py-3 text-sm font-medium
+                    text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all
                     ${errors.username
-                      ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10'
-                      : 'focus:ring-[#003fb1]/40'
+                      ? 'ring-2 ring-red-400/60 border-red-400/60'
+                      : 'focus:ring-primary/30 focus:border-primary/40'
                     }`}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -193,16 +192,16 @@ export default function RegisterPage() {
                 ຊື່-ນາມສະກຸນ <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#737686]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-muted-foreground/60">
                   badge
                 </span>
                 <input
                   {...register('full_name')}
                   placeholder="ປ້ອນຊື່ ແລະ ນາມສະກຸນ"
                   autoComplete="name"
-                  className={`w-full bg-accent rounded-xl pl-9 pr-4 py-3 text-sm font-medium
-                    text-foreground focus:outline-none focus:ring-2 transition-all
-                    ${errors.full_name ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10' : 'focus:ring-[#003fb1]/40'}`}
+                  className={`w-full bg-muted/40 backdrop-blur-sm border border-border/60 rounded-xl pl-9 pr-4 py-3 text-sm font-medium
+                    text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all
+                    ${errors.full_name ? 'ring-2 ring-red-400/60 border-red-400/60' : 'focus:ring-primary/30 focus:border-primary/40'}`}
                 />
               </div>
               {errors.full_name && (
@@ -219,7 +218,7 @@ export default function RegisterPage() {
                 Email <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#737686]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-muted-foreground/60">
                   mail
                 </span>
                 <input
@@ -227,11 +226,11 @@ export default function RegisterPage() {
                   type="email"
                   placeholder="example@email.com"
                   autoComplete="email"
-                  className={`w-full bg-accent rounded-xl pl-9 pr-10 py-3 text-sm font-medium
-                    text-foreground focus:outline-none focus:ring-2 transition-all
+                  className={`w-full bg-muted/40 backdrop-blur-sm border border-border/60 rounded-xl pl-9 pr-10 py-3 text-sm font-medium
+                    text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all
                     ${errors.email
-                      ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10'
-                      : 'focus:ring-[#003fb1]/40'
+                      ? 'ring-2 ring-red-400/60 border-red-400/60'
+                      : 'focus:ring-primary/30 focus:border-primary/40'
                     }`}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -245,10 +244,10 @@ export default function RegisterPage() {
             <div>
               <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-wide">
                 ເບີໂທ{' '}
-                <span className="normal-case font-normal text-[#737686] text-[11px]">(ບໍ່ບັງຄັບ)</span>
+                <span className="normal-case font-normal text-muted-foreground/60 text-[11px]">(ບໍ່ບັງຄັບ)</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#737686]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-muted-foreground/60">
                   phone
                 </span>
                 <input
@@ -256,9 +255,9 @@ export default function RegisterPage() {
                   type="tel"
                   placeholder="020XXXXXXXX"
                   autoComplete="tel"
-                  className={`w-full bg-accent rounded-xl pl-9 pr-4 py-3 text-sm font-medium
-                    text-foreground focus:outline-none focus:ring-2 transition-all
-                    ${errors.phone_number ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10' : 'focus:ring-[#003fb1]/40'}`}
+                  className={`w-full bg-muted/40 backdrop-blur-sm border border-border/60 rounded-xl pl-9 pr-4 py-3 text-sm font-medium
+                    text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all
+                    ${errors.phone_number ? 'ring-2 ring-red-400/60 border-red-400/60' : 'focus:ring-primary/30 focus:border-primary/40'}`}
                 />
               </div>
               {errors.phone_number && (
@@ -294,9 +293,9 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-[#003fb1] to-[#1a56db] text-white py-3.5 rounded-xl font-bold
-                text-sm hover:opacity-95 hover:-translate-y-0.5 transition-all duration-200
-                shadow-md shadow-[#003fb1]/25 disabled:opacity-50 disabled:transform-none
+              className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-bold
+                text-sm hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200
+                shadow-md shadow-primary/20 disabled:opacity-50 disabled:transform-none
                 flex items-center justify-center gap-2 mt-1"
             >
               {isSubmitting ? (
@@ -312,7 +311,7 @@ export default function RegisterPage() {
               )}
             </button>
 
-            <p className="text-center text-sm text-[#737686] pt-1">
+            <p className="text-center text-sm text-muted-foreground pt-1">
               ມີບັນຊີແລ້ວ?{' '}
               <Link to="/login" className="text-primary font-bold hover:underline">
                 ເຂົ້າສູ່ລະບົບ
@@ -322,7 +321,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="text-center mt-5">
-          <Link to="/" className="text-sm text-white/50 hover:text-white transition-colors font-medium">
+          <Link to="/" className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">
             ← ກັບໄປໜ້າຫຼັກ
           </Link>
         </div>

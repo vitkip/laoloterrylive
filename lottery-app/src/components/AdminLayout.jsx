@@ -175,21 +175,44 @@ export default function AdminLayout() {
         collapsed ? 'w-16' : 'w-60'
       }`}>
         {/* Logo */}
-        <div className={`flex items-center border-b border-[#2d6a4f]/30 h-16 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-4 gap-2'}`}>
+        <div className={`flex border-b border-[#2d6a4f]/30 shrink-0 ${
+          collapsed
+            ? 'flex-col items-center justify-center gap-1.5 py-2 h-[72px]'
+            : 'flex-row items-center px-4 gap-2 h-16'
+        }`}>
           {!collapsed && (
-            <Link to="/" className="text-lg font-black text-white tracking-tighter flex items-center gap-1.5 flex-1">
-              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
-              LaoLots
+            <Link to="/" className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md ring-1 ring-white/20 shrink-0">
+                <svg viewBox="0 0 36 36" className="w-full h-full">
+                  <rect x="0" y="0" width="36" height="9" fill="#CE1126"/>
+                  <rect x="0" y="9" width="36" height="18" fill="#002868"/>
+                  <rect x="0" y="27" width="36" height="9" fill="#CE1126"/>
+                  <circle cx="18" cy="18" r="6" fill="white"/>
+                </svg>
+              </div>
+              <div className="flex flex-col leading-none min-w-0">
+                <span className="text-[14px] font-extrabold tracking-tight text-white truncate">laolots<span className="text-[#5daf82]">.com</span></span>
+                <span className="text-[8.5px] font-medium text-white/50 tracking-widest uppercase">ນະພັດທະນາລາວ</span>
+              </div>
             </Link>
           )}
+          {/* Logo icon — collapsed state */}
           {collapsed && (
-            <Link to="/" className="text-white">
-              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
+            <Link to="/" title="laolots.com">
+              <div className="w-7 h-7 rounded-lg overflow-hidden shadow-md ring-1 ring-white/20">
+                <svg viewBox="0 0 36 36" className="w-full h-full">
+                  <rect x="0" y="0" width="36" height="9" fill="#CE1126"/>
+                  <rect x="0" y="9" width="36" height="18" fill="#002868"/>
+                  <rect x="0" y="27" width="36" height="9" fill="#CE1126"/>
+                  <circle cx="18" cy="18" r="6" fill="white"/>
+                </svg>
+              </div>
             </Link>
           )}
+          {/* Collapse toggle button */}
           <button
             onClick={() => setCollapsed(v => !v)}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-colors ${collapsed ? 'mx-auto mt-1' : ''}`}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-colors shrink-0"
             title={collapsed ? 'ຂະຫຍາຍ sidebar' : 'ຫຍໍ້ sidebar'}
           >
             <span className="material-symbols-outlined text-[18px]">{collapsed ? 'menu_open' : 'menu'}</span>
@@ -223,9 +246,19 @@ export default function AdminLayout() {
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 bottom-0 w-64 bg-[#1b3a2d] flex flex-col shadow-2xl">
             <div className="flex items-center justify-between px-4 h-16 border-b border-[#2d6a4f]/30">
-              <Link to="/" className="text-lg font-black text-white tracking-tighter flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>diamond</span>
-                LaoLots
+              <Link to="/" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md ring-1 ring-white/20 shrink-0">
+                  <svg viewBox="0 0 36 36" className="w-full h-full">
+                    <rect x="0" y="0" width="36" height="9" fill="#CE1126"/>
+                    <rect x="0" y="9" width="36" height="18" fill="#002868"/>
+                    <rect x="0" y="27" width="36" height="9" fill="#CE1126"/>
+                    <circle cx="18" cy="18" r="6" fill="white"/>
+                  </svg>
+                </div>
+                <div className="flex flex-col leading-none">
+                  <span className="text-[14px] font-extrabold tracking-tight text-white">laolots<span className="text-[#5daf82]">.com</span></span>
+                  <span className="text-[8.5px] font-medium text-white/50 tracking-widest uppercase">ທຸກຊາດລາວ</span>
+                </div>
               </Link>
               <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:bg-white/10">
                 <span className="material-symbols-outlined text-[18px]">close</span>

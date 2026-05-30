@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, Clock, BarChart2, TrendingUp, Search,
   Moon, Sun, Menu, User, Shield, LogOut, Lock,
-  ChevronDown, Star,
+  ChevronDown,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -111,12 +111,21 @@ export default function Navbar() {
 
         {/* ── Logo ── */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1b3a2d] to-[#2d6a4f] flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
-            <Star className="text-white w-[18px] h-[18px] fill-white" />
+          {/* ທຸງຊາດລາວ badge */}
+          <div className="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 ring-black/10 dark:ring-white/10 group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
+            <svg viewBox="0 0 36 36" className="w-full h-full">
+              <rect x="0" y="0" width="36" height="9" fill="#CE1126"/>
+              <rect x="0" y="9" width="36" height="18" fill="#002868"/>
+              <rect x="0" y="27" width="36" height="9" fill="#CE1126"/>
+              <circle cx="18" cy="18" r="6" fill="white"/>
+            </svg>
           </div>
-          <span className="text-[15px] font-extrabold tracking-tight text-foreground">
-            laolots<span className="text-primary">.com</span>
-          </span>
+          <div className="flex flex-col leading-none">
+            <span className="text-[15px] font-extrabold tracking-tight text-foreground">
+              laolots<span className="text-primary">.com</span>
+            </span>
+            <span className="text-[9.5px] font-medium text-muted-foreground tracking-widest uppercase">ນະພັດທະນາລາວ</span>
+          </div>
         </Link>
 
         {/* ── Desktop Nav ── */}
@@ -241,12 +250,20 @@ export default function Navbar() {
             <SheetContent side="left" className="w-[280px] p-0 flex flex-col">
               {/* Sheet header */}
               <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1b3a2d] to-[#2d6a4f] flex items-center justify-center">
-                  <Star className="text-white w-4 h-4 fill-white" />
+                <div className="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 ring-black/10">
+                  <svg viewBox="0 0 36 36" className="w-full h-full">
+                    <rect x="0" y="0" width="36" height="9" fill="#CE1126"/>
+                    <rect x="0" y="9" width="36" height="18" fill="#002868"/>
+                    <rect x="0" y="27" width="36" height="9" fill="#CE1126"/>
+                    <circle cx="18" cy="18" r="6" fill="white"/>
+                  </svg>
                 </div>
-                <span className="text-[15px] font-extrabold text-foreground">
-                  laolots<span className="text-primary">.com</span>
-                </span>
+                <div className="flex flex-col leading-none">
+                  <span className="text-[15px] font-extrabold text-foreground">
+                    laolots<span className="text-primary">.com</span>
+                  </span>
+                  <span className="text-[9.5px] font-medium text-muted-foreground tracking-widest uppercase">ນະພັດທະນາລາວ</span>
+                </div>
               </div>
 
               {/* Nav links */}

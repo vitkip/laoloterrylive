@@ -14,18 +14,18 @@ const PasswordInput = forwardRef(function PasswordInput(
         </label>
       )}
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#737686]">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-muted-foreground/60">
           lock
         </span>
         <input
           ref={ref}
           type={show ? 'text' : 'password'}
           placeholder={placeholder}
-          className={`w-full bg-accent rounded-xl pl-9 pr-10 py-3 text-sm font-medium
-            text-foreground focus:outline-none focus:ring-2 transition-all
+          className={`w-full bg-muted/40 backdrop-blur-sm border border-border/60 rounded-xl pl-9 pr-10 py-3 text-sm font-medium
+            text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all
             ${error
-              ? 'ring-2 ring-red-400 bg-red-50 dark:bg-red-900/10'
-              : 'focus:ring-[#003fb1]/40'
+              ? 'ring-2 ring-red-400/60 border-red-400/60'
+              : 'focus:ring-primary/30 focus:border-primary/40'
             } ${className}`}
           {...props}
         />
@@ -33,7 +33,7 @@ const PasswordInput = forwardRef(function PasswordInput(
           type="button"
           tabIndex={-1}
           onClick={() => setShow(v => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#003fb1] transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-primary transition-colors"
         >
           <span className="material-symbols-outlined text-[18px]">
             {show ? 'visibility_off' : 'visibility'}

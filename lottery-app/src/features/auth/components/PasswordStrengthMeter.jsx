@@ -12,7 +12,7 @@ function getStrength(pw) {
   if (score <= 3) return { label: 'ອ່ອນ',     color: '#e36c00', pct: 40 };
   if (score <= 4) return { label: 'ປານກາງ',   color: '#f5a623', pct: 60 };
   if (score <= 5) return { label: 'ດີ',        color: '#006c49', pct: 80 };
-  return               { label: 'ດີຫຼາຍ',    color: '#003fb1', pct: 100 };
+  return               { label: 'ດີຫຼາຍ',    color: '#7c3aed', pct: 100 };
 }
 
 const CHECKS = [
@@ -30,12 +30,12 @@ export default function PasswordStrengthMeter({ password }) {
   return (
     <div className="space-y-2 mt-2">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-[#737686]">ຄວາມແຂງແກ່ນ:</span>
+        <span className="text-muted-foreground/60">ຄວາມແຂງແກ່ນ:</span>
         <span className="font-bold transition-colors" style={{ color: strength.color }}>
           {strength.label}
         </span>
       </div>
-      <div className="h-1.5 bg-border rounded-full overflow-hidden">
+      <div className="h-1.5 bg-muted/60 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500 ease-out"
           style={{ width: `${strength.pct}%`, background: strength.color }}
@@ -47,12 +47,12 @@ export default function PasswordStrengthMeter({ password }) {
           return (
             <div key={c.label} className="flex items-center gap-1.5">
               <span
-                className={`material-symbols-outlined text-[13px] transition-colors ${ok ? 'text-[#006c49]' : 'text-[#c3c5d7]'}`}
+                className={`material-symbols-outlined text-[13px] transition-colors ${ok ? 'text-emerald-500' : 'text-muted-foreground/30'}`}
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 {ok ? 'check_circle' : 'radio_button_unchecked'}
               </span>
-              <span className={`text-[11px] font-medium transition-colors ${ok ? 'text-[#006c49]' : 'text-[#737686]'}`}>
+              <span className={`text-[11px] font-medium transition-colors ${ok ? 'text-emerald-500' : 'text-muted-foreground/50'}`}>
                 {c.label}
               </span>
             </div>
