@@ -7,12 +7,12 @@ api/.env.production
 *.log
 *.cache
 
-# ── Node / React build ────────────────────────────────────────────
+# ── Node / React (dev only, dist IS committed for deployment) ─────
 lottery-app/node_modules/
-lottery-app/dist/
 lottery-app/.env
 lottery-app/.env.local
 lottery-app/.env.production
+# dist/ is intentionally NOT ignored — cPanel shared hosting has no Node.js build step
 
 # ── Uploads (user content, not source code) ───────────────────────
 uploads/animals/*.jpg
@@ -30,6 +30,4 @@ Thumbs.db
 *.sw?
 
 # ── Screenshots / temp files ──────────────────────────────────────
-*.png.bak
-"Screenshot *.png"
 Screenshot*.png
