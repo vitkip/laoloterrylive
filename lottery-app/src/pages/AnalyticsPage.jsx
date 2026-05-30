@@ -198,6 +198,43 @@ function computeDecisionBacktest(draws, trials = 21) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// COMBINED PROBABILITY ENGINE
+// Combines: Frequency · Overdue · Momentum · AI Score · Decision Score
+// Each signal contributes 20 pts → total max 100
+// ─────────────────────────────────────────────────────────────────────────────
+
+function computeCombinedTop10(analytics) {
+  if (!analytics) return []
+  const { scores } = analytics
+  const maxFreq = Math.max(...scores.map(s => s.freq), 1)
+  const maxMom  = Math.max(...scores.filter(s => s.momentum > 0).map(s => s.momentum), 0.001)
+
+  const ranked = scores.map(s => {
+    const freqW     = (s.freq / maxFreq) * 20
+    const overdueW  = Math.min(s.overdue / 3, 1) * 20
+    const momentumW = s.momentum > 0 ? (s.momentum / maxMom) * 20 : 0
+    const aiW       = (s.aiScore / 100) * 20
+    const decisionW = (s.decisionScore / 3) * 20
+    const combined  = +(freqW + overdueW + momentumW + aiW + decisionW).toFixed(1)
+    return {
+      ...s,
+      combined,
+      freqW:     +freqW.toFixed(1),
+      overdueW:  +overdueW.toFixed(1),
+      momentumW: +momentumW.toFixed(1),
+      aiW:       +aiW.toFixed(1),
+      decisionW: +decisionW.toFixed(1),
+    }
+  }).sort((a, b) => b.combined - a.combined)
+
+  const maxCombined = ranked[0]?.combined ?? 1
+  return ranked.slice(0, 10).map(s => ({
+    ...s,
+    probability: +(s.combined / maxCombined * 100).toFixed(1),
+  }))
+}
+
 function computeBacktest(draws, range, targetNum) {
   if (!targetNum || !draws?.length) return null
   const n = range === 'all' ? draws.length : Math.min(parseInt(range), draws.length)
@@ -246,6 +283,7 @@ const MODES = [
   { value: 'trend',    label: 'Trend',      icon: 'trending_up' },
   { value: 'ai',       label: 'AI Engine',  icon: 'psychology' },
   { value: 'decision',   label: 'ຕັດສິນໃຈ',  icon: 'stars' },
+  { value: 'news',       label: 'ຂ່າວ AI',    icon: 'newspaper' },
   { value: 'dsbacktest', label: 'DS Backtest', icon: 'verified' },
   { value: 'backtest',   label: 'Backtest',    icon: 'science' },
 ]
@@ -321,6 +359,239 @@ function TrendList({ title, accent, data, field, fieldLabel }) {
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NEWS ARTICLE PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+const LDATE = (iso) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const LAO_MONTHS = ['ມັງກອນ','ກຸມພາ','ມີນາ','ເມສາ','ພຶດສະພາ','ມິຖຸນາ',
+                      'ກໍລະກົດ','ສິງຫາ','ກັນຍາ','ຕຸລາ','ພະຈິກ','ທັນວາ']
+  return `${d.getDate()} ${LAO_MONTHS[d.getMonth()]} ${d.getFullYear()}`
+}
+
+const STAT_LABEL = { freqW: 'ຄວາມຖີ່', overdueW: 'ຊ້ານານ', momentumW: 'Momentum', aiW: 'AI Score', decisionW: 'ສັນຍານ' }
+const STAT_COLOR = { freqW: '#ef4444', overdueW: '#fbbf24', momentumW: '#6cf8bb', aiW: '#818cf8', decisionW: '#f97316' }
+
+function buildArticle(top10, analytics, latestDraw, n, selectedTypeName) {
+  if (!top10.length || !analytics) return ''
+  const { hot, cold, rising, overdue: overdueList, aiTop, decisionTop } = analytics
+  const dateStr = LDATE(latestDraw?.draw_date) || LDATE(new Date().toISOString())
+  const drawNum = latestDraw?.draw_number ?? '?'
+  const typePart = selectedTypeName ? ` (${selectedTypeName})` : ''
+
+  const rank = (arr) => arr.slice(0, 5).map(x => x.num).join(', ')
+  const rankFull = top10.map((s, i) => `  ${i + 1}. ເລກ ${s.num} — ຄວາມໜ້າຈະເປັນລວມ ${s.probability}% (AI ${s.aiScore}pts · Overdue ${s.overdue}× · Momentum ${s.momentum > 0 ? '↑' : '↓'})`).join('\n')
+
+  const star3 = decisionTop.filter(s => s.decisionScore === 3).slice(0, 3).map(s => s.num)
+  const hotTop = hot.slice(0, 5).map(s => `${s.num}(${s.freq}ຄ)`)
+  const coldTop = cold.slice(0, 5).map(s => `${s.num}(${s.gap}ງ)`)
+  const risingTop = rising.slice(0, 5).map(s => `${s.num}`)
+  const overdueTop = overdueList.slice(0, 5).map(s => `${s.num}(${s.overdue}×)`)
+
+  return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📰 ວິເຄາະຫວຍລາວ — ເລກເດັ່ນງວດນີ້${typePart}
+📅 ວັນທີ: ${dateStr}  |  ງວດ: #${drawNum}  |  ວິເຄາະ ${n} ງວດ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🤖 ລະບົບ AI ໄດ້ວິເຄາະສະຖິຕິ ${n} ງວດ ໂດຍລວມ 5 ດ້ານ
+(ຄວາມຖີ່ · ຊ້ານານ · Momentum · AI Score · ສັນຍານ Decision)
+ຜ່ານ Algorithm Weighted Composite — ໄດ້ 10 ຕົວເລກເດັ່ນ ດັ່ງນີ້:
+
+▶ TOP 10 ເລກລວມຄວາມໜ້າຈະເປັນສູງສຸດ
+${rankFull}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 ບົດວິເຄາະສະຖິຕິ ແຕ່ລະດ້ານ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔥 ເລກ HOT (ອອກຫຼາຍສຸດ):
+   ${hotTop.join(' · ')}
+
+🧊 ເລກ COLD (ຊ້ານານທີ່ສຸດ):
+   ${coldTop.join(' · ')}
+
+📈 ເລກ RISING (ກຳລັງຂຶ້ນ Momentum):
+   ${risingTop.length ? risingTop.join(' · ') : 'ບໍ່ມີ'}
+
+⏳ ເລກ OVERDUE (ເກີນຄ່າສະເລ່ຍ):
+   ${overdueTop.join(' · ')}
+
+🌟 AI TOP 5 (Composite Score):
+   ${aiTop.slice(0, 5).map(s => `${s.num}[${s.aiScore}pts]`).join(' · ')}
+
+⭐ ສັນຍານຄົບ 3 (★★★ Decision Score):
+   ${star3.length ? star3.join(', ') : 'ບໍ່ມີງວດນີ້'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 ສະຫຼຸບ ເລກ 10 ໂຕເດັ່ນ:
+   ${top10.map(s => s.num).join(' · ')}
+
+⚠️  ຄຳເຕືອນ: ຫວຍລາວເປັນການສຸ່ມ — ຂໍ້ມູນນີ້ເປັນພຽງການວິເຄາະທາງສະຖິຕິ
+     ບໍ່ຮັບປະກັນຜົນລາງວັນ — ຫ້າມລົງທຶນເກີນຄວາມສາມາດ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📲 laolots.com — ຂໍ້ມູນຫວຍລາວ ຄົບຖ້ວນທີ່ສຸດ`
+}
+
+function NewsPanel({ analytics, draws, n, selectedType, types }) {
+  const [copied, setCopied] = useState(false)
+
+  const top10 = useMemo(() => computeCombinedTop10(analytics), [analytics])
+  const latestDraw = draws?.[0] ?? null
+  const selectedTypeName = selectedType === 'all' ? null
+    : types?.find(t => String(t.type_id) === selectedType)?.type_name ?? null
+
+  const article = useMemo(
+    () => buildArticle(top10, analytics, latestDraw, n, selectedTypeName),
+    [top10, analytics, latestDraw, n, selectedTypeName]
+  )
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(article).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  if (!top10.length) return <div className="text-center py-20 text-white/50">ຂໍ້ມູນບໍ່ພໍ</div>
+
+  const maxCombined = top10[0].combined
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Disclaimer ─────────────────────────────────────────────────────── */}
+      <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/25 rounded-xl px-4 py-2.5 text-xs text-[#fbbf24] flex items-start gap-2">
+        <span className="material-symbols-outlined text-[14px] mt-0.5 shrink-0">warning</span>
+        ການວິເຄາະນີ້ອ້າງອີງຈາກສະຖິຕິ ບໍ່ຮັບປະກັນຜົນລາງວັນ — ຫວຍລາວເປັນການສຸ່ມ
+      </div>
+
+      {/* ── Combined Score Cards ────────────────────────────────────────────── */}
+      <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-6 border border-white/[0.09] shadow-2xl shadow-black/50">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#f97316] to-[#fbbf24] flex items-center justify-center shadow-lg">
+            <span className="material-symbols-outlined text-white text-[22px]">newspaper</span>
+          </div>
+          <div>
+            <h3 className="font-black text-white text-xl">Top 10 ເລກລວມຄວາມໜ້າຈະເປັນ</h3>
+            <p className="text-xs text-white/40">Weighted Composite: ຄວາມຖີ່ · ຊ້ານານ · Momentum · AI · ສັນຍານ</p>
+          </div>
+        </div>
+
+        {/* Weight legend */}
+        <div className="flex gap-2 flex-wrap mb-5">
+          {Object.entries(STAT_LABEL).map(([k, label]) => (
+            <span key={k} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full"
+              style={{ background: STAT_COLOR[k] + '22', color: STAT_COLOR[k], border: `1px solid ${STAT_COLOR[k]}44` }}>
+              <span className="w-2 h-2 rounded-full inline-block" style={{ background: STAT_COLOR[k] }} />
+              {label} 20pts
+            </span>
+          ))}
+        </div>
+
+        <div className="space-y-3">
+          {top10.map((s, i) => (
+            <div key={s.num} className={`rounded-2xl p-4 border transition-all
+              ${i === 0 ? 'bg-[#fbbf24]/10 border-[#fbbf24]/35' : i < 3 ? 'bg-[#818cf8]/10 border-[#818cf8]/20' : 'bg-white/[0.03] border-white/[0.06]'}`}
+            >
+              <div className="flex items-center gap-3 mb-2.5">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0
+                  ${i === 0 ? 'bg-[#fbbf24] text-black' : i === 1 ? 'bg-[#94a3b8] text-black' : i === 2 ? 'bg-[#b45309] text-white' : 'bg-white/[0.08] text-white/40'}`}>
+                  {i + 1}
+                </div>
+                <span className={`font-black font-mono text-3xl shrink-0
+                  ${i === 0 ? 'text-[#fbbf24]' : i < 3 ? 'text-[#818cf8]' : 'text-white'}`}>{s.num}</span>
+                <div className="flex-1 min-w-0">
+                  {/* Combined probability bar */}
+                  <div className="relative h-5 bg-white/[0.06] rounded-full overflow-hidden mb-1">
+                    <div className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${s.probability}%`, background: 'linear-gradient(90deg,#f97316,#fbbf24)' }} />
+                    <span className="absolute inset-0 flex items-center justify-end pr-2.5 text-[10px] font-black text-white">
+                      {s.probability}%
+                    </span>
+                  </div>
+                  {/* 5-signal mini bars */}
+                  <div className="flex gap-1.5 flex-wrap">
+                    {Object.entries(STAT_LABEL).map(([k, label]) => (
+                      <div key={k} className="flex items-center gap-1">
+                        <span className="text-[9px] font-bold" style={{ color: STAT_COLOR[k] + 'aa' }}>{label}</span>
+                        <div className="w-12 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${(s[k] / 20) * 100}%`, background: STAT_COLOR[k] }} />
+                        </div>
+                        <span className="text-[9px] font-black" style={{ color: STAT_COLOR[k] }}>{s[k]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
+                    ${s.decisionScore === 3 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : s.decisionScore === 2 ? 'bg-[#818cf8]/20 text-[#818cf8]' : 'bg-white/[0.05] text-white/30'}`}>
+                    {'★'.repeat(s.decisionScore) + '☆'.repeat(3 - s.decisionScore)}
+                  </span>
+                  <span className={`text-[10px] font-bold ${s.momentum > 0 ? 'text-[#6cf8bb]' : 'text-[#f87171]'}`}>
+                    {s.momentum > 0 ? '↑' : '↓'} {Math.abs(s.r10)}×/10ງ
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Signal breakdown grid ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {[
+          { key: 'freqW',     icon: 'equalizer',    label: 'ຄວາມຖີ່',  color: '#ef4444', nums: analytics.hot.slice(0,5) },
+          { key: 'overdueW',  icon: 'hourglass_top',label: 'ຊ້ານານ',   color: '#fbbf24', nums: analytics.overdue.slice(0,5) },
+          { key: 'momentumW', icon: 'trending_up',  label: 'Momentum', color: '#6cf8bb', nums: analytics.rising.slice(0,5) },
+          { key: 'aiW',       icon: 'psychology',   label: 'AI Score', color: '#818cf8', nums: analytics.aiTop.slice(0,5) },
+          { key: 'decisionW', icon: 'stars',        label: 'ສັນຍານ★★★',color: '#f97316', nums: analytics.decisionTop.filter(s=>s.decisionScore===3).slice(0,5).length
+              ? analytics.decisionTop.filter(s=>s.decisionScore===3).slice(0,5)
+              : analytics.decisionTop.slice(0,5) },
+        ].map(({ icon, label, color, nums }) => (
+          <div key={label} className="bg-card/70 backdrop-blur-md rounded-2xl p-4 border border-border/60">
+            <div className="flex items-center gap-1.5 mb-3">
+              <span className="material-symbols-outlined text-[16px]" style={{ color }}>{icon}</span>
+              <span className="text-[11px] font-black text-white/70">{label}</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {nums.map((s, j) => (
+                <span key={j} className="font-black font-mono text-sm px-2 py-1 rounded-lg"
+                  style={{ background: color + '22', color, border: `1px solid ${color}44` }}>
+                  {s.num}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Auto-generated news article ─────────────────────────────────────── */}
+      <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl border border-white/[0.09] shadow-2xl shadow-black/50 overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08]">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px] text-[#fbbf24]">article</span>
+            <span className="font-black text-white text-sm">ບົດຄວາມຂ່າວ — ອັດຕະໂນມັດ</span>
+          </div>
+          <button
+            onClick={handleCopy}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all
+              ${copied ? 'bg-[#6cf8bb] text-black' : 'bg-white/[0.08] text-white/70 hover:bg-white/[0.15] hover:text-white'}`}
+          >
+            <span className="material-symbols-outlined text-[14px]">{copied ? 'check' : 'content_copy'}</span>
+            {copied ? 'ຄັດລອກແລ້ວ!' : 'ຄັດລອກ'}
+          </button>
+        </div>
+        <pre className="px-6 py-5 text-[12px] sm:text-[13px] leading-relaxed text-white/80 font-mono whitespace-pre-wrap break-words">
+          {article}
+        </pre>
+      </div>
+
     </div>
   )
 }
@@ -1045,6 +1316,17 @@ export default function AnalyticsPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ── TAB: NEWS ───────────────────────────────────────────────────────── */}
+      {mode === 'news' && (
+        <NewsPanel
+          analytics={analytics}
+          draws={filteredDraws}
+          n={n}
+          selectedType={selectedType}
+          types={types}
+        />
       )}
 
       {/* ── TAB: DS BACKTEST ────────────────────────────────────────────────── */}
