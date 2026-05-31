@@ -83,7 +83,7 @@ export default function TermsPage() {
         {/* Intro card */}
         <div className="bg-[#003fb1]/08 dark:bg-[#003fb1]/12 border border-[#003fb1]/20 rounded-2xl px-6 py-5 mb-8 text-sm text-foreground/80 leading-relaxed">
           ກ່ອນໃຊ້ງານ laolots.com ກະລຸນາອ່ານ ແລະ ທຳຄວາມເຂົ້າໃຈກັບເງື່ອນໄຂ ແລະ ຂໍ້ກຳນົດການໃຊ້ງານໃຫ້ຄົບຖ້ວນ.
-          ທ່ານສາມາດຕິດຕໍ່ທີມງານໄດ້ທາງ <a href="mailto:support@laolots.com" className="text-[#003fb1] hover:underline font-semibold">support@laolots.com</a> ຫາກມີຄຳຖາມ.
+          ທ່ານສາມາດຕິດຕໍ່ທີມງານໄດ້ທາງ <a href="mailto:noreply@laolots.com" className="text-[#003fb1] hover:underline font-semibold">noreply@laolots.com</a> ຫາກມີຄຳຖາມ.
         </div>
 
         {/* Sections */}
@@ -114,8 +114,8 @@ export default function TermsPage() {
         {/* Footer note */}
         <p className="text-xs text-muted-foreground text-center mt-10 pb-4">
           ຫາກທ່ານມີຄຳຖາມ ຕິດຕໍ່:{' '}
-          <a href="mailto:support@laolots.com" className="text-[#003fb1] hover:underline">
-            support@laolots.com
+          <a href="mailto:noreply@laolots.com" className="text-[#003fb1] hover:underline">
+            noreply@laolots.com
           </a>
         </p>
       </div>
