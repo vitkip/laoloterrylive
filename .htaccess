@@ -4,7 +4,10 @@ DirectoryIndex lottery-app/dist/index.html
 RewriteEngine On
 RewriteBase /
 
-# Let real files/folders pass through (api, uploads, lottery-app dist assets)
+# Explicitly pass through api/ and uploads/ — never rewrite these
+RewriteRule ^(api|uploads)/ - [L]
+
+# Let real files/folders pass through (lottery-app dist assets)
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
