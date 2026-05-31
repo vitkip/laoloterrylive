@@ -770,8 +770,8 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* Date — raw on mobile, full Lao date on desktop */}
-                    <div className="shrink-0 hidden xs:block">
+                    {/* Date — short on mobile, full Lao date on desktop */}
+                    <div className="shrink-0">
                       <p className="text-[11px] font-bold text-foreground leading-tight">
                         <span className="hidden sm:inline">{formatLaoDate(d.draw_date, true)}</span>
                         <span className="sm:hidden">{d.draw_date}</span>
