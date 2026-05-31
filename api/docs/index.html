@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lao Lottery Live — API Docs</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Top header bar ── */
+    .api-header {
+      background: linear-gradient(135deg, #0d1b4b 0%, #10182c 60%, #0a0f1e 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .api-header .logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #003fb1, #1d4ed8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .api-header .title {
+      flex: 1;
+    }
+
+    .api-header .title h1 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .api-header .title p {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 2px;
+    }
+
+    .api-header .badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-blue  { background: rgba(0,63,177,0.25); color: #93b4ff; border: 1px solid rgba(0,63,177,0.4); }
+    .badge-green { background: rgba(5,150,105,0.2);  color: #6ee7b7; border: 1px solid rgba(5,150,105,0.35); }
+    .badge-gray  { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
+
+    /* ── Swagger UI wrapper ── */
+    #swagger-ui {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    /* ── Override Swagger UI dark theme ── */
+    .swagger-ui {
+      color: #cbd5e1;
+    }
+
+    .swagger-ui .topbar { display: none !important; }
+
+    .swagger-ui .info { margin: 0 0 24px; }
+
+    .swagger-ui .info .title {
+      color: #fff !important;
+      font-size: 26px !important;
+      font-weight: 800 !important;
+    }
+
+    .swagger-ui .info .description p,
+    .swagger-ui .info .description li,
+    .swagger-ui .info .description code {
+      color: #94a3b8 !important;
+      font-size: 13px !important;
+      line-height: 1.7 !important;
+    }
+
+    .swagger-ui .info .description code {
+      background: rgba(255,255,255,0.06) !important;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    .swagger-ui .scheme-container,
+    .swagger-ui section.models {
+      background: rgba(255,255,255,0.02) !important;
+      border: 1px solid rgba(255,255,255,0.06) !important;
+      border-radius: 12px !important;
+      padding: 16px !important;
+    }
+
+    .swagger-ui .opblock-tag {
+      border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+      color: #e2e8f0 !important;
+      font-size: 14px !important;
+      font-weight: 700 !important;
+    }
+
+    .swagger-ui .opblock-tag:hover { background: rgba(255,255,255,0.03) !important; }
+
+    .swagger-ui .opblock {
+      border-radius: 10px !important;
+      border-width: 1px !important;
+      margin: 6px 0 !important;
+      overflow: hidden;
+      box-shadow: none !important;
+    }
+
+    .swagger-ui .opblock.opblock-get    { border-color: rgba(97,218,251,0.3)  !important; background: rgba(97,218,251,0.04)  !important; }
+    .swagger-ui .opblock.opblock-post   { border-color: rgba(73,204,144,0.3)  !important; background: rgba(73,204,144,0.04)  !important; }
+    .swagger-ui .opblock.opblock-put    { border-color: rgba(252,161,48,0.3)  !important; background: rgba(252,161,48,0.04)  !important; }
+    .swagger-ui .opblock.opblock-delete { border-color: rgba(249,97,97,0.3)   !important; background: rgba(249,97,97,0.04)   !important; }
+
+    .swagger-ui .opblock .opblock-summary {
+      padding: 10px 16px !important;
+    }
+
+    .swagger-ui .opblock .opblock-summary-description {
+      color: #94a3b8 !important;
+      font-size: 12px !important;
+    }
+
+    .swagger-ui .opblock-body,
+    .swagger-ui .opblock .opblock-section {
+      background: rgba(0,0,0,0.25) !important;
+    }
+
+    .swagger-ui select,
+    .swagger-ui input[type="text"],
+    .swagger-ui input[type="email"],
+    .swagger-ui input[type="password"],
+    .swagger-ui textarea {
+      background: #1e293b !important;
+      border: 1px solid rgba(255,255,255,0.12) !important;
+      color: #e2e8f0 !important;
+      border-radius: 6px !important;
+    }
+
+    .swagger-ui table thead tr th,
+    .swagger-ui table thead tr td {
+      background: rgba(255,255,255,0.04) !important;
+      color: #94a3b8 !important;
+      font-size: 11px !important;
+      border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    }
+
+    .swagger-ui table tbody tr td {
+      background: transparent !important;
+      border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+      color: #cbd5e1 !important;
+    }
+
+    .swagger-ui .parameter__name { color: #93c5fd !important; }
+    .swagger-ui .parameter__type { color: #86efac !important; }
+
+    .swagger-ui .response-col_status { color: #6ee7b7 !important; font-weight: 700 !important; }
+
+    .swagger-ui .btn {
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      font-size: 12px !important;
+    }
+
+    .swagger-ui .btn.execute {
+      background: #003fb1 !important;
+      border-color: #003fb1 !important;
+      color: #fff !important;
+    }
+
+    .swagger-ui .btn.execute:hover { background: #1d4ed8 !important; }
+
+    .swagger-ui .btn.cancel {
+      background: transparent !important;
+      border-color: rgba(255,255,255,0.2) !important;
+      color: #94a3b8 !important;
+    }
+
+    .swagger-ui .model-box { background: rgba(255,255,255,0.03) !important; border-radius: 8px !important; }
+
+    .swagger-ui .model .property { color: #93c5fd !important; }
+
+    .swagger-ui .highlight-code,
+    .swagger-ui .microlight {
+      background: #0d1117 !important;
+      border-radius: 6px !important;
+      padding: 12px !important;
+    }
+
+    .swagger-ui .microlight span { color: #a5f3fc !important; }
+
+    .swagger-ui .prop-type { color: #86efac !important; }
+    .swagger-ui .prop-format { color: #fde68a !important; }
+
+    .swagger-ui svg { fill: currentColor; }
+
+    .swagger-ui .authorization__btn svg { fill: #facc15 !important; }
+
+    /* ── Auth badge color ── */
+    .swagger-ui .authorization__btn.locked svg { fill: #6ee7b7 !important; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      .api-header { padding: 14px 16px; flex-wrap: wrap; }
+      .api-header .badges { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="api-header">
+    <div class="logo">L</div>
+    <div class="title">
+      <h1>Lao Lottery Live — API Docs</h1>
+      <p>ເອກະສານ REST API ສຳລັບນັກພັດທະນາ</p>
+    </div>
+    <div class="badges">
+      <span class="badge badge-blue">OpenAPI 3.0</span>
+      <span class="badge badge-green">v1.0.0</span>
+      <span class="badge badge-gray">JSON + JWT</span>
+    </div>
+  </header>
+
+  <!-- Swagger UI mount point -->
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js"></script>
+  <script>
+    // Resolve openapi.json relative to this page's location
+    const specUrl = new URL('./openapi.json', location.href).href;
+
+    SwaggerUIBundle({
+      url: specUrl,
+      dom_id: '#swagger-ui',
+      deepLinking: true,
+      presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIStandalonePreset,
+      ],
+      layout: 'StandaloneLayout',
+      defaultModelsExpandDepth: 1,
+      defaultModelExpandDepth: 2,
+      docExpansion: 'list',
+      filter: true,
+      tryItOutEnabled: true,
+      persistAuthorization: true,
+      syntaxHighlight: {
+        activated: true,
+        theme: 'agate',
+      },
+      requestInterceptor: (req) => {
+        // Inject stored token automatically when Authorize is used
+        return req;
+      },
+    });
+  </script>
+
+</body>
+</html>

@@ -1,5 +1,9 @@
+const API_DOCS_URL = import.meta.env.DEV
+  ? 'http://localhost/laoloterylive/api/docs/'
+  : '/laoloterylive/api/docs/'
+
 const FOOTER_LINKS = [
-  { label: 'API Documentation', href: '#' },
+  { label: 'API Documentation', href: API_DOCS_URL, target: '_blank' },
   { label: 'Terms of Service (ພາສາລາວ)', href: '#' },
   { label: 'Contact Information', href: '#' },
 ]
@@ -23,6 +27,8 @@ export default function Footer() {
           <a
             key={link.label}
             href={link.href}
+            target={link.target}
+            rel={link.target === '_blank' ? 'noopener noreferrer' : undefined}
             className="text-xs font-medium text-muted-foreground hover:underline hover:text-blue-800 dark:hover:text-primary transition-opacity opacity-80 hover:opacity-100"
           >
             {link.label}

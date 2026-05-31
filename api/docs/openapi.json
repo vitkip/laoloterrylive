@@ -1,0 +1,924 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Lao Lottery Live API",
+    "version": "1.0.0",
+    "description": "REST API ສຳລັບດຶງຂໍ້ມູນຜົນຫວຍ, ນາມສັດ, ປະເພດຫວຍ ແລະ ຈັດການລະບົບ.\n\n## Authentication\nEndpoint ທີ່ຕ້ອງການ auth ໃຊ້ **Bearer JWT token** ໃນ header:\n```\nAuthorization: Bearer <token>\n```\nດຶງ token ໄດ້ຈາກ endpoint `POST /auth.php?action=login`\n\n## Base URLs\n- **Production:** `https://laolots.com/laoloterylive/api`\n- **Local Dev:** `http://localhost/laoloterylive/api`\n\n## Rate Limits\n- Login: 20 ຄັ້ງ / 15 ນາທີ ຕໍ່ IP\n- Register: 5 ຄັ້ງ / ຊົ່ວໂມງ ຕໍ່ IP",
+    "contact": {
+      "name": "Lao Lottery Live",
+      "url": "https://laolots.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://laolots.com/laoloterylive/api",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost/laoloterylive/api",
+      "description": "Local Development (XAMPP)"
+    }
+  ],
+  "tags": [
+    { "name": "Public", "description": "ບໍ່ຕ້ອງ token — ທຸກຄົນເຂົ້າຖຶງໄດ້" },
+    { "name": "Auth", "description": "Login / Register / Refresh token" },
+    { "name": "Draws", "description": "ຈັດການຜົນຫວຍ (staff+)" },
+    { "name": "Users", "description": "ຈັດການ users (admin)" },
+    { "name": "Types", "description": "ຈັດການປະເພດຫວຍ (admin)" },
+    { "name": "Live", "description": "ຕັ້ງຄ່າ live stream (staff+)" },
+    { "name": "Profile", "description": "ຂໍ້ມູນຜູ້ໃຊ້ທີ່ login ແລ້ວ" },
+    { "name": "Analytics", "description": "ສະຖິຕິ & ຜູ້ເຂົ້າຊົມ (admin)" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "ດຶງ token ຈາກ `POST /auth.php?action=login`"
+      }
+    },
+    "schemas": {
+      "Draw": {
+        "type": "object",
+        "properties": {
+          "draw_id":       { "type": "integer", "example": 142 },
+          "type_id":       { "type": "integer", "example": 1 },
+          "draw_number":   { "type": "integer", "example": 142 },
+          "draw_date":     { "type": "string", "format": "date", "example": "2026-05-31" },
+          "full_result":   { "type": "string", "example": "485721", "description": "6-digit result" },
+          "status":        { "type": "string", "enum": ["published", "pending"], "example": "published" },
+          "created_by":    { "type": "integer", "example": 1 },
+          "youtube_url":   { "type": "string", "nullable": true, "example": "https://youtube.com/shorts/abc123" },
+          "results_detail": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DrawDetail" }
+          }
+        }
+      },
+      "DrawDetail": {
+        "type": "object",
+        "properties": {
+          "detail_id":    { "type": "integer", "example": 710 },
+          "draw_id":      { "type": "integer", "example": 142 },
+          "prize_type":   { "type": "string", "enum": ["6_digits","5_digits","4_digits","3_digits","2_digits"], "example": "2_digits" },
+          "result_value": { "type": "string", "example": "21" },
+          "animal_id":    { "type": "integer", "nullable": true, "example": 21 }
+        }
+      },
+      "Animal": {
+        "type": "object",
+        "properties": {
+          "animal_id":        { "type": "integer", "example": 1 },
+          "animal_name_lao":  { "type": "string", "example": "ປານ້ອຍ" },
+          "animal_numbers":   { "type": "string", "example": "01,41,81", "description": "ເລກ 2 ຕົວ ທີ່ກ່ຽວຂ້ອງ" },
+          "image_url":        { "type": "string", "nullable": true, "example": "/uploads/animals/animal_1_1234567890.jpg" }
+        }
+      },
+      "LotteryType": {
+        "type": "object",
+        "properties": {
+          "type_id":   { "type": "integer", "example": 1 },
+          "type_name": { "type": "string", "example": "ຫວຍພັດທະນາ" },
+          "schedule":  { "type": "string", "example": "Monday, Wednesday, Friday" },
+          "color":     { "type": "string", "example": "#003fb1" },
+          "is_active": { "type": "integer", "enum": [0, 1], "example": 1 }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "user_id":      { "type": "integer", "example": 1 },
+          "username":     { "type": "string", "example": "admin" },
+          "full_name":    { "type": "string", "example": "Administrator" },
+          "role":         { "type": "string", "enum": ["admin","staff","member"] },
+          "email":        { "type": "string", "format": "email", "example": "admin@laolots.com" },
+          "phone_number": { "type": "string", "nullable": true, "example": "+85620000000" },
+          "is_active":    { "type": "integer", "enum": [0, 1] },
+          "created_at":   { "type": "string", "format": "date-time" },
+          "updated_at":   { "type": "string", "format": "date-time" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "Unauthorized — token invalid or missing" },
+          "code":  { "type": "string", "example": "TOKEN_INVALID" }
+        }
+      },
+      "Success": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Draw added successfully" }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Token ບໍ່ຖືກຕ້ອງ ຫຼື ໝົດອາຍຸ",
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+        }
+      },
+      "Forbidden": {
+        "description": "ສິດທິ Role ບໍ່ພຽງພໍ",
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+        }
+      },
+      "BadRequest": {
+        "description": "ຂໍ້ມູນ request ບໍ່ຖືກຕ້ອງ",
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+        }
+      }
+    }
+  },
+
+  "paths": {
+
+    "/auth.php": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login / Register / Refresh",
+        "description": "ຈັດການ authentication ທັງໝົດ ໂດຍສ່ງ `?action=` query parameter",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["login", "register", "logout", "refresh", "send_otp", "verify_otp", "forgot_password", "reset_password"]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "title": "login",
+                    "type": "object",
+                    "required": ["username", "password"],
+                    "properties": {
+                      "username": { "type": "string", "example": "admin" },
+                      "password": { "type": "string", "example": "Password@123" }
+                    }
+                  },
+                  {
+                    "title": "register",
+                    "type": "object",
+                    "required": ["username", "full_name", "email", "password"],
+                    "properties": {
+                      "username":     { "type": "string", "minLength": 4, "maxLength": 20, "pattern": "^[a-zA-Z0-9_]+$", "example": "john_doe" },
+                      "full_name":    { "type": "string", "example": "John Doe" },
+                      "email":        { "type": "string", "format": "email" },
+                      "phone_number": { "type": "string", "example": "+85620000000" },
+                      "password":     { "type": "string", "minLength": 8, "description": "ຕ້ອງມີ uppercase, lowercase, ຕົວເລກ ແລະ ໂຕພິເສດ", "example": "Password@123" }
+                    }
+                  },
+                  {
+                    "title": "refresh",
+                    "type": "object",
+                    "required": ["refresh_token"],
+                    "properties": {
+                      "refresh_token": { "type": "string" }
+                    }
+                  },
+                  {
+                    "title": "forgot_password",
+                    "type": "object",
+                    "required": ["email"],
+                    "properties": {
+                      "email": { "type": "string", "format": "email" }
+                    }
+                  },
+                  {
+                    "title": "reset_password",
+                    "type": "object",
+                    "required": ["token", "new_password"],
+                    "properties": {
+                      "token":        { "type": "string" },
+                      "new_password": { "type": "string", "minLength": 8 }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ສຳເລັດ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "title": "login response",
+                      "type": "object",
+                      "properties": {
+                        "token":         { "type": "string", "description": "Access token (JWT) — valid 15 min" },
+                        "refresh_token": { "type": "string", "description": "Refresh token — valid 30 days" },
+                        "expires_in":    { "type": "integer", "example": 900, "description": "seconds" },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id":       { "type": "integer" },
+                            "username": { "type": "string" },
+                            "name":     { "type": "string" },
+                            "role":     { "type": "string", "enum": ["admin","staff","member"] }
+                          }
+                        }
+                      }
+                    },
+                    { "$ref": "#/components/schemas/Success" }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+
+    "/index.php?action=draws": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "ດຶງລາຍຊື່ຜົນຫວຍ",
+        "description": "ດຶງຜົນຫວຍພ້ອມ `results_detail` (6/5/4/3/2 ຕົວ).\n\nSupports **ETag** caching — ສົ່ງ `If-None-Match` header ເພື່ອຮັບ `304 Not Modified` ຖ້າຂໍ້ມູນບໍ່ປ່ຽນ.",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["draws"] }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "ຈຳນວນ record (default 600, max 2000)",
+            "schema": { "type": "integer", "default": 600, "minimum": 1, "maximum": 2000 }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "description": "ດຶງທຸກ record ຂອງປີ YYYY (ບໍ່ຈຳກັດ limit)",
+            "schema": { "type": "integer", "example": 2026 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of draws",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Draw" }
+                }
+              }
+            }
+          },
+          "304": { "description": "Not Modified (ETag match)" }
+        }
+      }
+    },
+
+    "/index.php?action=animals": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "ດຶງລາຍຊື່ນາມສັດທັງໝົດ (40 ໂຕ)",
+        "description": "Cache 5 ນາທີ. ຜົນທີ່ໄດ້ລວມ `image_url` ທີ່ເປັນ relative path ຫຼື null.",
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["animals"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of animals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Animal" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/index.php?action=types": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "ດຶງປະເພດຫວຍທັງໝົດ",
+        "description": "Cache 10 ນາທີ.",
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["types"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of lottery types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LotteryType" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/index.php?action=draw_years": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "ດຶງປີທີ່ມີຂໍ້ມູນ ແຍກຕາມປະເພດ",
+        "description": "Response ເປັນ object ທີ່ key = `type_id` ແລະ `all`",
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["draw_years"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Years by type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": { "1": ["2026","2025"], "2": ["2026"], "all": ["2026","2025"] }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/index.php?action=live_settings": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "ດຶງການຕັ້ງຄ່າ live stream",
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["live_settings"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "youtube_live_url": { "type": "string", "example": "https://youtube.com/live/abc" },
+                    "is_live":          { "type": "string", "enum": ["0","1"] },
+                    "live_source":      { "type": "string", "enum": ["youtube","facebook","web"] }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/index.php?action=create_draw": {
+      "post": {
+        "tags": ["Draws"],
+        "summary": "ເພີ່ມງວດໃໝ່",
+        "description": "ຕ້ອງການ role **staff** ຂຶ້ນໄປ",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["create_draw"] } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["type_id","draw_number","draw_date","full_result"],
+                "properties": {
+                  "type_id":     { "type": "integer", "example": 1 },
+                  "draw_number": { "type": "integer", "example": 143 },
+                  "draw_date":   { "type": "string", "format": "date", "example": "2026-06-02" },
+                  "full_result": { "type": "string", "pattern": "^\\d{6}$", "example": "123456" },
+                  "animal_id":   { "type": "integer", "nullable": true, "description": "null = ໃຊ້ auto-match ຈາກ 2 ຕົວສຸດທ້າຍ" },
+                  "youtube_url": { "type": "string", "nullable": true, "example": "https://youtube.com/shorts/abc" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ສ້າງສຳເລັດ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+
+    "/index.php?action=update_draw": {
+      "post": {
+        "tags": ["Draws"],
+        "summary": "ແກ້ໄຂງວດ",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["update_draw"] } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["draw_id","type_id","draw_number","draw_date","full_result"],
+                "properties": {
+                  "draw_id":     { "type": "integer", "example": 142 },
+                  "type_id":     { "type": "integer", "example": 1 },
+                  "draw_number": { "type": "integer", "example": 142 },
+                  "draw_date":   { "type": "string", "format": "date", "example": "2026-05-31" },
+                  "full_result": { "type": "string", "pattern": "^\\d{6}$", "example": "485721" },
+                  "animal_id":   { "type": "integer", "nullable": true },
+                  "youtube_url": { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ອັບເດດສຳເລັດ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+
+    "/index.php?action=update_live_settings": {
+      "post": {
+        "tags": ["Live"],
+        "summary": "ອັບເດດ live stream URL",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["update_live_settings"] } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "youtube_live_url": { "type": "string", "example": "https://youtube.com/live/abc" },
+                  "is_live":          { "type": "string", "enum": ["0","1"], "example": "1" },
+                  "live_source":      { "type": "string", "enum": ["youtube","facebook","web"], "example": "youtube" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ສຳເລັດ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/index.php?action=list_users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "ດຶງລາຍຊື່ users (paginated)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action",    "in": "query", "required": true, "schema": { "type": "string", "enum": ["list_users"] } },
+          { "name": "search",    "in": "query", "schema": { "type": "string" }, "description": "ຄົ້ນຫາ username, full_name, email" },
+          { "name": "role",      "in": "query", "schema": { "type": "string", "enum": ["admin","staff","member"] } },
+          { "name": "is_active", "in": "query", "schema": { "type": "integer", "enum": [0,1] } },
+          { "name": "page",      "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page",  "in": "query", "schema": { "type": "integer", "default": 20, "minimum": 5, "maximum": 100 } },
+          { "name": "sort",      "in": "query", "schema": { "type": "string", "enum": ["username","full_name","role","created_at","is_active"], "default": "created_at" } },
+          { "name": "dir",       "in": "query", "schema": { "type": "string", "enum": ["ASC","DESC"], "default": "DESC" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated user list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data":        { "type": "array", "items": { "$ref": "#/components/schemas/User" } },
+                    "total":       { "type": "integer" },
+                    "page":        { "type": "integer" },
+                    "per_page":    { "type": "integer" },
+                    "total_pages": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+
+    "/index.php?action=create_user": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "ສ້າງ user ໃໝ່ (admin only)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["create_user"] } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username","password","full_name"],
+                "properties": {
+                  "username":     { "type": "string", "minLength": 4, "example": "newstaff" },
+                  "password":     { "type": "string", "minLength": 6, "example": "secret123" },
+                  "full_name":    { "type": "string", "example": "New Staff" },
+                  "email":        { "type": "string", "format": "email" },
+                  "phone_number": { "type": "string" },
+                  "role":         { "type": "string", "enum": ["admin","staff","member"], "default": "staff" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ສ້າງ user ສຳເລັດ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "user_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+
+    "/index.php?action=update_user": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "ແກ້ໄຂ user (admin only)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["update_user"] } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id","full_name","role"],
+                "properties": {
+                  "user_id":      { "type": "integer" },
+                  "full_name":    { "type": "string" },
+                  "role":         { "type": "string", "enum": ["admin","staff","member"] },
+                  "email":        { "type": "string", "format": "email" },
+                  "phone_number": { "type": "string" },
+                  "is_active":    { "type": "integer", "enum": [0,1] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ສຳເລັດ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+
+    "/index.php?action=delete_user": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "ລຶບ user (admin only)",
+        "description": "ບໍ່ສາມາດລຶບຕົນເອງ ຫຼື Admin ຄົນສຸດທ້າຍໄດ້",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["delete_user"] } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id"],
+                "properties": {
+                  "user_id": { "type": "integer", "example": 5 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ລຶບສຳເລັດ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+
+    "/index.php?action=change_password": {
+      "post": {
+        "tags": ["Profile"],
+        "summary": "ປ່ຽນລະຫັດຜ່ານ",
+        "description": "User ທົ່ວໄປ ຕ້ອງສ່ງ `current_password`. Admin ສາມາດ override password ຂອງ user ອື່ນໂດຍສ່ງ `target_user_id`.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["change_password"] } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["new_password"],
+                "properties": {
+                  "current_password": { "type": "string", "description": "ຕ້ອງການສຳລັບ non-admin" },
+                  "new_password":     { "type": "string", "minLength": 6 },
+                  "target_user_id":   { "type": "integer", "description": "admin only — override password ຂອງ user ອື່ນ" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ສຳເລັດ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/index.php?action=get_profile": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "ດຶງໂປຣໄຟລ໌ຂອງຕົວເອງ",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["get_profile"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile + recent activity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/User" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "recent_activity": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "log_id":     { "type": "integer" },
+                              "action":     { "type": "string" },
+                              "ip_address": { "type": "string" },
+                              "created_at": { "type": "string", "format": "date-time" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/index.php?action=update_profile": {
+      "post": {
+        "tags": ["Profile"],
+        "summary": "ອັບເດດໂປຣໄຟລ໌",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["update_profile"] } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["full_name"],
+                "properties": {
+                  "full_name":    { "type": "string" },
+                  "email":        { "type": "string", "format": "email" },
+                  "phone_number": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ສຳເລັດ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/index.php?action=upload_animal_image": {
+      "post": {
+        "tags": ["Types"],
+        "summary": "ອັບໂຫຼດຮູບນາມສັດ",
+        "description": "ຮູບແບບ: JPG, PNG, GIF, WebP — ຂະໜາດສູງສຸດ **2MB**",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["upload_animal_image"] } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["animal_id","image"],
+                "properties": {
+                  "animal_id": { "type": "integer" },
+                  "image":     { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ອັບໂຫຼດສຳເລັດ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status":    { "type": "string", "example": "success" },
+                    "image_url": { "type": "string", "example": "/uploads/animals/animal_1_1234567890.jpg" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/index.php?action=visitor_stats": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "ສະຖິຕິຜູ້ເຂົ້າຊົມ (admin only)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["visitor_stats"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visitor stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total":           { "type": "integer" },
+                    "unique_sessions": { "type": "integer" },
+                    "today":           { "type": "integer" },
+                    "today_unique":    { "type": "integer" },
+                    "this_week":       { "type": "integer" },
+                    "this_month":      { "type": "integer" },
+                    "daily": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "day":              { "type": "string", "format": "date" },
+                          "visits":           { "type": "integer" },
+                          "unique_visitors":  { "type": "integer" }
+                        }
+                      }
+                    },
+                    "top_pages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "page_path": { "type": "string" },
+                          "visits":    { "type": "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+
+    "/index.php?action=user_stats": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "ສະຖິຕິ users (staff+)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["user_stats"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "User stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total_users":    { "type": "integer" },
+                    "active_users":   { "type": "integer" },
+                    "inactive_users": { "type": "integer" },
+                    "admin_count":    { "type": "integer" },
+                    "staff_count":    { "type": "integer" },
+                    "member_count":   { "type": "integer" },
+                    "recent_logins":  { "type": "array", "items": { "type": "object" } },
+                    "new_users":      { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/index.php?action=track_visit": {
+      "post": {
+        "tags": ["Analytics"],
+        "summary": "ບັນທຶກ page visit",
+        "description": "ໃຊ້ໂດຍ frontend ເພື່ອ track ການເຂົ້າຊົມ. ບໍ່ຕ້ອງ token.",
+        "parameters": [
+          { "name": "action", "in": "query", "required": true, "schema": { "type": "string", "enum": ["track_visit"] } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "page":       { "type": "string", "example": "/statistics" },
+                  "session_id": { "type": "string", "example": "abc123xyz" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ສຳເລັດ", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Success" } } } }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+Options -Indexes
+DirectoryIndex index.html
+
+# Allow access to HTML, JSON, JS, CSS files
+<FilesMatch "\.(html|json|js|css|map)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Remove X-Frame-Options for this directory so Swagger UI loads correctly
+<IfModule mod_headers.c>
+    Header unset X-Frame-Options
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Serve openapi.json with correct content-type
+<FilesMatch "openapi\.json$">
+    Header always set Content-Type "application/json; charset=UTF-8"
+</FilesMatch>
