@@ -16,7 +16,7 @@ export function useVisitorTrack() {
 
   useEffect(() => {
     const session_id = getOrCreateSessionId();
-    fetch(`${API}/?action=track_visit`, {
+    fetch(`${API}/index.php?action=track_visit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ page: location.pathname, session_id }),

@@ -111,6 +111,18 @@ if ($conn->connect_error) {
 }
 $conn->set_charset("utf8mb4");
 
+// Ensure visitor_stats table exists (idempotent — safe to run every request)
+$conn->query("CREATE TABLE IF NOT EXISTS visitor_stats (
+    stat_id    INT           AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45),
+    page_path  VARCHAR(255),
+    user_agent VARCHAR(500),
+    session_id VARCHAR(64),
+    visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_vs_visited_at (visited_at),
+    INDEX idx_vs_session    (session_id(32))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 switch ($action) {
@@ -1015,7 +1027,7 @@ switch ($action) {
         // Consolidated: 6 COUNT queries → 1 query with conditional aggregation
         // Range conditions on visited_at allow index usage (idx_vs_visited_at)
         // DATE_FORMAT for month-start avoids YEAR()/MONTH() functions on column
-        $summaryRow = $conn->query("
+        $summaryResult = $conn->query("
             SELECT
                 COUNT(*) AS total,
                 COUNT(DISTINCT NULLIF(session_id, '')) AS unique_sessions,
@@ -1025,7 +1037,12 @@ switch ($action) {
                 SUM(visited_at >= CURDATE() - INTERVAL 7 DAY) AS this_week,
                 SUM(visited_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')) AS this_month
             FROM visitor_stats
-        ")->fetch_assoc();
+        ");
+        if (!$summaryResult) {
+            echo json_encode(["error" => "visitor_stats table not found: " . $conn->error]);
+            break;
+        }
+        $summaryRow = $summaryResult->fetch_assoc();
 
         // Last 7 days daily breakdown
         $daily_res = $conn->query("
