@@ -33,6 +33,7 @@ const ProfilePage         = lazy(() => import('./pages/ProfilePage'))
 const AdminLotteryTypes   = lazy(() => import('./pages/AdminLotteryTypes'))
 
 const TermsPage        = lazy(() => import('./pages/TermsPage'))
+const ContactPage      = lazy(() => import('./pages/ContactPage'))
 
 // ── Error pages ───────────────────────────────────────────────────
 const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'))
@@ -108,6 +109,7 @@ export default function App() {
             <Route path="/statistics"  element={<DashboardPage />} />
             <Route path="/search"      element={<SearchPage />} />
             <Route path="/terms"       element={<TermsPage />} />
+            <Route path="/contact"     element={<ContactPage />} />
           </Route>
 
           {/* ══ TIER 1b: Auth / Registration (full-screen, no Navbar) */}
