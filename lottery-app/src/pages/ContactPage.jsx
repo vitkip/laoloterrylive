@@ -11,13 +11,13 @@ const CONTACT_INFO = {
 
   // ── ຊ່ອງທາງຕິດຕໍ່ ─────────────────────────────────────────────────────────
   email:      {
-    support:  'support@laolots.com',      // TODO: email ສຳລັບຜູ້ໃຊ້ທົ່ວໄປ
-    business: null,                        // TODO: 'business@laolots.com' — ຮ່ວມທຸລະກິດ
+    support:  'noreply@laolots.com',      // TODO: email ສຳລັບຜູ້ໃຊ້ທົ່ວໄປ
+    business: 'business@laolots.com',        // TODO: 'business@laolots.com' — ຮ່ວມທຸລະກິດ
   },
-  phone:      null,                        // TODO: '+856 20 XXXX XXXX'
-  line:       null,                        // TODO: LINE ID ຫຼື QR
-  facebook:   null,                        // TODO: 'https://facebook.com/laolots'
-  telegram:   null,                        // TODO: 'https://t.me/laolots'
+  phone:      '+856 20 597 508 24',                        // TODO: '+856 20 XXXX XXXX'
+  line:       '@laolots',                        // TODO: LINE ID ຫຼື QR
+  facebook:   'https://facebook.com/laolots',                        // TODO: 'https://facebook.com/laolots'
+  whatsApp:   'whatsApp://send?phone=8562059750824',                        // TODO: 'hWhatsApp link' (https://faq.whatsapp.com/general/chats/how-to-use-click-to-chat)
 }
 
 // ── Sub-components ──────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ function ContactItem({ icon, label, value, href, isTodo }) {
 // ── Page ────────────────────────────────────────────────────────────────────
 export default function ContactPage() {
   const navigate = useNavigate()
-  const { email, phone, line, facebook, telegram, orgName, orgType, address, workHours } = CONTACT_INFO
+  const { email, phone, line, facebook, whatsApp, orgName, orgType, address, workHours } = CONTACT_INFO
 
   return (
     <>
@@ -153,10 +153,10 @@ export default function ContactPage() {
 
           <ContactItem
             icon="send"
-            label="Telegram"
-            value={telegram ? telegram.replace('https://', '') : null}
-            href={telegram}
-            isTodo={!telegram}
+            label="WhatsApp"
+            value={whatsApp ? whatsApp.replace('whatsApp://send?phone=', '+') : null}
+            href={whatsApp}
+            isTodo={!whatsApp}
           />
         </div>
 
