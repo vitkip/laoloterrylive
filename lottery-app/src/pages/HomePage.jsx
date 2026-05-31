@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { useStatistics } from '../hooks/useStatistics'
+import { computeAnalytics, computeCombinedTop10, COMBINED_SIGNALS, buildArticle } from '../utils/analytics'
 import ResultCard from '../components/ResultCard'
 import LiveVdoBanner from '../components/LiveVdoBanner'
 import { resolveAnimalImage } from '../utils/api'
@@ -103,6 +104,128 @@ function TickerItem({ draw, color }) {
       <span className="text-white/70 text-[10px] font-bold">ງວດ {draw.draw_number}</span>
       <span className="text-white font-black text-xs tracking-widest" style={{ fontFamily: 'Inter, monospace' }}>{draw.full_result}</span>
     </span>
+  )
+}
+
+// ── AI News Section ──────────────────────────────────────────────────────────
+function HomeNewsSection({ draws }) {
+  const [copied, setCopied] = useState(false)
+
+  // Analyse last 50 draws (same default as Analytics page)
+  const analytics = useMemo(() => computeAnalytics(draws, '50'), [draws])
+  const top10     = useMemo(() => computeCombinedTop10(analytics), [analytics])
+  const latestDraw = draws?.[0] ?? null
+
+  const article = useMemo(
+    () => buildArticle(top10, analytics, latestDraw, analytics?.n ?? 0, null),
+    [top10, analytics, latestDraw]
+  )
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(article).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  if (!top10.length) return null
+
+  return (
+    <section>
+      {/* Section header */}
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-[#f97316]/15 flex items-center justify-center">
+            <span className="material-symbols-outlined text-[#f97316] text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>newspaper</span>
+          </div>
+          <div>
+            <h2 className="text-base font-extrabold text-foreground uppercase tracking-wider text-[11px]">AI ເລກເດັ່ນ</h2>
+            <p className="text-[11px] text-muted-foreground mt-0.5">ລວມ 4 ສັນຍານ · ວິເຄາະ {analytics?.n ?? 0} ງວດ</p>
+          </div>
+        </div>
+        <Link
+          to="/analytics"
+          className="inline-flex items-center gap-1.5 text-[#f97316] text-xs font-bold hover:gap-2.5 transition-all duration-200 group"
+        >
+          ວິເຄາະເຕັມ
+          <span className="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+        </Link>
+      </div>
+
+      {/* Top 10 number pills */}
+      <div className="bg-zinc-950/90 backdrop-blur-xl rounded-2xl p-5 border border-white/[0.08] shadow-xl mb-4">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">TOP 10</span>
+          <div className="flex gap-1.5 flex-wrap">
+            {COMBINED_SIGNALS.map(({ label, color }) => (
+              <span key={label} className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                style={{ background: color + '20', color, border: `1px solid ${color}40` }}>
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {top10.map((s, i) => (
+            <div key={s.num} className={`relative flex flex-col items-center px-3 py-2.5 rounded-xl min-w-[52px] transition-all
+              ${i === 0 ? 'bg-[#fbbf24]/20 border border-[#fbbf24]/40' : i < 3 ? 'bg-[#818cf8]/15 border border-[#818cf8]/30' : 'bg-white/[0.05] border border-white/[0.08]'}`}>
+              {i < 3 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black shadow-sm"
+                  style={{ background: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : '#b45309', color: '#000' }}>
+                  {i + 1}
+                </span>
+              )}
+              <span className={`font-black font-mono text-xl leading-none
+                ${i === 0 ? 'text-[#fbbf24]' : i < 3 ? 'text-[#818cf8]' : 'text-white/80'}`}>
+                {s.num}
+              </span>
+              <span className="text-[8px] mt-1 font-bold text-white/40">{s.probability}%</span>
+              {/* mini score bars */}
+              <div className="flex gap-0.5 mt-1.5">
+                {COMBINED_SIGNALS.map(({ key, color }) => (
+                  <div key={key} className="w-5 h-1 bg-white/[0.08] rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${(s[key] / 25) * 100}%`, background: color }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Disclaimer */}
+        <p className="text-[10px] text-white/25 mt-4 flex items-start gap-1">
+          <span className="material-symbols-outlined text-[11px] shrink-0 mt-0.5">warning</span>
+          ຂໍ້ມູນນີ້ເປັນການວິເຄາະສະຖິຕິ ບໍ່ຮັບປະກັນຜົນລາງວັນ
+        </p>
+      </div>
+
+      {/* Article preview + copy */}
+      <div className="bg-zinc-950/90 backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.07]">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[16px] text-[#fbbf24]">article</span>
+            <span className="font-black text-white/80 text-xs">ບົດຄວາມຂ່າວ — ອັດຕະໂນມັດ</span>
+          </div>
+          <button
+            onClick={handleCopy}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all
+              ${copied ? 'bg-[#6cf8bb] text-black' : 'bg-white/[0.07] text-white/60 hover:bg-white/[0.14] hover:text-white'}`}
+          >
+            <span className="material-symbols-outlined text-[13px]">{copied ? 'check' : 'content_copy'}</span>
+            {copied ? 'ຄັດລອກແລ້ວ!' : 'ຄັດລອກ'}
+          </button>
+        </div>
+        <pre className="px-5 py-4 text-[11px] leading-relaxed text-white/60 font-mono whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
+          {article}
+        </pre>
+        <div className="px-5 py-3 border-t border-white/[0.07] flex justify-end">
+          <Link to="/analytics" className="text-[11px] font-bold text-[#818cf8] hover:text-[#a78bfa] flex items-center gap-1 transition-colors">
+            ເຂົ້າໄປ Analytics ລາຍລະອຽດ
+            <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+          </Link>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -457,6 +580,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ─── AI News Section ─── */}
+      <HomeNewsSection draws={filteredDraws} />
 
       {/* ─── CTA Banner ─── */}
       <section className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/[0.05]">

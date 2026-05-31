@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useData } from '../context/DataContext'
+import { computeAnalytics, computeCombinedTop10, COMBINED_SIGNALS, LDATE, buildArticle } from '../utils/analytics'
 import SEO from '../components/SEO'
 import { webPageSchema, breadcrumbSchema } from '../components/schemas'
 import {
@@ -8,106 +9,7 @@ import {
   ResponsiveContainer, Cell, ReferenceLine,
 } from 'recharts'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// COMPUTATION ENGINE
-// ─────────────────────────────────────────────────────────────────────────────
-
-function computeAnalytics(draws, range) {
-  if (!draws?.length) return null
-  const n = range === 'all' ? draws.length : Math.min(parseInt(range), draws.length)
-  const sliced = draws.slice(0, n)
-  const chrono = [...sliced].reverse()
-
-  // Initialize frequency + last-seen maps
-  const freq = {}
-  const lastAt = {}
-  for (let i = 0; i < 100; i++) {
-    const k = i.toString().padStart(2, '0')
-    freq[k] = 0
-    lastAt[k] = -1
-  }
-
-  // Single pass: build freq + lastAt + raw series
-  const seriesRaw = chrono.map((d, idx) => {
-    const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
-    if (v !== undefined && freq[v] !== undefined) {
-      freq[v]++
-      lastAt[v] = idx
-    }
-    return { idx, date: d.draw_date, drawNum: d.draw_number, v }
-  })
-
-  // Precompute recent hit maps (O(N) each instead of O(100*N))
-  const r10Map = {}; const r30Map = {}
-  for (let i = 0; i < 100; i++) {
-    const k = i.toString().padStart(2, '0'); r10Map[k] = 0; r30Map[k] = 0
-  }
-  chrono.slice(-10).forEach(d => {
-    const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
-    if (v && r10Map[v] !== undefined) r10Map[v]++
-  })
-  chrono.slice(-30).forEach(d => {
-    const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
-    if (v && r30Map[v] !== undefined) r30Map[v]++
-  })
-
-  const maxFreq = Math.max(...Object.values(freq), 1)
-  const minFreq = Math.min(...Object.values(freq), 0)
-
-  // Score each number
-  const scores = Object.keys(freq).map(num => {
-    const f = freq[num]
-    const lastIdx = lastAt[num]
-    const gap = lastIdx === -1 ? n : n - 1 - lastIdx
-    const avgGap = f > 0 ? n / f : n
-    const overdue = gap / Math.max(avgGap, 1)
-    const r10 = r10Map[num]
-    const r30 = r30Map[num]
-    const recentRate = r10 / Math.max(Math.min(10, chrono.length), 1)
-    const baseRate  = r30 / Math.max(Math.min(30, chrono.length), 1)
-    const momentum  = +(recentRate - baseRate).toFixed(3)
-    const heatIntensity = maxFreq > minFreq ? (f - minFreq) / (maxFreq - minFreq) : 0.5
-
-    // Composite AI score 0–100
-    const freqScore     = (f / maxFreq) * 35
-    const gapScore      = Math.min(overdue / 3, 1) * 35
-    const momentumScore = Math.max(Math.min((momentum + 0.1) / 0.2, 1), 0) * 30
-    const aiScore       = +Math.min(freqScore + gapScore + momentumScore, 100).toFixed(1)
-
-    // Decision Score: 0–3 signals passed
-    const sig1 = overdue >= 1.0 ? 1 : 0   // ຊ້ານານກວ່າສະເລ່ຍ
-    const sig2 = momentum > 0 ? 1 : 0      // momentum ຂຶ້ນ
-    const sig3 = aiScore >= 60 ? 1 : 0     // AI score ສູງ
-    const decisionScore = sig1 + sig2 + sig3
-
-    return { num, freq: f, gap, avgGap: Math.round(avgGap), overdue: +overdue.toFixed(2),
-             pct: +((f / Math.max(n, 1)) * 100).toFixed(1), r10, r30, momentum, aiScore, heatIntensity,
-             decisionScore, sig1, sig2, sig3 }
-  })
-
-  // Time-series (last 50, newest-first → reverse for chart)
-  const series = seriesRaw.filter(d => d.v).slice(-50).map((d, i) => ({
-    x: i + 1, date: d.date?.slice(5), drawNum: d.drawNum,
-    val: parseInt(d.v), label: d.v,
-  }))
-
-  // Top-20 frequency bar chart data
-  const freqBars = [...scores].sort((a, b) => b.freq - a.freq).slice(0, 20)
-    .map(s => ({ num: s.num, freq: s.freq }))
-
-  return {
-    n, freq, scores, series, freqBars, maxFreq, minFreq,
-    hot:     [...scores].sort((a, b) => b.freq - a.freq).slice(0, 10),
-    cold:    [...scores].sort((a, b) => b.gap  - a.gap).slice(0, 10),
-    aiTop:   [...scores].sort((a, b) => b.aiScore - a.aiScore).slice(0, 10),
-    rising:  [...scores].filter(s => s.momentum > 0).sort((a, b) => b.momentum - a.momentum).slice(0, 8),
-    falling: [...scores].filter(s => s.momentum < 0).sort((a, b) => a.momentum - b.momentum).slice(0, 8),
-    overdue:     [...scores].filter(s => s.overdue >= 1.0).sort((a, b) => b.overdue - a.overdue).slice(0, 12),
-    decisionTop: [...scores].filter(s => s.decisionScore > 0)
-                            .sort((a, b) => b.decisionScore - a.decisionScore || b.aiScore - a.aiScore)
-                            .slice(0, 20),
-  }
-}
+// computeAnalytics imported from '../utils/analytics'
 
 function computeAIBacktest(draws, trials) {
   if (!draws?.length || draws.length < trials + 5) return null
@@ -198,42 +100,7 @@ function computeDecisionBacktest(draws, trials = 21) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// COMBINED PROBABILITY ENGINE
-// Combines: Frequency · Overdue · Momentum · AI Score · Decision Score
-// Each signal contributes 20 pts → total max 100
-// ─────────────────────────────────────────────────────────────────────────────
-
-function computeCombinedTop10(analytics) {
-  if (!analytics) return []
-  const { scores } = analytics
-  const maxFreq = Math.max(...scores.map(s => s.freq), 1)
-  const maxMom  = Math.max(...scores.filter(s => s.momentum > 0).map(s => s.momentum), 0.001)
-
-  const ranked = scores.map(s => {
-    const freqW     = (s.freq / maxFreq) * 20
-    const overdueW  = Math.min(s.overdue / 3, 1) * 20
-    const momentumW = s.momentum > 0 ? (s.momentum / maxMom) * 20 : 0
-    const aiW       = (s.aiScore / 100) * 20
-    const decisionW = (s.decisionScore / 3) * 20
-    const combined  = +(freqW + overdueW + momentumW + aiW + decisionW).toFixed(1)
-    return {
-      ...s,
-      combined,
-      freqW:     +freqW.toFixed(1),
-      overdueW:  +overdueW.toFixed(1),
-      momentumW: +momentumW.toFixed(1),
-      aiW:       +aiW.toFixed(1),
-      decisionW: +decisionW.toFixed(1),
-    }
-  }).sort((a, b) => b.combined - a.combined)
-
-  const maxCombined = ranked[0]?.combined ?? 1
-  return ranked.slice(0, 10).map(s => ({
-    ...s,
-    probability: +(s.combined / maxCombined * 100).toFixed(1),
-  }))
-}
+// computeCombinedTop10 imported from '../utils/analytics'
 
 function computeBacktest(draws, range, targetNum) {
   if (!targetNum || !draws?.length) return null
@@ -364,79 +231,8 @@ function TrendList({ title, accent, data, field, fieldLabel }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NEWS ARTICLE PANEL
+// NEWS ARTICLE PANEL  (LDATE, buildArticle, COMBINED_SIGNALS from utils/analytics)
 // ─────────────────────────────────────────────────────────────────────────────
-
-const LDATE = (iso) => {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const LAO_MONTHS = ['ມັງກອນ','ກຸມພາ','ມີນາ','ເມສາ','ພຶດສະພາ','ມິຖຸນາ',
-                      'ກໍລະກົດ','ສິງຫາ','ກັນຍາ','ຕຸລາ','ພະຈິກ','ທັນວາ']
-  return `${d.getDate()} ${LAO_MONTHS[d.getMonth()]} ${d.getFullYear()}`
-}
-
-const STAT_LABEL = { freqW: 'ຄວາມຖີ່', overdueW: 'ຊ້ານານ', momentumW: 'Momentum', aiW: 'AI Score', decisionW: 'ສັນຍານ' }
-const STAT_COLOR = { freqW: '#ef4444', overdueW: '#fbbf24', momentumW: '#6cf8bb', aiW: '#818cf8', decisionW: '#f97316' }
-
-function buildArticle(top10, analytics, latestDraw, n, selectedTypeName) {
-  if (!top10.length || !analytics) return ''
-  const { hot, cold, rising, overdue: overdueList, aiTop, decisionTop } = analytics
-  const dateStr = LDATE(latestDraw?.draw_date) || LDATE(new Date().toISOString())
-  const drawNum = latestDraw?.draw_number ?? '?'
-  const typePart = selectedTypeName ? ` (${selectedTypeName})` : ''
-
-  const rank = (arr) => arr.slice(0, 5).map(x => x.num).join(', ')
-  const rankFull = top10.map((s, i) => `  ${i + 1}. ເລກ ${s.num} — ຄວາມໜ້າຈະເປັນລວມ ${s.probability}% (AI ${s.aiScore}pts · Overdue ${s.overdue}× · Momentum ${s.momentum > 0 ? '↑' : '↓'})`).join('\n')
-
-  const star3 = decisionTop.filter(s => s.decisionScore === 3).slice(0, 3).map(s => s.num)
-  const hotTop = hot.slice(0, 5).map(s => `${s.num}(${s.freq}ຄ)`)
-  const coldTop = cold.slice(0, 5).map(s => `${s.num}(${s.gap}ງ)`)
-  const risingTop = rising.slice(0, 5).map(s => `${s.num}`)
-  const overdueTop = overdueList.slice(0, 5).map(s => `${s.num}(${s.overdue}×)`)
-
-  return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📰 ວິເຄາະຫວຍລາວ — ເລກເດັ່ນງວດນີ້${typePart}
-📅 ວັນທີ: ${dateStr}  |  ງວດ: #${drawNum}  |  ວິເຄາະ ${n} ງວດ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🤖 ລະບົບ AI ໄດ້ວິເຄາະສະຖິຕິ ${n} ງວດ ໂດຍລວມ 5 ດ້ານ
-(ຄວາມຖີ່ · ຊ້ານານ · Momentum · AI Score · ສັນຍານ Decision)
-ຜ່ານ Algorithm Weighted Composite — ໄດ້ 10 ຕົວເລກເດັ່ນ ດັ່ງນີ້:
-
-▶ TOP 10 ເລກລວມຄວາມໜ້າຈະເປັນສູງສຸດ
-${rankFull}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 ບົດວິເຄາະສະຖິຕິ ແຕ່ລະດ້ານ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🔥 ເລກ HOT (ອອກຫຼາຍສຸດ):
-   ${hotTop.join(' · ')}
-
-🧊 ເລກ COLD (ຊ້ານານທີ່ສຸດ):
-   ${coldTop.join(' · ')}
-
-📈 ເລກ RISING (ກຳລັງຂຶ້ນ Momentum):
-   ${risingTop.length ? risingTop.join(' · ') : 'ບໍ່ມີ'}
-
-⏳ ເລກ OVERDUE (ເກີນຄ່າສະເລ່ຍ):
-   ${overdueTop.join(' · ')}
-
-🌟 AI TOP 5 (Composite Score):
-   ${aiTop.slice(0, 5).map(s => `${s.num}[${s.aiScore}pts]`).join(' · ')}
-
-⭐ ສັນຍານຄົບ 3 (★★★ Decision Score):
-   ${star3.length ? star3.join(', ') : 'ບໍ່ມີງວດນີ້'}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 ສະຫຼຸບ ເລກ 10 ໂຕເດັ່ນ:
-   ${top10.map(s => s.num).join(' · ')}
-
-⚠️  ຄຳເຕືອນ: ຫວຍລາວເປັນການສຸ່ມ — ຂໍ້ມູນນີ້ເປັນພຽງການວິເຄາະທາງສະຖິຕິ
-     ບໍ່ຮັບປະກັນຜົນລາງວັນ — ຫ້າມລົງທຶນເກີນຄວາມສາມາດ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📲 laolots.com — ຂໍ້ມູນຫວຍລາວ ຄົບຖ້ວນທີ່ສຸດ`
-}
 
 function NewsPanel({ analytics, draws, n, selectedType, types }) {
   const [copied, setCopied] = useState(false)
@@ -479,17 +275,17 @@ function NewsPanel({ analytics, draws, n, selectedType, types }) {
           </div>
           <div>
             <h3 className="font-black text-white text-xl">Top 10 ເລກລວມຄວາມໜ້າຈະເປັນ</h3>
-            <p className="text-xs text-white/40">Weighted Composite: ຄວາມຖີ່ · ຊ້ານານ · Momentum · AI · ສັນຍານ</p>
+            <p className="text-xs text-white/40">Weighted Composite: ຄວາມຖີ່ · ຊ້ານານ · Momentum · ສັນຍານ (4×25pts)</p>
           </div>
         </div>
 
         {/* Weight legend */}
         <div className="flex gap-2 flex-wrap mb-5">
-          {Object.entries(STAT_LABEL).map(([k, label]) => (
-            <span key={k} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full"
-              style={{ background: STAT_COLOR[k] + '22', color: STAT_COLOR[k], border: `1px solid ${STAT_COLOR[k]}44` }}>
-              <span className="w-2 h-2 rounded-full inline-block" style={{ background: STAT_COLOR[k] }} />
-              {label} 20pts
+          {COMBINED_SIGNALS.map(({ key, label, color }) => (
+            <span key={key} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full"
+              style={{ background: color + '22', color, border: `1px solid ${color}44` }}>
+              <span className="w-2 h-2 rounded-full inline-block" style={{ background: color }} />
+              {label} 25pts
             </span>
           ))}
         </div>
@@ -515,15 +311,15 @@ function NewsPanel({ analytics, draws, n, selectedType, types }) {
                       {s.probability}%
                     </span>
                   </div>
-                  {/* 5-signal mini bars */}
+                  {/* 4-signal mini bars */}
                   <div className="flex gap-1.5 flex-wrap">
-                    {Object.entries(STAT_LABEL).map(([k, label]) => (
-                      <div key={k} className="flex items-center gap-1">
-                        <span className="text-[9px] font-bold" style={{ color: STAT_COLOR[k] + 'aa' }}>{label}</span>
+                    {COMBINED_SIGNALS.map(({ key, label, color }) => (
+                      <div key={key} className="flex items-center gap-1">
+                        <span className="text-[9px] font-bold" style={{ color: color + 'aa' }}>{label}</span>
                         <div className="w-12 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${(s[k] / 20) * 100}%`, background: STAT_COLOR[k] }} />
+                          <div className="h-full rounded-full" style={{ width: `${(s[key] / 25) * 100}%`, background: color }} />
                         </div>
-                        <span className="text-[9px] font-black" style={{ color: STAT_COLOR[k] }}>{s[k]}</span>
+                        <span className="text-[9px] font-black" style={{ color }}>{s[key]}</span>
                       </div>
                     ))}
                   </div>
@@ -543,16 +339,18 @@ function NewsPanel({ analytics, draws, n, selectedType, types }) {
         </div>
       </div>
 
-      {/* ── Signal breakdown grid ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      {/* ── Signal breakdown grid (4 signals, no aiW) ──────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { key: 'freqW',     icon: 'equalizer',    label: 'ຄວາມຖີ່',  color: '#ef4444', nums: analytics.hot.slice(0,5) },
-          { key: 'overdueW',  icon: 'hourglass_top',label: 'ຊ້ານານ',   color: '#fbbf24', nums: analytics.overdue.slice(0,5) },
-          { key: 'momentumW', icon: 'trending_up',  label: 'Momentum', color: '#6cf8bb', nums: analytics.rising.slice(0,5) },
-          { key: 'aiW',       icon: 'psychology',   label: 'AI Score', color: '#818cf8', nums: analytics.aiTop.slice(0,5) },
-          { key: 'decisionW', icon: 'stars',        label: 'ສັນຍານ★★★',color: '#f97316', nums: analytics.decisionTop.filter(s=>s.decisionScore===3).slice(0,5).length
-              ? analytics.decisionTop.filter(s=>s.decisionScore===3).slice(0,5)
-              : analytics.decisionTop.slice(0,5) },
+          { ...COMBINED_SIGNALS[0], nums: analytics.hot.slice(0, 5) },
+          { ...COMBINED_SIGNALS[1], nums: analytics.overdue.slice(0, 5) },
+          { ...COMBINED_SIGNALS[2], nums: analytics.rising.slice(0, 5) },
+          {
+            ...COMBINED_SIGNALS[3],
+            nums: analytics.decisionTop.filter(s => s.decisionScore === 3).slice(0, 5).length
+              ? analytics.decisionTop.filter(s => s.decisionScore === 3).slice(0, 5)
+              : analytics.decisionTop.slice(0, 5),
+          },
         ].map(({ icon, label, color, nums }) => (
           <div key={label} className="bg-card/70 backdrop-blur-md rounded-2xl p-4 border border-border/60">
             <div className="flex items-center gap-1.5 mb-3">
