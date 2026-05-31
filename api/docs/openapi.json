@@ -3,7 +3,7 @@
   "info": {
     "title": "Lao Lottery Live API",
     "version": "1.0.0",
-    "description": "REST API ສຳລັບດຶງຂໍ້ມູນຜົນຫວຍ, ນາມສັດ, ປະເພດຫວຍ ແລະ ຈັດການລະບົບ.\n\n## Authentication\nEndpoint ທີ່ຕ້ອງການ auth ໃຊ້ **Bearer JWT token** ໃນ header:\n```\nAuthorization: Bearer <token>\n```\nດຶງ token ໄດ້ຈາກ endpoint `POST /auth.php?action=login`\n\n## Base URLs\n- **Production:** `https://laolots.com/laoloterylive/api`\n- **Local Dev:** `http://localhost/laoloterylive/api`\n\n## Rate Limits\n- Login: 20 ຄັ້ງ / 15 ນາທີ ຕໍ່ IP\n- Register: 5 ຄັ້ງ / ຊົ່ວໂມງ ຕໍ່ IP",
+    "description": "REST API ສຳລັບດຶງຂໍ້ມູນຜົນຫວຍ, ນາມສັດ, ປະເພດຫວຍ ແລະ ຈັດການລະບົບ.\n\n## Authentication\nEndpoint ທີ່ຕ້ອງການ auth ໃຊ້ **Bearer JWT token** ໃນ header:\n```\nAuthorization: Bearer <token>\n```\nດຶງ token ໄດ້ຈາກ endpoint `POST /auth.php?action=login`\n\n## Base URLs\n- **Production:** `https://laolots.com/api`\n- **Local Dev:** `http://localhost/laoloterylive/api`\n\n## Rate Limits\n- Login: 20 ຄັ້ງ / 15 ນາທີ ຕໍ່ IP\n- Register: 5 ຄັ້ງ / ຊົ່ວໂມງ ຕໍ່ IP",
     "contact": {
       "name": "Lao Lottery Live",
       "url": "https://laolots.com"
@@ -11,7 +11,7 @@
   },
   "servers": [
     {
-      "url": "https://laolots.com/laoloterylive/api",
+      "url": "https://laolots.com/api",
       "description": "Production"
     },
     {

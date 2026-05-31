@@ -1,7 +1,10 @@
 Options -Indexes
 DirectoryIndex index.html
 
-# Allow access to HTML, JSON, JS, CSS files
+# Allow all access to this directory (public docs)
+Require all granted
+
+# Serve openapi.json and HTML files with correct MIME type
 <FilesMatch "\.(html|json|js|css|map)$">
     Require all granted
 </FilesMatch>
