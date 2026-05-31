@@ -1,6 +1,6 @@
 const API_DOCS_URL = import.meta.env.DEV
   ? 'http://localhost/laoloterylive/api/docs/'
-  : '/laoloterylive/api/docs/'
+  : '/api/docs/'
 
 const FOOTER_LINKS = [
   { label: 'API Documentation', href: API_DOCS_URL, target: '_blank' },
