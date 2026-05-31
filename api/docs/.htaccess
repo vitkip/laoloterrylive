@@ -3,8 +3,7 @@ DirectoryIndex index.html
 
 # Allow access to HTML, JSON, JS, CSS files
 <FilesMatch "\.(html|json|js|css|map)$">
-    Order allow,deny
-    Allow from all
+    Require all granted
 </FilesMatch>
 
 # Remove X-Frame-Options for this directory so Swagger UI loads correctly
