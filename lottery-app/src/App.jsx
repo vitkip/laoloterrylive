@@ -32,6 +32,8 @@ const UserLogsPage        = lazy(() => import('./pages/UserLogsPage'))
 const ProfilePage         = lazy(() => import('./pages/ProfilePage'))
 const AdminLotteryTypes   = lazy(() => import('./pages/AdminLotteryTypes'))
 
+const TermsPage        = lazy(() => import('./pages/TermsPage'))
+
 // ── Error pages ───────────────────────────────────────────────────
 const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'))
 const NotFoundPage     = lazy(() => import('./pages/NotFoundPage'))
@@ -105,6 +107,7 @@ export default function App() {
             <Route path="/login"       element={<LoginPage />} />
             <Route path="/statistics"  element={<DashboardPage />} />
             <Route path="/search"      element={<SearchPage />} />
+            <Route path="/terms"       element={<TermsPage />} />
           </Route>
 
           {/* ══ TIER 1b: Auth / Registration (full-screen, no Navbar) */}

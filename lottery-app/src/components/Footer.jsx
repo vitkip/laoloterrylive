@@ -4,7 +4,7 @@ const API_DOCS_URL = import.meta.env.DEV
 
 const FOOTER_LINKS = [
   { label: 'API Documentation', href: API_DOCS_URL, target: '_blank' },
-  { label: 'Terms of Service (ພາສາລາວ)', href: '#' },
+  { label: 'Terms of Service (ພາສາລາວ)', href: '/terms' },
   { label: 'Contact Information', href: '#' },
 ]
 
