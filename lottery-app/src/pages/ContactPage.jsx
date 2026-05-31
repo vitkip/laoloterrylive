@@ -97,12 +97,23 @@ export default function ContactPage() {
 
         {/* Org card */}
         <div className="bg-gradient-to-br from-[#003fb1]/08 to-[#003fb1]/04 border border-[#003fb1]/20 rounded-2xl px-6 py-5 mb-8 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#003fb1] flex items-center justify-center shrink-0">
-            <span className="text-white font-black text-lg">L</span>
+          {/* Brand logo — same as Navbar */}
+          <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm ring-1 ring-black/10 dark:ring-white/10 shrink-0">
+            <svg viewBox="0 0 36 36" className="w-full h-full">
+              <rect x="0" y="0" width="36" height="9" fill="#CE1126"/>
+              <rect x="0" y="9" width="36" height="18" fill="#002868"/>
+              <rect x="0" y="27" width="36" height="9" fill="#CE1126"/>
+              <circle cx="18" cy="18" r="6" fill="white"/>
+            </svg>
           </div>
           <div>
-            <p className="font-black text-foreground text-base">{orgName}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{orgType}</p>
+            <div className="flex flex-col leading-none mb-1">
+              <span className="text-[15px] font-extrabold tracking-tight text-foreground">
+                laolots<span className="text-primary">.com</span>
+              </span>
+              <span className="text-[9.5px] font-medium text-muted-foreground tracking-widest uppercase">ຫວຍພັດທະນາລາວ</span>
+            </div>
+            <p className="text-xs text-muted-foreground">{orgType}</p>
             {address && <p className="text-xs text-muted-foreground mt-0.5">{address}</p>}
           </div>
         </div>
