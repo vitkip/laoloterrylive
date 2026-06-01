@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS users (
     phone_number  VARCHAR(20),
     is_active     BOOLEAN DEFAULT TRUE,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at    TIMESTAMP NULL DEFAULT NULL   -- soft-delete; NULL = active
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ── 2. Animals (static reference — 40 species) ───────────────────
@@ -115,7 +116,7 @@ CREATE TABLE IF NOT EXISTS user_logs (
     action     VARCHAR(255),
     ip_address VARCHAR(45),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =================================================================
@@ -126,7 +127,7 @@ CREATE TABLE IF NOT EXISTS user_logs (
 CREATE TABLE IF NOT EXISTS email_verifications (
     verification_id INT          AUTO_INCREMENT PRIMARY KEY,
     user_id         INT          NOT NULL,
-    token           VARCHAR(255) NOT NULL,
+    token_hash      VARCHAR(64)  NOT NULL UNIQUE, -- SHA-256 of raw token sent to user
     expires_at      DATETIME     NOT NULL,
     verified_at     DATETIME     NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -137,7 +138,7 @@ CREATE TABLE IF NOT EXISTS email_verifications (
 CREATE TABLE IF NOT EXISTS password_resets (
     reset_id   INT          AUTO_INCREMENT PRIMARY KEY,
     user_id    INT          NOT NULL,
-    token      VARCHAR(255) NOT NULL,
+    token_hash VARCHAR(64)  NOT NULL UNIQUE, -- SHA-256 of raw token sent to user
     expires_at DATETIME     NOT NULL,
     used_at    DATETIME     NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -148,7 +149,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
 CREATE TABLE IF NOT EXISTS otp_codes (
     otp_id        INT          AUTO_INCREMENT PRIMARY KEY,
     user_id       INT          NOT NULL,
-    otp_code      VARCHAR(10)  NOT NULL,
+    otp_code_hash VARCHAR(64)  NOT NULL, -- SHA-256 of the 6-digit OTP shown to user
     purpose       ENUM('register','login','reset_password') NOT NULL,
     expires_at    DATETIME     NOT NULL,
     used_at       DATETIME     NULL,
@@ -201,11 +202,12 @@ CREATE INDEX IF NOT EXISTS idx_vs_session_id  ON visitor_stats(session_id(32));
 CREATE INDEX IF NOT EXISTS idx_vs_page_visits ON visitor_stats(page_path(100), visited_at);
 
 -- email_verifications / password_resets / otp_codes / refresh_tokens
-CREATE INDEX IF NOT EXISTS idx_ev_token  ON email_verifications(token);
-CREATE INDEX IF NOT EXISTS idx_ev_user   ON email_verifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_pr_token  ON password_resets(token);
-CREATE INDEX IF NOT EXISTS idx_pr_user   ON password_resets(user_id);
+-- token_hash is UNIQUE on email_verifications + password_resets → fast lookup, no extra index needed
+CREATE INDEX IF NOT EXISTS idx_ev_user          ON email_verifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_pr_user          ON password_resets(user_id);
 CREATE INDEX IF NOT EXISTS idx_otp_user_purpose ON otp_codes(user_id, purpose);
+-- users soft-delete: filter active users without full scan
+CREATE INDEX IF NOT EXISTS idx_u_deleted ON users(deleted_at);
 -- refresh_tokens: token_hash is UNIQUE (fast lookup); compound for cleanup queries
 CREATE INDEX IF NOT EXISTS idx_rt_user_expires ON refresh_tokens(user_id, expires_at);
 CREATE INDEX IF NOT EXISTS idx_rt_expires      ON refresh_tokens(expires_at);

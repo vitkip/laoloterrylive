@@ -128,6 +128,72 @@ $conn->query("ALTER TABLE lottery_draws
     ADD COLUMN IF NOT EXISTS updated_at
     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
 
+// ── Schema migrations (all idempotent) ────────────────────────────
+
+// 1. users.deleted_at — soft delete support
+$conn->query("ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL");
+
+// 2. user_logs FK: ON DELETE SET NULL (preserve audit trail when user deleted)
+$_ul_fk = $conn->query(
+    "SELECT rc.DELETE_RULE, kcu.CONSTRAINT_NAME
+     FROM information_schema.KEY_COLUMN_USAGE kcu
+     JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
+          ON rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+         AND rc.CONSTRAINT_SCHEMA = kcu.TABLE_SCHEMA
+     WHERE kcu.TABLE_SCHEMA = DATABASE()
+       AND kcu.TABLE_NAME   = 'user_logs'
+       AND kcu.COLUMN_NAME  = 'user_id'"
+)->fetch_assoc();
+if ($_ul_fk && $_ul_fk['DELETE_RULE'] !== 'SET NULL') {
+    $_ul_fk_name = $_ul_fk['CONSTRAINT_NAME'];
+    $conn->query("ALTER TABLE user_logs DROP FOREIGN KEY `{$_ul_fk_name}`");
+    $conn->query("ALTER TABLE user_logs ADD CONSTRAINT fk_ul_user
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL");
+}
+unset($_ul_fk, $_ul_fk_name);
+
+// 3. otp_codes: rename otp_code → otp_code_hash + widen to VARCHAR(64)
+$_otp_col = $conn->query(
+    "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'otp_codes'
+       AND COLUMN_NAME = 'otp_code'"
+)->fetch_assoc();
+if ($_otp_col) {
+    $conn->query("ALTER TABLE otp_codes
+        CHANGE COLUMN otp_code otp_code_hash VARCHAR(64) NOT NULL");
+}
+unset($_otp_col);
+
+// 4. password_resets: rename token → token_hash + narrow to VARCHAR(64) + UNIQUE
+$_pr_col = $conn->query(
+    "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'password_resets'
+       AND COLUMN_NAME = 'token'"
+)->fetch_assoc();
+if ($_pr_col) {
+    // Drop old index on 'token' if it exists before rename
+    $conn->query("ALTER TABLE password_resets DROP INDEX IF EXISTS idx_pr_token");
+    $conn->query("ALTER TABLE password_resets
+        CHANGE COLUMN token token_hash VARCHAR(64) NOT NULL,
+        ADD UNIQUE KEY uniq_pr_token_hash (token_hash)");
+}
+unset($_pr_col);
+
+// 5. email_verifications: rename token → token_hash + narrow to VARCHAR(64) + UNIQUE
+$_ev_col = $conn->query(
+    "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'email_verifications'
+       AND COLUMN_NAME = 'token'"
+)->fetch_assoc();
+if ($_ev_col) {
+    $conn->query("ALTER TABLE email_verifications DROP INDEX IF EXISTS idx_ev_token");
+    $conn->query("ALTER TABLE email_verifications
+        CHANGE COLUMN token token_hash VARCHAR(64) NOT NULL,
+        ADD UNIQUE KEY uniq_ev_token_hash (token_hash)");
+}
+unset($_ev_col);
+
 // draw_results_detail integrity upgrades (idempotent)
 // 1. UNIQUE(draw_id, prize_type) — prevents duplicate prize rows per draw
 $_drd_uniq = $conn->query(
@@ -661,7 +727,7 @@ switch ($action) {
         requireAuth('staff');
         $uid = (int)($_GET['user_id'] ?? 0);
         if ($uid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid user_id"]); break; }
-        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users WHERE user_id = ?");
+        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users WHERE user_id = ? AND deleted_at IS NULL");
         $stmt->bind_param("i", $uid);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
@@ -688,7 +754,7 @@ switch ($action) {
                 SUM(role = 'admin') AS admin_count,
                 SUM(role = 'staff') AS staff_count,
                 SUM(role = 'member') AS member_count
-            FROM users
+            FROM users WHERE deleted_at IS NULL
         ")->fetch_assoc();
 
         $recent = $conn->query("
@@ -703,6 +769,7 @@ switch ($action) {
         $newUsers = $conn->query("
             SELECT user_id, username, full_name, role, created_at
             FROM users
+            WHERE deleted_at IS NULL
             ORDER BY created_at DESC
             LIMIT 5
         ")->fetch_all(MYSQLI_ASSOC);
@@ -788,7 +855,7 @@ switch ($action) {
 
     case 'get_profile':
         $p = requireAuth();
-        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users WHERE user_id = ?");
+        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users WHERE user_id = ? AND deleted_at IS NULL");
         $stmt->bind_param("i", $p['user_id']);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
@@ -968,7 +1035,7 @@ switch ($action) {
         $nameStmt->close();
         $deletedUsername = $nameRow['username'] ?? $user_id;
 
-        $stmt = $conn->prepare("DELETE FROM users WHERE user_id=?");
+        $stmt = $conn->prepare("UPDATE users SET deleted_at = NOW(), is_active = 0 WHERE user_id=?");
         $stmt->bind_param("i", $user_id);
         if ($stmt->execute()) {
             $ip  = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
