@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { API } from '../utils/api';
+import { API, resolveUploadUrl } from '../utils/api';
 import RoleBadge from '../components/RoleBadge';
 import UserAvatar from '../components/UserAvatar';
 
@@ -85,7 +85,10 @@ export default function ProfilePage() {
     authFetch(`${API}/index.php?action=get_profile`)
       .then(({ ok, data }) => {
         if (ok) {
-          setProfile(data);
+          const resolvedData = data.avatar_url
+            ? { ...data, avatar_url: resolveUploadUrl(data.avatar_url) }
+            : data;
+          setProfile(resolvedData);
           setProfileForm({ full_name: data.full_name || '', email: data.email || '', phone_number: data.phone_number || '' });
         } else {
           toast.error(data?.error || 'ໂຫຼດ profile ບໍ່ສຳເລັດ');
@@ -153,7 +156,7 @@ export default function ProfilePage() {
         body: formData,
       });
       if (ok && data?.avatar_url) {
-        setProfile(p => ({ ...p, avatar_url: data.avatar_url }));
+        setProfile(p => ({ ...p, avatar_url: resolveUploadUrl(data.avatar_url) }));
         toast.success('ປ່ຽນຮູບ profile ສຳເລັດ');
       } else {
         toast.error(data?.error || 'ອັບໂຫຼດຮູບບໍ່ສຳເລັດ');
