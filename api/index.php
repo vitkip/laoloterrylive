@@ -128,6 +128,37 @@ $conn->query("ALTER TABLE lottery_draws
     ADD COLUMN IF NOT EXISTS updated_at
     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
 
+// draw_results_detail integrity upgrades (idempotent)
+// 1. UNIQUE(draw_id, prize_type) — prevents duplicate prize rows per draw
+$_drd_uniq = $conn->query(
+    "SELECT COUNT(*) AS c FROM information_schema.STATISTICS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'draw_results_detail'
+       AND INDEX_NAME = 'uniq_draw_prize'"
+)->fetch_assoc()['c'];
+if (!$_drd_uniq) {
+    // Drop old non-unique index first (if exists), then add UNIQUE
+    $conn->query("ALTER TABLE draw_results_detail DROP INDEX IF EXISTS idx_drd_draw_prize");
+    $conn->query("ALTER TABLE draw_results_detail ADD UNIQUE KEY uniq_draw_prize (draw_id, prize_type)");
+}
+// 2. animal_id FK: ensure ON DELETE SET NULL (safe if animal is deleted)
+$_drd_fk = $conn->query(
+    "SELECT kcu.CONSTRAINT_NAME, rc.DELETE_RULE
+     FROM information_schema.KEY_COLUMN_USAGE kcu
+     JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
+          ON rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+         AND rc.CONSTRAINT_SCHEMA = kcu.TABLE_SCHEMA
+     WHERE kcu.TABLE_SCHEMA = DATABASE()
+       AND kcu.TABLE_NAME   = 'draw_results_detail'
+       AND kcu.COLUMN_NAME  = 'animal_id'"
+)->fetch_assoc();
+if ($_drd_fk && $_drd_fk['DELETE_RULE'] !== 'SET NULL') {
+    $_drd_fk_name = $_drd_fk['CONSTRAINT_NAME'];
+    $conn->query("ALTER TABLE draw_results_detail DROP FOREIGN KEY `{$_drd_fk_name}`");
+    $conn->query("ALTER TABLE draw_results_detail ADD CONSTRAINT fk_drd_animal
+        FOREIGN KEY (animal_id) REFERENCES animals(animal_id) ON DELETE SET NULL");
+}
+unset($_drd_uniq, $_drd_fk, $_drd_fk_name);
+
 // Retention cleanup — runs on ~1% of requests (no cron needed).
 // visitor_stats: keep 90 days | user_logs: keep 365 days
 if (mt_rand(1, 100) === 1) {

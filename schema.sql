@@ -99,12 +99,13 @@ CREATE TABLE IF NOT EXISTS lottery_draws (
 -- ── 7. Draw Results Detail ───────────────────────────────────────
 CREATE TABLE IF NOT EXISTS draw_results_detail (
     detail_id    INT AUTO_INCREMENT PRIMARY KEY,
-    draw_id      INT,
+    draw_id      INT          NOT NULL,              -- always child of a draw
     prize_type   ENUM('6_digits','5_digits','4_digits','3_digits','2_digits') NOT NULL,
-    result_value VARCHAR(6) NOT NULL,
-    animal_id    INT NULL,
+    result_value VARCHAR(6)   NOT NULL,
+    animal_id    INT          NULL,
+    UNIQUE KEY   uniq_draw_prize (draw_id, prize_type),   -- one row per prize per draw
     FOREIGN KEY (draw_id)   REFERENCES lottery_draws(draw_id) ON DELETE CASCADE,
-    FOREIGN KEY (animal_id) REFERENCES animals(animal_id)
+    FOREIGN KEY (animal_id) REFERENCES animals(animal_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ── 8. User Logs ─────────────────────────────────────────────────
@@ -183,9 +184,9 @@ CREATE INDEX IF NOT EXISTS idx_ld_status_date ON lottery_draws(status, draw_date
 CREATE INDEX IF NOT EXISTS idx_ld_date_num   ON lottery_draws(draw_date DESC, draw_number DESC);
 
 -- draw_results_detail
---   idx_drd_draw_id (draw_id) DROPPED — covered by idx_drd_draw_prize(draw_id, prize_type)
-CREATE INDEX IF NOT EXISTS idx_result_value   ON draw_results_detail(result_value);
-CREATE INDEX IF NOT EXISTS idx_drd_draw_prize ON draw_results_detail(draw_id, prize_type);
+--   uniq_draw_prize (draw_id, prize_type) is UNIQUE KEY — also serves as index for JOINs
+--   idx_drd_draw_id DROPPED — covered by uniq_draw_prize leading column
+CREATE INDEX IF NOT EXISTS idx_result_value ON draw_results_detail(result_value);
 
 -- user_logs
 CREATE INDEX IF NOT EXISTS idx_ul_action_date ON user_logs(action(50), created_at);
