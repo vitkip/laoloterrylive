@@ -521,6 +521,16 @@ export default function AdminOverview() {
 
   const [visitorStats, setVisitorStats] = useState(null);
   const [userStats,    setUserStats]    = useState(null);
+  const [purgeState,   setPurgeState]   = useState({ loading: false, result: null });
+
+  const handlePurgeLogs = () => {
+    setPurgeState({ loading: true, result: null });
+    authFetch(`${API}/index.php?action=purge_logs`, { method: 'POST', body: JSON.stringify({}) })
+      .then(({ ok, data }) => {
+        setPurgeState({ loading: false, result: ok ? data : { error: data?.error ?? 'ຜິດພາດ' } });
+      })
+      .catch(() => setPurgeState({ loading: false, result: { error: 'Network error' } }));
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -772,6 +782,36 @@ export default function AdminOverview() {
 
       {/* ─── Recent Draws Table ─── */}
       <RecentHistory />
+
+      {/* ─── Database Maintenance ─── */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-[15px] font-extrabold text-foreground leading-snug">ຈັດການຂໍ້ມູນ</h3>
+            <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+              ລົບ visitor_stats &gt; 90 ວັນ · ລົບ user_logs &gt; 365 ວັນ
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {purgeState.result && !purgeState.result.error && (
+              <p className="text-[11px] text-green-600 font-semibold">
+                ລົບ {purgeState.result.visitor_stats_deleted} visits · {purgeState.result.user_logs_deleted} logs
+              </p>
+            )}
+            {purgeState.result?.error && (
+              <p className="text-[11px] text-red-500 font-semibold">{purgeState.result.error}</p>
+            )}
+            <button
+              onClick={handlePurgeLogs}
+              disabled={purgeState.loading}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-bold bg-destructive/10 text-destructive hover:bg-destructive/20 disabled:opacity-50 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+              {purgeState.loading ? 'ກຳລັງລົບ...' : 'Purge Old Logs'}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -123,6 +123,13 @@ $conn->query("CREATE TABLE IF NOT EXISTS visitor_stats (
     INDEX idx_vs_session    (session_id(32))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+// Retention cleanup — runs on ~1% of requests (no cron needed).
+// visitor_stats: keep 90 days | user_logs: keep 365 days
+if (mt_rand(1, 100) === 1) {
+    $conn->query("DELETE FROM visitor_stats WHERE visited_at  < NOW() - INTERVAL 90  DAY");
+    $conn->query("DELETE FROM user_logs    WHERE created_at   < NOW() - INTERVAL 365 DAY");
+}
+
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 switch ($action) {
@@ -1077,6 +1084,34 @@ switch ($action) {
             "this_month" => (int)$summaryRow['this_month'],
             "daily" => $daily,
             "top_pages" => $top_pages,
+        ]);
+        break;
+
+    // ── Admin: manual retention purge ─────────────────────────────
+    // POST ?action=purge_logs   body: { visitor_days?: int, logs_days?: int }
+    // Defaults: visitor_stats 90 days, user_logs 365 days
+    case 'purge_logs':
+        requireAuth('admin');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'POST required']);
+            break;
+        }
+        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $vDays = max(1, (int)($body['visitor_days'] ?? 90));
+        $lDays = max(1, (int)($body['logs_days']   ?? 365));
+
+        $conn->query("DELETE FROM visitor_stats WHERE visited_at < NOW() - INTERVAL {$vDays} DAY");
+        $vsDeleted = $conn->affected_rows;
+
+        $conn->query("DELETE FROM user_logs WHERE created_at < NOW() - INTERVAL {$lDays} DAY");
+        $ulDeleted = $conn->affected_rows;
+
+        echo json_encode([
+            'visitor_stats_deleted' => $vsDeleted,
+            'user_logs_deleted'     => $ulDeleted,
+            'visitor_days_kept'     => $vDays,
+            'logs_days_kept'        => $lDays,
         ]);
         break;
 
