@@ -259,8 +259,10 @@ export default function DashboardPage() {
             <SectionLabel icon="bar_chart" label="ການກະຈາຍຕົວເລກ" accent="#0369a1" />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 sm:p-8 border border-border/60 shadow-sm">
+                <DigitDistribution timeframe={timeframe} />
               </div>
               <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 sm:p-8 border border-border/60 shadow-sm">
+                <HistoricalVolatility timeframe={timeframe} />
               </div>
             </div>
           </div>

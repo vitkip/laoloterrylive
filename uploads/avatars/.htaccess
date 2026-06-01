@@ -1,0 +1,5 @@
+php_flag engine off
+Options -ExecCGI
+<Files *>
+  SetHandler default-handler
+</Files>
