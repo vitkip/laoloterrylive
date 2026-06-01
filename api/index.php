@@ -134,6 +134,10 @@ $conn->query("ALTER TABLE lottery_draws
 $conn->query("ALTER TABLE users
     ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL");
 
+// 1b. users.avatar_url — profile picture
+$conn->query("ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500) NULL DEFAULT NULL");
+
 // 2. user_logs FK: ON DELETE SET NULL (preserve audit trail when user deleted)
 $_ul_fk = $conn->query(
     "SELECT rc.DELETE_RULE, kcu.CONSTRAINT_NAME
@@ -654,6 +658,94 @@ switch ($action) {
         }
         break;
 
+    case 'upload_avatar':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["error" => "Only POST allowed"]);
+            break;
+        }
+
+        $p = requireAuth();
+
+        // Admin can upload avatar for any user; others only for themselves
+        $target_uid = $p['user_id'];
+        if ($p['role'] === 'admin' && !empty($_POST['user_id'])) {
+            $target_uid = (int)$_POST['user_id'];
+        }
+
+        if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+            http_response_code(400);
+            echo json_encode(["error" => "ກະລຸນາເລືອກໄຟລ໌ຮູບ"]);
+            break;
+        }
+
+        if ($_FILES['avatar']['size'] > 2 * 1024 * 1024) {
+            http_response_code(400);
+            echo json_encode(["error" => "ໄຟລ໌ໃຫຍ່ເກີນ 2MB"]);
+            break;
+        }
+
+        $finfo    = new finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($_FILES['avatar']['tmp_name']);
+        $mimeToExt = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
+        if (!isset($mimeToExt[$mimeType])) {
+            http_response_code(400);
+            echo json_encode(["error" => "ປະເພດໄຟລ໌ບໍ່ຮອງຮັບ (JPG, PNG, GIF, WebP)"]);
+            break;
+        }
+        $ext = $mimeToExt[$mimeType];
+
+        $uploadDir = __DIR__ . '/../uploads/avatars/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        // Block PHP execution in avatars dir
+        $htaccessPath = $uploadDir . '.htaccess';
+        if (!file_exists($htaccessPath)) {
+            file_put_contents($htaccessPath, "php_flag engine off\nOptions -ExecCGI\n<Files *>\n  SetHandler default-handler\n</Files>\n");
+        }
+
+        // Remove old avatar file if present
+        $oldRow = $conn->query("SELECT avatar_url FROM users WHERE user_id = " . (int)$target_uid);
+        if ($oldRow && ($oldData = $oldRow->fetch_assoc()) && !empty($oldData['avatar_url'])) {
+            $oldFile = __DIR__ . '/..' . $oldData['avatar_url'];
+            if (file_exists($oldFile)) {
+                @unlink($oldFile);
+            }
+        }
+
+        $fileName = 'avatar_' . $target_uid . '_' . time() . '.' . $ext;
+        $dest     = $uploadDir . $fileName;
+
+        if (move_uploaded_file($_FILES['avatar']['tmp_name'], $dest)) {
+            $avatarUrl = '/uploads/avatars/' . $fileName;
+
+            $stmt = $conn->prepare("UPDATE users SET avatar_url=? WHERE user_id=?");
+            $stmt->bind_param("si", $avatarUrl, $target_uid);
+            $stmt->execute();
+            $stmt->close();
+
+            // Log the action
+            $ip  = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+            $act = 'Update avatar';
+            $logStmt = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?,?,?)");
+            $logStmt->bind_param("iss", $target_uid, $act, $ip);
+            $logStmt->execute();
+            $logStmt->close();
+
+            echo json_encode(["status" => "success", "avatar_url" => $avatarUrl]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["error" => "ບໍ່ສາມາດບັນທຶກໄຟລ໌ໄດ້"]);
+        }
+        break;
+
     case 'list_users':
         requireAuth('staff');
 
@@ -701,7 +793,7 @@ switch ($action) {
         $countStmt->close();
 
         // Fetch page
-        $sql  = "SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users {$whereSql} {$orderSql} LIMIT ? OFFSET ?";
+        $sql  = "SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at, avatar_url FROM users {$whereSql} {$orderSql} LIMIT ? OFFSET ?";
         $stmt = $conn->prepare($sql);
         if ($types && $params) {
             $allTypes  = $types . 'ii';
@@ -727,7 +819,7 @@ switch ($action) {
         requireAuth('staff');
         $uid = (int)($_GET['user_id'] ?? 0);
         if ($uid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid user_id"]); break; }
-        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users WHERE user_id = ? AND deleted_at IS NULL");
+        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at, avatar_url FROM users WHERE user_id = ? AND deleted_at IS NULL");
         $stmt->bind_param("i", $uid);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
@@ -855,7 +947,7 @@ switch ($action) {
 
     case 'get_profile':
         $p = requireAuth();
-        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at FROM users WHERE user_id = ? AND deleted_at IS NULL");
+        $stmt = $conn->prepare("SELECT user_id, username, full_name, role, email, phone_number, is_active, created_at, updated_at, avatar_url FROM users WHERE user_id = ? AND deleted_at IS NULL");
         $stmt->bind_param("i", $p['user_id']);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();

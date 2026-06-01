@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS users (
     email         VARCHAR(100),
     phone_number  VARCHAR(20),
     is_active     BOOLEAN DEFAULT TRUE,
+    avatar_url    VARCHAR(500) NULL DEFAULT NULL,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at    TIMESTAMP NULL DEFAULT NULL   -- soft-delete; NULL = active

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { API } from '../utils/api';
@@ -77,6 +77,8 @@ export default function ProfilePage() {
   const [profileForm, setProfileForm] = useState({ full_name: '', email: '', phone_number: '' });
   const [passForm, setPassForm]       = useState({ current_password: '', new_password: '', confirm_password: '' });
   const [showPass, setShowPass]       = useState({ cur: false, new: false, con: false });
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef(null);
 
   useEffect(() => {
     setLoadingProfile(true);
@@ -135,6 +137,35 @@ export default function ProfilePage() {
   const setP  = (k, v) => setProfileForm(f => ({ ...f, [k]: v }));
   const setPw = (k, v) => setPassForm(f => ({ ...f, [k]: v }));
 
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('ໄຟລ໌ໃຫຍ່ເກີນ 2MB');
+      return;
+    }
+    setUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append('avatar', file);
+    try {
+      const { ok, data } = await authFetch(`${API}/index.php?action=upload_avatar`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (ok && data?.avatar_url) {
+        setProfile(p => ({ ...p, avatar_url: data.avatar_url }));
+        toast.success('ປ່ຽນຮູບ profile ສຳເລັດ');
+      } else {
+        toast.error(data?.error || 'ອັບໂຫຼດຮູບບໍ່ສຳເລັດ');
+      }
+    } catch {
+      toast.error('ເຊື່ອມຕໍ່ server ບໍ່ໄດ້');
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = '';
+    }
+  };
+
   if (loadingProfile) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -152,8 +183,35 @@ export default function ProfilePage() {
       <div className="relative bg-gradient-to-br from-[#001d6e] via-[#003fb1] to-[#1a56db] rounded-3xl p-6 sm:p-8 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(108,248,187,0.08),transparent_60%)]" />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-          <UserAvatar name={profile?.full_name} username={profile?.username || user?.username} size="xl"
-            className="ring-4 ring-white/20" />
+          {/* Clickable avatar with upload overlay */}
+          <div className="relative group shrink-0">
+            <UserAvatar
+              name={profile?.full_name}
+              username={profile?.username || user?.username}
+              avatarUrl={profile?.avatar_url}
+              size="xl"
+              className="ring-4 ring-white/20"
+            />
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              title="ປ່ຽນຮູບ profile"
+              className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:cursor-wait"
+            >
+              {uploadingAvatar
+                ? <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                : <span className="material-symbols-rounded text-white text-xl">photo_camera</span>
+              }
+            </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+          </div>
           <div className="flex-1">
             <h1 className="text-2xl font-black text-white mb-1">{profile?.full_name || user?.name || 'ຜູ້ໃຊ້'}</h1>
             <p className="text-white/60 text-sm mb-2">@{profile?.username || user?.username}</p>

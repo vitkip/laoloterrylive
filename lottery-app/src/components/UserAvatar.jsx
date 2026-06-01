@@ -17,10 +17,21 @@ const SIZES = {
   xl:  'w-20 h-20 text-3xl',
 };
 
-export default function UserAvatar({ name = '', username = '', size = 'md', className = '' }) {
+export default function UserAvatar({ name = '', username = '', size = 'md', className = '', avatarUrl = null }) {
   const display = name || username || '?';
   const initials = display.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const [fg, bg] = colorFor(username || name);
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={display}
+        className={`rounded-full object-cover shrink-0 ${SIZES[size] || SIZES.md} ${className}`}
+      />
+    );
+  }
+
   return (
     <div
       className={`rounded-full flex items-center justify-center font-black shrink-0 select-none ${SIZES[size] || SIZES.md} ${className}`}
