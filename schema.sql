@@ -155,6 +155,22 @@ CREATE TABLE IF NOT EXISTS otp_codes (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ── 12. Refresh Tokens ───────────────────────────────────────────
+--    Used by auth.php: issueRefreshToken() + rotate on refresh.
+--    Stores SHA-256 hash of raw token (raw token sent to client only).
+--    Token rotation: old token revoked_at set, new token issued.
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    rt_id       INT           AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT           NOT NULL,
+    token_hash  VARCHAR(64)   NOT NULL UNIQUE,   -- SHA-256 hex (64 chars)
+    expires_at  DATETIME      NOT NULL,
+    ip_address  VARCHAR(45),
+    user_agent  VARCHAR(255),
+    revoked_at  DATETIME      NULL DEFAULT NULL,  -- NULL = active
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- =================================================================
 -- INDEXES  (all consolidated; duplicates removed)
 -- =================================================================
@@ -182,12 +198,15 @@ CREATE INDEX IF NOT EXISTS idx_vs_visited_at  ON visitor_stats(visited_at);
 CREATE INDEX IF NOT EXISTS idx_vs_session_id  ON visitor_stats(session_id(32));
 CREATE INDEX IF NOT EXISTS idx_vs_page_visits ON visitor_stats(page_path(100), visited_at);
 
--- email_verifications / password_resets / otp_codes
+-- email_verifications / password_resets / otp_codes / refresh_tokens
 CREATE INDEX IF NOT EXISTS idx_ev_token  ON email_verifications(token);
 CREATE INDEX IF NOT EXISTS idx_ev_user   ON email_verifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_pr_token  ON password_resets(token);
 CREATE INDEX IF NOT EXISTS idx_pr_user   ON password_resets(user_id);
 CREATE INDEX IF NOT EXISTS idx_otp_user_purpose ON otp_codes(user_id, purpose);
+-- refresh_tokens: token_hash is UNIQUE (fast lookup); compound for cleanup queries
+CREATE INDEX IF NOT EXISTS idx_rt_user_expires ON refresh_tokens(user_id, expires_at);
+CREATE INDEX IF NOT EXISTS idx_rt_expires      ON refresh_tokens(expires_at);
 
 -- =================================================================
 -- SEED DATA

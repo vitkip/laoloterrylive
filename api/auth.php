@@ -33,6 +33,21 @@ if ($conn->connect_error) {
 }
 $conn->set_charset("utf8mb4");
 
+// Ensure refresh_tokens table exists (idempotent — safe to run every request)
+$conn->query("CREATE TABLE IF NOT EXISTS refresh_tokens (
+    rt_id       INT           AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT           NOT NULL,
+    token_hash  VARCHAR(64)   NOT NULL UNIQUE,
+    expires_at  DATETIME      NOT NULL,
+    ip_address  VARCHAR(45),
+    user_agent  VARCHAR(255),
+    revoked_at  DATETIME      NULL DEFAULT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_rt_user_expires (user_id, expires_at),
+    INDEX idx_rt_expires      (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
 define('SECRET_KEY', JWT_SECRET);
 
 // ── JWT helpers ────────────────────────────────────────────────────
