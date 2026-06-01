@@ -720,6 +720,18 @@ switch ($action) {
             break;
         }
 
+        $ip = clientIP();
+
+        // IP rate limit: max 5 forgot_password requests per IP per day
+        if (!checkIPRateLimit($conn, 'Password reset request', $ip, 5, 86400)) {
+            http_response_code(429);
+            echo json_encode([
+                "error" => "ຂໍ reset ລະຫັດຜ່ານຫຼາຍເກີນໄປ ກະລຸນາລໍຖ້າ 24 ຊົ່ວໂມງ",
+                "code"  => "RATE_LIMIT",
+            ]);
+            break;
+        }
+
         // Always return success (don't reveal whether email exists)
         $stmt = $conn->prepare("SELECT user_id, full_name FROM users WHERE email = ? AND is_active = 1 LIMIT 1");
         $stmt->bind_param("s", $email);
@@ -727,28 +739,55 @@ switch ($action) {
         $userRes = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        $resp = ["success" => true, "message" => "ຖ້າ Email ດັ່ງກ່າວມີຢູ່ ທ່ານຈະໄດ້ຮັບ Email ເດ"];
+        $resp      = ["success" => true, "message" => "ຖ້າ Email ດັ່ງກ່າວມີຢູ່ ທ່ານຈະໄດ້ຮັບ Email ເດ"];
+        $logUserId = null;
+
         if ($userRes) {
-            // Invalidate old tokens
-            $del = $conn->prepare("UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL");
-            $del->bind_param("i", $userRes['user_id']);
-            $del->execute();
-            $del->close();
+            $logUserId = $userRes['user_id'];
 
-            $resetToken     = generateSecureToken();          // raw — sent in email URL
-            $resetTokenHash = hash('sha256', $resetToken);    // stored in DB
-            $expiry         = date('Y-m-d H:i:s', time() + 3600);
-            $stmt = $conn->prepare(
-                'INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?,?,?)'
+            // User-level rate limit: max 5 resets per calendar day (UTC)
+            $todayStart = date('Y-m-d') . ' 00:00:00';
+            $rlStmt = $conn->prepare(
+                "SELECT COUNT(*) FROM password_resets WHERE user_id = ? AND created_at >= ?"
             );
-            $stmt->bind_param('iss', $userRes['user_id'], $resetTokenHash, $expiry);
-            $stmt->execute();
-            $stmt->close();
+            $rlStmt->bind_param('is', $userRes['user_id'], $todayStart);
+            $rlStmt->execute();
+            $rlCount = 0;
+            $rlStmt->bind_result($rlCount);
+            $rlStmt->fetch();
+            $rlStmt->close();
 
-            sendPasswordResetEmail($email, $userRes['full_name'], $resetToken);
+            if ($rlCount < 5) {
+                // Invalidate old tokens
+                $del = $conn->prepare("UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL");
+                $del->bind_param("i", $userRes['user_id']);
+                $del->execute();
+                $del->close();
 
-            if (!PRODUCTION) $resp['dev_token'] = $resetToken;
+                $resetToken     = generateSecureToken();          // raw — sent in email URL
+                $resetTokenHash = hash('sha256', $resetToken);    // stored in DB
+                $expiry         = date('Y-m-d H:i:s', time() + 3600);
+                $stmt = $conn->prepare(
+                    'INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?,?,?)'
+                );
+                $stmt->bind_param('iss', $userRes['user_id'], $resetTokenHash, $expiry);
+                $stmt->execute();
+                $stmt->close();
+
+                sendPasswordResetEmail($email, $userRes['full_name'], $resetToken);
+
+                if (!PRODUCTION) $resp['dev_token'] = $resetToken;
+            }
+            // else: silently skip — don't reveal rate limit to requester
         }
+
+        // Log every attempt (drives IP rate limit counter for future requests)
+        $rlAction = 'Password reset request';
+        $logS = $conn->prepare('INSERT INTO user_logs (user_id, action, ip_address) VALUES (?,?,?)');
+        $logS->bind_param('iss', $logUserId, $rlAction, $ip);
+        $logS->execute();
+        $logS->close();
+
         echo json_encode($resp);
         break;
 
