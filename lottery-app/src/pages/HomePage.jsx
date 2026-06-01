@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useData } from '../context/DataContext'
+import { API, resolveUploadUrl } from '../utils/api'
 import { useStatistics } from '../hooks/useStatistics'
 import { computeAnalytics, computeCombinedTop10, COMBINED_SIGNALS, buildArticle } from '../utils/analytics'
 import ResultCard from '../components/ResultCard'
@@ -8,6 +9,91 @@ import LiveVdoBanner from '../components/LiveVdoBanner'
 import { resolveAnimalImage } from '../utils/api'
 import SEO from '../components/SEO'
 import { websiteSchema, lotteryResultSchema, breadcrumbSchema } from '../components/schemas'
+
+// ── Logo renderer (matches AdminBanners logo types) ──────────────────────────
+function BannerLogo({ type, logoUrl = null }) {
+  if (type === 'lao_flag') {
+    return (
+      <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-sm ring-1 ring-white/20">
+        <svg viewBox="0 0 36 36" className="w-full h-full">
+          <rect x="0" y="0"  width="36" height="9"  fill="#CE1126"/>
+          <rect x="0" y="9"  width="36" height="18" fill="#002868"/>
+          <rect x="0" y="27" width="36" height="9"  fill="#CE1126"/>
+          <circle cx="18" cy="18" r="6" fill="white"/>
+        </svg>
+      </div>
+    )
+  }
+  if (type === 'custom' && logoUrl) {
+    return (
+      <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-sm ring-1 ring-white/20">
+        <img src={logoUrl} alt="logo" className="w-full h-full object-cover" />
+      </div>
+    )
+  }
+  const icons = { star: '⭐', gift: '🎁', trophy: '🏆', custom: '🖼️' }
+  return (
+    <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 shrink-0 flex items-center justify-center text-base">
+      {icons[type] || '🎯'}
+    </div>
+  )
+}
+
+// ── Referral Scroll Banner ────────────────────────────────────────────────────
+function ReferralScrollBanner() {
+  const [banners, setBanners] = useState([])
+
+  useEffect(() => {
+    fetch(`${API}/index.php?action=get_banners`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setBanners(data.filter(b => Number(b.is_active)))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  if (banners.length === 0) return null
+
+  // Duplicate to fill the marquee track (at least 2 passes for seamless loop)
+  const repeated = banners.length < 5
+    ? [...banners, ...banners, ...banners, ...banners]
+    : [...banners, ...banners]
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-r from-[#020818] via-[#001040] to-[#020818] shadow-lg ring-1 ring-white/[0.04]">
+      {/* header label */}
+      <div className="flex items-center justify-center gap-2 border-b border-white/[0.06] px-4 py-2">
+        <span className="material-symbols-outlined text-[14px] text-[#6cf8bb]">volunteer_activism</span>
+        <p className="text-center text-[11px] font-medium tracking-wide text-white/50">
+          ໃຫ້ກຳລັງໃຈໂດຍ &nbsp;—&nbsp; ນຳລະຫັດແນະນຳໃສ່ໃນແອບຊື້ເລກຂອງທ່ານ
+        </p>
+        <span className="material-symbols-outlined text-[14px] text-[#6cf8bb]">volunteer_activism</span>
+      </div>
+      {/* fade edges */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#020818] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#020818] to-transparent" />
+
+      <div className="flex w-max animate-marquee-ltr py-3">
+        {repeated.map((b, idx) => (
+          <div
+            key={`${b.banner_id}-${idx}`}
+            className="mx-4 flex items-center gap-3 rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-2 backdrop-blur-sm"
+          >
+            <BannerLogo type={b.logo_type} logoUrl={resolveUploadUrl(b.logo_url)} />
+            <span className="text-sm font-bold text-white/90 whitespace-nowrap">{b.label}</span>
+            <span className="text-white/20">|</span>
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[13px] text-[#6cf8bb]">card_giftcard</span>
+              <span className="text-[11px] font-black tracking-widest text-[#6cf8bb] whitespace-nowrap">{b.ref_code}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function HomePageSkeleton() {
   const shimmer = "bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse rounded-lg"
@@ -618,6 +704,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Referral Scroll Banner ─── */}
+      <ReferralScrollBanner />
     </div>
   )
 }

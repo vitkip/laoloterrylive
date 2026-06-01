@@ -130,6 +130,20 @@ $conn->query("ALTER TABLE lottery_draws
 
 // ── Schema migrations (all idempotent) ────────────────────────────
 
+// 0. banner_items — scrolling referral banner (admin-managed)
+$conn->query("CREATE TABLE IF NOT EXISTS banner_items (
+    banner_id   INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    label       VARCHAR(120)  NOT NULL,
+    ref_code    VARCHAR(60)   NOT NULL,
+    logo_type   VARCHAR(40)   NOT NULL DEFAULT 'lao_flag',
+    sort_order  SMALLINT      NOT NULL DEFAULT 0,
+    is_active   TINYINT(1)    NOT NULL DEFAULT 1,
+    created_at  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$conn->query("ALTER TABLE banner_items
+    ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500) NULL DEFAULT NULL");
+
 // 1. users.deleted_at — soft delete support
 $conn->query("ALTER TABLE users
     ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL DEFAULT NULL");
@@ -1477,6 +1491,130 @@ switch ($action) {
             echo json_encode(["success" => true, "message" => "ລຶບປະເພດຫວຍສຳເລັດ"]);
         } else {
             http_response_code(500); echo json_encode(["error" => "ເກີດຂໍ້ຜິດພາດ: " . $conn->error]);
+        }
+        $stmt->close();
+        break;
+
+    // ══════════════════════════════════════════════
+    // ── BANNER ITEMS MANAGEMENT (CRUD) ───────────
+    // ══════════════════════════════════════════════
+
+    case 'get_banners':
+        // Public — no auth required (shown on homepage)
+        $result = $conn->query("
+            SELECT banner_id, label, ref_code, logo_type, logo_url, sort_order, is_active
+            FROM   banner_items
+            ORDER  BY sort_order ASC, banner_id ASC
+        ");
+        echo json_encode($result ? $result->fetch_all(MYSQLI_ASSOC) : []);
+        break;
+
+    case 'create_banner':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        requireAuth('admin');
+        $input      = json_decode(file_get_contents('php://input'), true);
+        $label      = trim($input['label']      ?? '');
+        $ref_code   = trim($input['ref_code']   ?? '');
+        $logo_type  = trim($input['logo_type']  ?? 'lao_flag');
+        $logo_url   = trim($input['logo_url']   ?? '');
+        $sort_order = (int)($input['sort_order'] ?? 0);
+        $is_active  = isset($input['is_active']) ? (int)$input['is_active'] : 1;
+
+        if ($label === '')    { http_response_code(400); echo json_encode(["error" => "ຊື່ banner ຫ້າງຫວ່າງ"]); break; }
+        if ($ref_code === '') { http_response_code(400); echo json_encode(["error" => "ລະຫັດແນະນຳຫ້າງຫວ່າງ"]); break; }
+
+        $stmt = $conn->prepare("INSERT INTO banner_items (label, ref_code, logo_type, logo_url, sort_order, is_active) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param("ssssii", $label, $ref_code, $logo_type, $logo_url, $sort_order, $is_active);
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "banner_id" => $conn->insert_id]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => $conn->error]);
+        }
+        $stmt->close();
+        break;
+
+    case 'update_banner':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        requireAuth('admin');
+        $input      = json_decode(file_get_contents('php://input'), true);
+        $bid        = (int)($input['banner_id'] ?? 0);
+        $label      = trim($input['label']      ?? '');
+        $ref_code   = trim($input['ref_code']   ?? '');
+        $logo_type  = trim($input['logo_type']  ?? 'lao_flag');
+        $logo_url   = trim($input['logo_url']   ?? '');
+        $sort_order = (int)($input['sort_order'] ?? 0);
+        $is_active  = isset($input['is_active']) ? (int)$input['is_active'] : 1;
+
+        if ($bid <= 0)        { http_response_code(400); echo json_encode(["error" => "Invalid banner_id"]); break; }
+        if ($label === '')    { http_response_code(400); echo json_encode(["error" => "ຊື່ banner ຫ້າງຫວ່າງ"]); break; }
+        if ($ref_code === '') { http_response_code(400); echo json_encode(["error" => "ລະຫັດແນະນຳຫ້າງຫວ່າງ"]); break; }
+
+        $stmt2 = $conn->prepare("UPDATE banner_items SET label=?, ref_code=?, logo_type=?, logo_url=?, sort_order=?, is_active=? WHERE banner_id=?");
+        $stmt2->bind_param("ssssiii", $label, $ref_code, $logo_type, $logo_url, $sort_order, $is_active, $bid);
+        if ($stmt2->execute() && $stmt2->affected_rows >= 0) {
+            echo json_encode(["success" => true]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => $conn->error]);
+        }
+        $stmt2->close();
+        break;
+
+    case 'upload_banner_logo':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        requireAuth('admin');
+        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+            http_response_code(400); echo json_encode(["error" => "ບໍ່ພົບໄຟລ໌ logo"]); break;
+        }
+        if ($_FILES['logo']['size'] > 1 * 1024 * 1024) {
+            http_response_code(400); echo json_encode(["error" => "ໄຟລ໌ໃຫຍ່ເກີນ 1MB"]); break;
+        }
+        $finfo    = new finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($_FILES['logo']['tmp_name']);
+        $mimeToExt = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
+        if (!isset($mimeToExt[$mimeType])) {
+            http_response_code(400); echo json_encode(["error" => "ປະເພດໄຟລ໌ບໍ່ຮອງຮັບ (JPG, PNG, GIF, WebP)"]); break;
+        }
+        $ext = $mimeToExt[$mimeType];
+        $uploadDir = __DIR__ . '/../uploads/banners/';
+        if (!is_dir($uploadDir)) { mkdir($uploadDir, 0755, true); }
+        $htaccessPath = $uploadDir . '.htaccess';
+        if (!file_exists($htaccessPath)) {
+            file_put_contents($htaccessPath, "php_flag engine off\nOptions -ExecCGI\n<Files *>\n  SetHandler default-handler\n</Files>\n");
+        }
+        $fileName = 'banner_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $dest = $uploadDir . $fileName;
+        if (move_uploaded_file($_FILES['logo']['tmp_name'], $dest)) {
+            echo json_encode(["logo_url" => '/uploads/banners/' . $fileName]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => "Failed to save file"]);
+        }
+        break;
+
+    case 'delete_banner':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        requireAuth('admin');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $bid   = (int)($input['banner_id'] ?? 0);
+        if ($bid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid banner_id"]); break; }
+        $stmt = $conn->prepare("DELETE FROM banner_items WHERE banner_id=?");
+        $stmt->bind_param("i", $bid);
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => $conn->error]);
         }
         $stmt->close();
         break;

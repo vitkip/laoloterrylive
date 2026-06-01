@@ -171,3 +171,12 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* ─── Referral banner marquee (left → right) ─── */
+@keyframes marquee-ltr {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0%);   }
+}
+.animate-marquee-ltr {
+  animation: marquee-ltr 35s linear infinite;
+}

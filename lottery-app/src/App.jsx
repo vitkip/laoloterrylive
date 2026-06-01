@@ -31,6 +31,7 @@ const AdminLive           = lazy(() => import('./pages/AdminLive'))
 const UserLogsPage        = lazy(() => import('./pages/UserLogsPage'))
 const ProfilePage         = lazy(() => import('./pages/ProfilePage'))
 const AdminLotteryTypes   = lazy(() => import('./pages/AdminLotteryTypes'))
+const AdminBanners        = lazy(() => import('./pages/AdminBanners'))
 
 const TermsPage        = lazy(() => import('./pages/TermsPage'))
 const ContactPage      = lazy(() => import('./pages/ContactPage'))
@@ -136,9 +137,10 @@ export default function App() {
               <Route path="/admin/live"    element={<AdminLive />} />
               <Route path="/admin/draws"   element={<AdminPanel />} />
               <Route path="/admin/types"   element={<AdminLotteryTypes />} />
-              <Route path="/admin/animals" element={<AnimalImageManager />} />
-              <Route path="/admin/users"   element={<AdminUsers />} />
-              <Route path="/admin/profile" element={<ProfilePage />} />
+              <Route path="/admin/animals"  element={<AnimalImageManager />} />
+              <Route path="/admin/users"    element={<AdminUsers />} />
+              <Route path="/admin/banners"  element={<AdminBanners />} />
+              <Route path="/admin/profile"  element={<ProfilePage />} />
 
               {/* Admin-only */}
               <Route element={<ProtectedRoute allowedRoles={['admin']} redirectTo="/unauthorized" />}>

@@ -15,13 +15,14 @@ function getNavItems(role) {
     { path: '/admin/types',  icon: 'category',          label: 'ປະເພດຫວຍ' },
   ];
   const adminOnly = [
-    { path: '/admin/animals', icon: 'image',            label: 'ຮູບນາມສັດ' },
-    { path: '/admin/users',   icon: 'manage_accounts',  label: 'ຈັດການຜູ້ໃຊ້' },
-    { path: '/admin/logs',    icon: 'history',          label: 'Audit Logs' },
+    { path: '/admin/animals',  icon: 'image',            label: 'ຮູບນາມສັດ' },
+    { path: '/admin/users',    icon: 'manage_accounts',  label: 'ຈັດການຜູ້ໃຊ້' },
+    { path: '/admin/banners',  icon: 'view_carousel',    label: 'Banner ເລື່ອນ' },
+    { path: '/admin/logs',     icon: 'history',          label: 'Audit Logs' },
   ];
   const staffOnly = [
-    { path: '/admin/animals', icon: 'image',            label: 'ຮູບນາມສັດ' },
-    { path: '/admin/users',   icon: 'manage_accounts',  label: 'ຈັດການຜູ້ໃຊ້' },
+    { path: '/admin/animals',  icon: 'image',            label: 'ຮູບນາມສັດ' },
+    { path: '/admin/users',    icon: 'manage_accounts',  label: 'ຈັດການຜູ້ໃຊ້' },
   ];
   if (role === 'admin') return [...base, ...adminOnly];
   if (role === 'staff') return [...base, ...staffOnly];
