@@ -123,6 +123,11 @@ $conn->query("CREATE TABLE IF NOT EXISTS visitor_stats (
     INDEX idx_vs_session    (session_id(32))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+// Ensure lottery_draws.updated_at column exists (tracks row changes for ETag accuracy)
+$conn->query("ALTER TABLE lottery_draws
+    ADD COLUMN IF NOT EXISTS updated_at
+    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+
 // Retention cleanup — runs on ~1% of requests (no cron needed).
 // visitor_stats: keep 90 days | user_logs: keep 365 days
 if (mt_rand(1, 100) === 1) {
@@ -145,10 +150,14 @@ switch ($action) {
         break;
 
     case 'draws':
-        // ETag: cheap COUNT+MAX query → if nothing changed, return 304 (no body)
-        $etag_res = $conn->query("SELECT MAX(draw_id) as mid, COUNT(*) as cnt FROM lottery_draws");
+        // ETag: MAX(draw_id) + COUNT + MAX(updated_at) → 304 on any insert, delete, or field edit
+        $etag_res = $conn->query(
+            "SELECT MAX(draw_id) AS mid, COUNT(*) AS cnt,
+                    COALESCE(UNIX_TIMESTAMP(MAX(updated_at)), 0) AS mupd
+             FROM lottery_draws"
+        );
         $etag_row = $etag_res->fetch_assoc();
-        $etag = '"' . md5($etag_row['mid'] . '_' . $etag_row['cnt']) . '"';
+        $etag = '"' . md5($etag_row['mid'] . '_' . $etag_row['cnt'] . '_' . $etag_row['mupd']) . '"';
         header("ETag: $etag");
         header('Vary: Accept-Encoding');
         if (
@@ -183,7 +192,9 @@ switch ($action) {
         $ytOuter = $hasYoutubeCol ? 'd.youtube_url,' : 'NULL AS youtube_url,';
 
         if ($yearFilter > 0) {
-            // Fetch ALL draws for the requested year (used by frontend lazy-loading)
+            // BETWEEN range lets MySQL use idx_draw_date (YEAR() function prevents index use)
+            $yearStart = $yearFilter . '-01-01';
+            $yearEnd   = $yearFilter . '-12-31';
             $sql = "
                 SELECT
                     d.draw_id, d.type_id, d.draw_number, d.draw_date,
@@ -194,14 +205,14 @@ switch ($action) {
                     SELECT draw_id, type_id, draw_number, draw_date,
                            full_result, status, created_by{$ytInner}
                     FROM   lottery_draws
-                    WHERE  YEAR(draw_date) = ?
+                    WHERE  draw_date BETWEEN ? AND ?
                     ORDER  BY draw_date DESC, draw_number DESC
                 ) d
                 LEFT JOIN draw_results_detail dr ON dr.draw_id = d.draw_id
                 ORDER BY d.draw_date DESC, d.draw_number DESC, dr.detail_id ASC
             ";
             $drawStmt = $conn->prepare($sql);
-            $drawStmt->bind_param('i', $yearFilter);
+            $drawStmt->bind_param('ss', $yearStart, $yearEnd);
         } else {
             $sql = "
                 SELECT
@@ -280,6 +291,16 @@ switch ($action) {
     case 'draw_years':
         // Returns distinct years grouped by type_id from the full table
         // Response: { "1": ["2026","2025",...], "2": ["2026",...], ..., "all": ["2026","2025",...] }
+        $dy_etag_row = $conn->query(
+            "SELECT COUNT(DISTINCT YEAR(draw_date)) AS cnt, MAX(draw_date) AS mdate FROM lottery_draws"
+        )->fetch_assoc();
+        $dy_etag = '"' . md5($dy_etag_row['cnt'] . '_' . $dy_etag_row['mdate']) . '"';
+        header("ETag: $dy_etag");
+        header('Vary: Accept-Encoding');
+        if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] === $dy_etag) {
+            http_response_code(304);
+            exit();
+        }
         header('Cache-Control: public, max-age=60, stale-while-revalidate=300');
         $res = $conn->query(
             "SELECT type_id, YEAR(draw_date) AS y

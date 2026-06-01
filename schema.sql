@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS lottery_draws (
     status      ENUM('pending','published') DEFAULT 'pending',
     created_by  INT,
     youtube_url VARCHAR(500)  NULL,
+    updated_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (type_id)    REFERENCES lottery_types(type_id),
     FOREIGN KEY (created_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
