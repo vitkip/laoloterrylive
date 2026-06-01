@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useData } from '../context/DataContext'
-import { computeAnalytics, computeCombinedTop10, COMBINED_SIGNALS, LDATE, buildArticle } from '../utils/analytics'
+import { computeAnalytics, computeCombinedTop10, COMBINED_SIGNALS, LDATE, buildArticle, computeEnhancedPrediction, computeEnhancedBacktest, ENHANCED_SIGNALS } from '../utils/analytics'
 import SEO from '../components/SEO'
 import { webPageSchema, breadcrumbSchema } from '../components/schemas'
 import {
@@ -145,14 +145,15 @@ const RANGE_OPTIONS = [
 ]
 
 const MODES = [
-  { value: 'heatmap',  label: 'Heatmap',    icon: 'grid_view' },
-  { value: 'charts',   label: 'Charts',     icon: 'show_chart' },
-  { value: 'trend',    label: 'Trend',      icon: 'trending_up' },
-  { value: 'ai',       label: 'AI Engine',  icon: 'psychology' },
-  { value: 'decision',   label: 'ຕັດສິນໃຈ',  icon: 'stars' },
-  { value: 'news',       label: 'ຂ່າວ AI',    icon: 'newspaper' },
-  { value: 'dsbacktest', label: 'DS Backtest', icon: 'verified' },
-  { value: 'backtest',   label: 'Backtest',    icon: 'science' },
+  { value: 'heatmap',  label: 'Heatmap',       icon: 'grid_view'      },
+  { value: 'charts',   label: 'Charts',         icon: 'show_chart'     },
+  { value: 'trend',    label: 'Trend',          icon: 'trending_up'    },
+  { value: 'ai',       label: 'AI Engine',      icon: 'psychology'     },
+  { value: 'decision', label: 'ຕັດສິນໃຈ',        icon: 'stars'          },
+  { value: 'predict',  label: 'ທຳນາຍງວດໜ້າ',    icon: 'auto_awesome'   },
+  { value: 'news',     label: 'ຂ່າວ AI',         icon: 'newspaper'      },
+  { value: 'dsbacktest', label: 'DS Backtest',  icon: 'verified'       },
+  { value: 'backtest', label: 'Backtest',        icon: 'science'        },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -490,6 +491,353 @@ function BacktestPanel({ draws, range, backtest, backtestNum, setBacktestNum }) 
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ENHANCED PREDICTION ENGINE PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PredictionEnginePanel({ prediction, backtest, epTrials, setEpTrials }) {
+  if (!prediction) return <div className="text-center py-20 text-white/50">ຂໍ້ມູນບໍ່ພໍ</div>
+
+  const { top10, lastResult, nextDate, monthName, weekdayName, pairTopFollowers, n, base } = prediction
+
+  const nextDateStr = nextDate
+    ? `${nextDate.getDate()}/${nextDate.getMonth() + 1}/${nextDate.getFullYear()}`
+    : '—'
+
+  const maxTotal = top10[0]?.total ?? 1
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Disclaimer ── */}
+      <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/25 rounded-xl px-4 py-2.5 text-xs text-[#fbbf24] flex items-start gap-2">
+        <span className="material-symbols-outlined text-[14px] mt-0.5 shrink-0">warning</span>
+        ການທຳນາຍນີ້ອ້າງອີງຈາກສະຖິຕິ 8 ດ້ານ — ຫວຍລາວເປັນການສຸ່ມ ບໍ່ຮັບປະກັນຜົນ
+      </div>
+
+      {/* ── Context Bar ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'ຜົນງວດຫຼ້າສຸດ',  val: lastResult ?? '—',   sub: 'ຜົນ 2 ຕົວ',           c: '#818cf8' },
+          { label: 'ງວດຖັດໄປ',       val: nextDateStr,          sub: weekdayName ?? '',     c: '#22d3ee' },
+          { label: 'ເດືອນ',           val: monthName ?? '—',     sub: 'ເດືອນ next draw',    c: '#a78bfa' },
+          { label: 'ວິເຄາະຈາກ',       val: n,                    sub: 'ງວດ',                 c: '#6cf8bb' },
+        ].map(({ label, val, sub, c }) => (
+          <div key={label} className="bg-zinc-900 border border-zinc-700/60 rounded-2xl px-4 py-3 text-center shadow-sm">
+            <p className="text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: c + 'cc' }}>{label}</p>
+            <p className="text-2xl font-black text-white font-mono">{val}</p>
+            <p className="text-[9px] mt-0.5" style={{ color: c + '99' }}>{sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Signal Legend ── */}
+      <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-700/60 shadow-sm">
+        <p className="text-xs font-black text-white/70 uppercase tracking-widest mb-3">ສັນຍານທຳນາຍ 8 ດ້ານ (100pts max)</p>
+        <div className="flex gap-2 flex-wrap">
+          {ENHANCED_SIGNALS.map(({ key, label, color, max, icon }) => (
+            <div key={key} className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1.5 rounded-full border"
+              style={{ background: color + '18', color, borderColor: color + '40' }}>
+              <span className="material-symbols-outlined text-[12px]">{icon}</span>
+              {label}
+              <span className="text-[9px] opacity-60">{max}pts</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Top 10 Predictions ── */}
+      <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-6 border border-white/[0.09] shadow-2xl shadow-black/50">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#a855f7] flex items-center justify-center shadow-lg">
+            <span className="material-symbols-outlined text-white text-[22px]">auto_awesome</span>
+          </div>
+          <div>
+            <h3 className="font-black text-white text-xl">Top 10 ເລກລວມຄວາມໜ້າຈະເປັນ</h3>
+            <p className="text-xs text-white/40">8-Signal Composite · {n} ງວດ · ງວດຖັດໄປ {nextDateStr} ({weekdayName})</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {top10.map((s, i) => (
+            <div key={s.num}
+              className={`rounded-2xl p-4 border transition-all
+                ${i === 0 ? 'bg-[#6366f1]/15 border-[#6366f1]/40' :
+                  i < 3  ? 'bg-[#a855f7]/10 border-[#a855f7]/25' :
+                           'bg-white/[0.03] border-white/[0.06]'}`}
+            >
+              <div className="flex items-center gap-3 mb-2.5">
+                {/* Rank badge */}
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0
+                  ${i === 0 ? 'bg-gradient-to-br from-[#6366f1] to-[#a855f7] text-white' :
+                    i === 1 ? 'bg-[#94a3b8] text-black' :
+                    i === 2 ? 'bg-[#b45309] text-white' : 'bg-white/[0.08] text-white/40'}`}>
+                  {i + 1}
+                </div>
+
+                {/* Number */}
+                <span className={`font-black font-mono text-3xl shrink-0
+                  ${i === 0 ? 'text-[#818cf8]' : i < 3 ? 'text-[#c4b5fd]' : 'text-white'}`}>
+                  {s.num}
+                </span>
+
+                {/* Mirror display */}
+                {s.mirror !== s.num && (
+                  <span className="text-[10px] text-[#f472b6]/70 font-bold font-mono shrink-0">↔{s.mirror}</span>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  {/* Main probability bar */}
+                  <div className="relative h-5 bg-white/[0.06] rounded-full overflow-hidden mb-1.5">
+                    <div className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${s.probability}%`, background: 'linear-gradient(90deg,#6366f1,#a855f7,#f472b6)' }} />
+                    <span className="absolute inset-0 flex items-center justify-end pr-2.5 text-[10px] font-black text-white">
+                      {s.probability}%
+                    </span>
+                  </div>
+
+                  {/* 8-signal mini bars */}
+                  <div className="flex gap-1 flex-wrap">
+                    {ENHANCED_SIGNALS.map(({ key, label, color, max }) => (
+                      <div key={key} className="flex items-center gap-0.5">
+                        <span className="text-[8px] font-bold hidden sm:block" style={{ color: color + '99' }}>{label}</span>
+                        <div className="w-10 h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${(s[key] / max) * 100}%`, background: color }} />
+                        </div>
+                        <span className="text-[8px] font-black" style={{ color }}>{s[key]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Meta badges */}
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
+                    ${s.decisionScore === 3 ? 'bg-[#f97316]/20 text-[#f97316]' :
+                      s.decisionScore === 2 ? 'bg-[#818cf8]/20 text-[#818cf8]' :
+                                              'bg-white/[0.05] text-white/30'}`}>
+                    {'★'.repeat(s.decisionScore) + '☆'.repeat(3 - s.decisionScore)}
+                  </span>
+                  <span className={`text-[10px] font-bold ${s.momentum > 0 ? 'text-[#6cf8bb]' : 'text-[#f87171]'}`}>
+                    {s.momentum > 0 ? '↑' : '↓'}{Math.abs(s.r10)}×/10
+                  </span>
+                  <span className="text-[9px] text-white/30">{s.total.toFixed(1)}pts</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Signal Breakdown Grid ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+        {/* Monthly top numbers */}
+        <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-700/60 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-[15px] text-[#818cf8]">calendar_month</span>
+            <p className="text-[11px] font-black text-white/80">ເດືອນ {monthName} ປີກ່ອນ</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {top10.filter(s => s.monthFreqCount > 0).slice(0, 6).map(s => (
+              <span key={s.num} className="font-black font-mono text-sm px-2 py-1 rounded-lg bg-[#818cf8]/25 text-[#818cf8] border border-[#818cf8]/40">
+                {s.num}<span className="text-[9px] ml-0.5 opacity-70">{s.monthFreqCount}x</span>
+              </span>
+            ))}
+            {top10.filter(s => s.monthFreqCount > 0).length === 0 && (
+              <p className="text-xs text-zinc-400">ຍັງບໍ່ມີ</p>
+            )}
+          </div>
+        </div>
+
+        {/* Weekday top numbers */}
+        <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-700/60 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-[15px] text-[#22d3ee]">today</span>
+            <p className="text-[11px] font-black text-white/80">ວັນ{weekdayName} ປີກ່ອນ</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {top10.filter(s => s.dayFreqCount > 0).slice(0, 6).map(s => (
+              <span key={s.num} className="font-black font-mono text-sm px-2 py-1 rounded-lg bg-[#22d3ee]/20 text-[#22d3ee] border border-[#22d3ee]/35">
+                {s.num}<span className="text-[9px] ml-0.5 opacity-70">{s.dayFreqCount}x</span>
+              </span>
+            ))}
+            {top10.filter(s => s.dayFreqCount > 0).length === 0 && (
+              <p className="text-xs text-zinc-400">ຍັງບໍ່ມີ</p>
+            )}
+          </div>
+        </div>
+
+        {/* Pair continuation */}
+        <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-700/60 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-[15px] text-[#a78bfa]">link</span>
+            <p className="text-[11px] font-black text-white/80">ຕໍ່ຈາກ {lastResult ?? '—'}</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {pairTopFollowers.filter(p => p.cnt > 0).map(p => (
+              <span key={p.num} className="font-black font-mono text-sm px-2 py-1 rounded-lg bg-[#a78bfa]/20 text-[#a78bfa] border border-[#a78bfa]/35">
+                {p.num}<span className="text-[9px] ml-0.5 opacity-70">{p.cnt}x</span>
+              </span>
+            ))}
+            {pairTopFollowers.filter(p => p.cnt > 0).length === 0 && (
+              <p className="text-xs text-zinc-400">ຍັງບໍ່ມີ pair data</p>
+            )}
+          </div>
+        </div>
+
+        {/* Mirror pairs */}
+        <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-700/60 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-[15px] text-[#f472b6]">sync_alt</span>
+            <p className="text-[11px] font-black text-white/80">ເລກສະລັບ (Mirror)</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {top10.filter(s => s.mirrorW > 0 && s.mirror !== s.num).slice(0, 5).map(s => (
+              <span key={s.num} className="font-black font-mono text-sm px-2 py-1 rounded-lg bg-[#f472b6]/20 text-[#f472b6] border border-[#f472b6]/35">
+                {s.num}↔{s.mirror}
+              </span>
+            ))}
+            {top10.filter(s => s.mirrorW > 0 && s.mirror !== s.num).length === 0 && (
+              <p className="text-xs text-zinc-400">ບໍ່ມີ mirror active</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Summary row ── */}
+      <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-700/60 shadow-sm">
+        <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mb-3">ສະຫຼຸບ 10 ເລກເດັ່ນ</p>
+        <div className="flex flex-wrap gap-2">
+          {top10.map((s, i) => (
+            <div key={s.num} className={`flex flex-col items-center px-3 py-2 rounded-xl border
+              ${i === 0 ? 'bg-[#6366f1]/20 border-[#6366f1]/50' :
+                i < 3  ? 'bg-[#a855f7]/15 border-[#a855f7]/35' :
+                         'bg-white/[0.05] border-white/[0.10]'}`}>
+              <span className="text-[9px] text-white/30 font-bold">#{i + 1}</span>
+              <span className={`font-black font-mono text-xl
+                ${i === 0 ? 'text-[#818cf8]' : i < 3 ? 'text-[#c4b5fd]' : 'text-white'}`}>
+                {s.num}
+              </span>
+              <span className="text-[9px] font-bold text-white/40">{s.probability}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Enhanced Backtest ── */}
+      <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-6 border border-white/[0.09] shadow-2xl shadow-black/50">
+        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#a855f7] flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-[18px]">verified</span>
+            </div>
+            <div>
+              <h3 className="font-black text-white text-base">Decision Score Accuracy Backtest</h3>
+              <p className="text-xs text-white/40">ທົດສອບ 8-Signal Engine ກັບຂໍ້ມູນຍ້ອນຫຼັງ</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-white/50">ງວດທົດສອບ:</span>
+            {[10, 21, 30, 50].map(v => (
+              <button key={v}
+                onClick={() => setEpTrials(v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all
+                  ${epTrials === v ? 'bg-[#6366f1] text-white' : 'bg-white/[0.08] text-white/50 hover:text-white'}`}>
+                {v}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {!backtest && (
+          <p className="text-center text-white/30 py-8">ຂໍ້ມູນຍ້ອນຫຼັງບໍ່ພໍ — ຕ້ອງການ {epTrials + 5}+ ງວດ</p>
+        )}
+
+        {backtest && (
+          <>
+            {/* Accuracy KPIs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              {[
+                { label: 'Top-1 ຖືກ',  val: backtest.hits1,   pct: backtest.trials, c: '#fbbf24', icon: 'star' },
+                { label: 'Top-5 ຖືກ',  val: backtest.hits5,   pct: backtest.trials, c: '#6cf8bb', icon: 'check_circle' },
+                { label: 'Top-10 ຖືກ', val: backtest.hits10,  pct: backtest.trials, c: '#818cf8', icon: 'done_all' },
+                { label: 'ງວດທົດສອບ',  val: backtest.trials,  pct: null,            c: '#94a3b8', icon: 'science' },
+              ].map(({ label, val, pct, c, icon }) => (
+                <div key={label} className="bg-zinc-800/80 rounded-xl p-4 border border-zinc-700/60 text-center">
+                  <span className="material-symbols-outlined text-[16px] mb-1 block" style={{ color: c }}>{icon}</span>
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: c + 'aa' }}>{label}</p>
+                  <p className="text-2xl font-black text-white">{val}</p>
+                  {pct !== null && (
+                    <p className="text-[10px] mt-0.5" style={{ color: c + '80' }}>
+                      {(val / pct * 100).toFixed(1)}%
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Result table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.08]">
+                    {['ງວດ','ວັນທີ','ຜົນຈິງ','ທຳນາຍ #1','ໃນ Top5','ໃນ Top10','Rank'].map(h => (
+                      <th key={h} className="text-left py-2 px-2 text-white/30 font-bold">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {backtest.results.map((r, i) => (
+                    <tr key={i} className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]
+                      ${r.hit1 ? 'bg-[#fbbf24]/5' : r.hit5 ? 'bg-[#6cf8bb]/5' : r.hit10 ? 'bg-[#818cf8]/5' : ''}`}>
+                      <td className="py-2 px-2 font-bold text-white/60">#{r.drawNum}</td>
+                      <td className="py-2 px-2 text-white/40">{r.date?.slice(0, 10)}</td>
+                      <td className="py-2 px-2 font-black font-mono text-white text-base">{r.actual}</td>
+                      <td className="py-2 px-2">
+                        <span className={`font-black font-mono text-base ${r.hit1 ? 'text-[#fbbf24]' : 'text-white/50'}`}>
+                          {r.top1}
+                          {r.hit1 && <span className="material-symbols-outlined text-[12px] ml-1 align-middle text-[#fbbf24]">star</span>}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2 text-center">
+                        {r.hit5
+                          ? <span className="material-symbols-outlined text-[14px] text-[#6cf8bb]">check_circle</span>
+                          : <span className="text-white/15">—</span>}
+                      </td>
+                      <td className="py-2 px-2 text-center">
+                        {r.hit10
+                          ? <span className="material-symbols-outlined text-[14px] text-[#818cf8]">done_all</span>
+                          : <span className="text-white/15">—</span>}
+                      </td>
+                      <td className="py-2 px-2 text-center">
+                        {r.actualRank
+                          ? <span className={`font-black text-xs px-1.5 py-0.5 rounded-md
+                              ${r.actualRank === 1 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' :
+                                r.actualRank <= 5  ? 'bg-[#6cf8bb]/20 text-[#6cf8bb]' :
+                                                     'bg-[#818cf8]/20 text-[#818cf8]'}`}>
+                              #{r.actualRank}
+                            </span>
+                          : <span className="text-white/15">—</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="mt-4 text-[10px] text-white/25 flex items-start gap-1.5">
+              <span className="material-symbols-outlined text-[12px] mt-px shrink-0">info</span>
+              Backtest ວິ່ງ {ENHANCED_SIGNALS.length} signals engine ຕໍ່ {backtest.trials} ງວດ — ໂດຍໃຊ້ຂໍ້ມູນກ່ອນງວດນັ້ນເທົ່ານັ້ນ (no leakage)
+            </p>
+          </>
+        )}
+      </div>
+
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -502,16 +850,19 @@ export default function AnalyticsPage() {
   const [backtestNum, setBacktestNum] = useState('')
   const [aiTrials, setAiTrials] = useState(10)
   const [dsTrials, setDsTrials] = useState(21)
+  const [epTrials, setEpTrials] = useState(21)
   const [selectedType, setSelectedType] = useState('all')
 
   const filteredDraws = useMemo(() => (
     selectedType === 'all' ? draws : draws?.filter(d => String(d.type_id) === selectedType)
   ), [draws, selectedType])
 
-  const analytics    = useMemo(() => computeAnalytics(filteredDraws, range), [filteredDraws, range])
-  const backtest     = useMemo(() => computeBacktest(filteredDraws, range, backtestNum), [filteredDraws, range, backtestNum])
-  const aiBacktest   = useMemo(() => computeAIBacktest(filteredDraws, aiTrials), [filteredDraws, aiTrials])
-  const dsBacktest   = useMemo(() => computeDecisionBacktest(filteredDraws, dsTrials), [filteredDraws, dsTrials])
+  const analytics         = useMemo(() => computeAnalytics(filteredDraws, range), [filteredDraws, range])
+  const backtest          = useMemo(() => computeBacktest(filteredDraws, range, backtestNum), [filteredDraws, range, backtestNum])
+  const aiBacktest        = useMemo(() => computeAIBacktest(filteredDraws, aiTrials), [filteredDraws, aiTrials])
+  const dsBacktest        = useMemo(() => computeDecisionBacktest(filteredDraws, dsTrials), [filteredDraws, dsTrials])
+  const enhancedPrediction = useMemo(() => computeEnhancedPrediction(filteredDraws, range), [filteredDraws, range])
+  const enhancedBacktest  = useMemo(() => computeEnhancedBacktest(filteredDraws, epTrials), [filteredDraws, epTrials])
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -816,9 +1167,9 @@ export default function AnalyticsPage() {
             <div className="space-y-2.5 mt-5">
               {overdue.map((s, i) => (
                 <div key={s.num} className="flex items-center gap-3">
-                  <span className="text-[10px] text-white/50 w-5 text-right">{i + 1}</span>
-                  <span className="font-black font-mono text-white bg-muted/70 backdrop-blur-sm rounded-lg px-3 py-1.5 text-sm w-12 text-center shadow-sm ring-1 ring-border/40">{s.num}</span>
-                  <div className="flex-1 relative h-7 bg-muted/50 rounded-full overflow-hidden">
+                  <span className="text-[10px] text-muted-foreground w-5 text-right">{i + 1}</span>
+                  <span className="font-black font-mono text-white bg-zinc-700 rounded-lg px-3 py-1.5 text-sm w-12 text-center shadow-sm ring-1 ring-white/10">{s.num}</span>
+                  <div className="flex-1 relative h-7 bg-zinc-800/80 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{
@@ -1292,6 +1643,16 @@ export default function AnalyticsPage() {
             </>
           )}
         </div>
+      )}
+
+      {/* ── TAB: PREDICT ────────────────────────────────────────────────────── */}
+      {mode === 'predict' && (
+        <PredictionEnginePanel
+          prediction={enhancedPrediction}
+          backtest={enhancedBacktest}
+          epTrials={epTrials}
+          setEpTrials={setEpTrials}
+        />
       )}
 
       {/* ── TAB: BACKTEST ───────────────────────────────────────────────────── */}

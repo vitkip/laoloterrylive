@@ -158,6 +158,223 @@ export const COMBINED_SIGNALS = [
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ENHANCED PREDICTION ENGINE  (8 orthogonal signals × weighted pts = 100 max)
+//
+// Signals:
+//   freqW     (15) — Raw historical frequency
+//   overdueW  (15) — Overdue ratio vs own avg gap
+//   momentumW (12) — Recent 10-draw trend momentum (positive only)
+//   decisionW  (9) — Boolean decision-score triggers (3 × 3pts)
+//   monthlyW  (15) — Frequency in same month as next draw
+//   weekdayW  (15) — Frequency on same weekday as next draw
+//   pairW     (12) — How often this number follows the last result
+//   mirrorW    (7) — Mirror/reverse digit bonus (ເລກສະລັບ)
+// Total max: 100pts
+// ─────────────────────────────────────────────────────────────────────────────
+
+const _LAO_MONTHS_FULL = ['ມັງກອນ','ກຸມພາ','ມີນາ','ເມສາ','ພຶດສະພາ','ມິຖຸນາ','ກໍລະກົດ','ສິງຫາ','ກັນຍາ','ຕຸລາ','ພະຈິກ','ທັນວາ']
+const _LAO_WEEKDAYS    = ['ອາທິດ','ຈັນ','ອັງຄານ','ພຸດ','ພະຫັດ','ສຸກ','ເສົາ']
+
+function _getNextDrawDate(from = new Date()) {
+  const d = new Date(from)
+  d.setDate(d.getDate() + 1)
+  d.setHours(12, 0, 0, 0)
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1)
+  return d
+}
+
+export const ENHANCED_SIGNALS = [
+  { key: 'freqW',     label: 'ຄວາມຖີ່',   color: '#ef4444', max: 15, icon: 'equalizer'     },
+  { key: 'overdueW',  label: 'ຊ້ານານ',     color: '#fbbf24', max: 15, icon: 'hourglass_top' },
+  { key: 'momentumW', label: 'Momentum',   color: '#6cf8bb', max: 12, icon: 'trending_up'   },
+  { key: 'decisionW', label: 'ສັນຍານ★',    color: '#f97316', max:  9, icon: 'stars'          },
+  { key: 'monthlyW',  label: 'ເດືອນ',      color: '#818cf8', max: 15, icon: 'calendar_month' },
+  { key: 'weekdayW',  label: 'ວັນອອກ',     color: '#22d3ee', max: 15, icon: 'today'          },
+  { key: 'pairW',     label: 'ຕໍ່ຈາກ',     color: '#a78bfa', max: 12, icon: 'link'           },
+  { key: 'mirrorW',   label: 'ສະລັບ',      color: '#f472b6', max:  7, icon: 'sync_alt'       },
+]
+
+/**
+ * Enhanced Prediction Engine — combines 8 independent signals.
+ * @param {Array}  draws       Newest-first sorted draws (from DataContext)
+ * @param {string} range       Number of draws to analyse, or 'all'
+ * @param {string|Date} [targetDate]  Override target draw date (for backtesting)
+ */
+export function computeEnhancedPrediction(draws, range, targetDate = null) {
+  if (!draws?.length) return null
+  const n = range === 'all' ? draws.length : Math.min(parseInt(range), draws.length)
+  const sliced = draws.slice(0, n)
+  const chrono  = [...sliced].reverse()
+
+  const base = computeAnalytics(draws, range)
+  if (!base) return null
+  const { scores } = base
+
+  // ── Last draw result (for pairing signal) ──
+  const lastResult = sliced[0]?.results_detail?.find(r => r.prize_type === '2_digits')?.result_value ?? null
+
+  // ── Target draw date (live: tomorrow weekday; backtest: actual draw date) ──
+  const nextDate    = targetDate ? new Date(targetDate) : _getNextDrawDate(new Date())
+  const nextMonth   = nextDate.getMonth() + 1   // 1-12
+  const nextWeekday = nextDate.getDay()          // 0-6
+
+  // ── Monthly & weekday frequency maps ──
+  const monthFreq = {}; const dayFreq = {}
+  for (let i = 0; i < 100; i++) {
+    const k = i.toString().padStart(2, '0')
+    monthFreq[k] = 0; dayFreq[k] = 0
+  }
+  chrono.forEach(d => {
+    const v = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    if (!v || monthFreq[v] === undefined) return
+    const dd = new Date(d.draw_date)
+    if (dd.getMonth() + 1 === nextMonth) monthFreq[v]++
+    if (dd.getDay() === nextWeekday)     dayFreq[v]++
+  })
+
+  // ── Pairing map: what typically follows lastResult? ──
+  const pairCount = {}
+  for (let i = 0; i < 100; i++) pairCount[i.toString().padStart(2, '0')] = 0
+  if (lastResult) {
+    chrono.forEach((d, idx) => {
+      if (idx >= chrono.length - 1) return
+      const curr = d.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+      const next = chrono[idx + 1]?.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+      if (curr === lastResult && next && pairCount[next] !== undefined) pairCount[next]++
+    })
+  }
+
+  const maxMonthFreq = Math.max(...Object.values(monthFreq), 1)
+  const maxDayFreq   = Math.max(...Object.values(dayFreq),   1)
+  const maxPairCount = Math.max(...Object.values(pairCount), 1)
+  const maxFreq      = Math.max(...scores.map(s => s.freq),  1)
+  const maxMom       = Math.max(...scores.filter(s => s.momentum > 0).map(s => s.momentum), 0.001)
+
+  // Score map for mirror lookup
+  const scoreMap = Object.fromEntries(scores.map(s => [s.num, s]))
+
+  const scored = scores.map(s => {
+    const { num } = s
+
+    // Signal 1: frequency (15 pts)
+    const freqW     = (s.freq / maxFreq) * 15
+
+    // Signal 2: overdue / gap ratio (15 pts)
+    const overdueW  = Math.min(s.overdue / 3, 1) * 15
+
+    // Signal 3: positive momentum only (12 pts)
+    const momentumW = s.momentum > 0 ? (s.momentum / maxMom) * 12 : 0
+
+    // Signal 4: decision score boolean triggers (9 pts)
+    const decisionW = (s.decisionScore / 3) * 9
+
+    // Signal 5: same-month historical frequency (15 pts)
+    const monthlyW  = (monthFreq[num] / maxMonthFreq) * 15
+
+    // Signal 6: same-weekday historical frequency (15 pts)
+    const weekdayW  = (dayFreq[num] / maxDayFreq) * 15
+
+    // Signal 7: pair continuation from last result (12 pts)
+    const pairW     = lastResult ? (pairCount[num] / maxPairCount) * 12 : 0
+
+    // Signal 8: mirror/reverse digit bonus — ເລກສະລັບ (7 pts)
+    const mirror  = num[1] + num[0]
+    const mirrorS = scoreMap[mirror]
+    const mirrorBoost = mirrorS
+      ? ((mirrorS.momentum > 0 ? 0.5 : 0) + (mirrorS.overdue > 1 ? 0.5 : 0))
+      : 0
+    const mirrorW = mirrorBoost * 7
+
+    const total = +(freqW + overdueW + momentumW + decisionW + monthlyW + weekdayW + pairW + mirrorW).toFixed(2)
+
+    return {
+      ...s,
+      num,
+      total,
+      freqW:           +freqW.toFixed(1),
+      overdueW:        +overdueW.toFixed(1),
+      momentumW:       +momentumW.toFixed(1),
+      decisionW:       +decisionW.toFixed(1),
+      monthlyW:        +monthlyW.toFixed(1),
+      weekdayW:        +weekdayW.toFixed(1),
+      pairW:           +pairW.toFixed(1),
+      mirrorW:         +mirrorW.toFixed(1),
+      mirror,
+      monthFreqCount:  monthFreq[num],
+      dayFreqCount:    dayFreq[num],
+      pairFollowCount: pairCount[num],
+    }
+  }).sort((a, b) => b.total - a.total)
+
+  const maxTotal = scored[0]?.total ?? 1
+  const top10 = scored.slice(0, 10).map(s => ({
+    ...s,
+    probability: +(s.total / maxTotal * 100).toFixed(1),
+  }))
+
+  const pairTopFollowers = Object.entries(pairCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([num, cnt]) => ({ num, cnt }))
+
+  return {
+    top10,
+    scored,
+    lastResult,
+    nextDate,
+    nextMonth,
+    nextWeekday,
+    monthName:   _LAO_MONTHS_FULL[nextMonth - 1],
+    weekdayName: _LAO_WEEKDAYS[nextWeekday],
+    n,
+    base,
+    maxTotal,
+    pairTopFollowers,
+  }
+}
+
+/**
+ * Backtest the Enhanced Prediction Engine over the last `trials` draws.
+ */
+export function computeEnhancedBacktest(draws, trials = 21) {
+  if (!draws?.length || draws.length < trials + 5) return null
+  const results = []
+  for (let i = 0; i < trials; i++) {
+    const draw   = draws[i]
+    const actual = draw?.results_detail?.find(r => r.prize_type === '2_digits')?.result_value
+    if (!actual) continue
+    const training = draws.slice(i + 1)
+    if (training.length < 5) continue
+    const pred = computeEnhancedPrediction(training, 'all', draw.draw_date)
+    if (!pred) continue
+    const top10Nums = pred.top10.map(s => s.num)
+    const top5Nums  = top10Nums.slice(0, 5)
+    const top1      = top10Nums[0]
+    const actualRank = top10Nums.indexOf(actual)
+    results.push({
+      drawNum:    draw.draw_number,
+      date:       draw.draw_date,
+      actual,
+      top1,
+      top10Nums,
+      hit1:       top1 === actual,
+      hit5:       top5Nums.includes(actual),
+      hit10:      top10Nums.includes(actual),
+      score1:     pred.top10[0]?.probability,
+      actualRank: actualRank >= 0 ? actualRank + 1 : null,
+    })
+  }
+  const t = results.length
+  return {
+    results,
+    trials: t,
+    hits1:  results.filter(r => r.hit1).length,
+    hits5:  results.filter(r => r.hit5).length,
+    hits10: results.filter(r => r.hit10).length,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // DATE FORMATTER (Lao)
 // ─────────────────────────────────────────────────────────────────────────────
 
