@@ -243,6 +243,18 @@ if ($_drd_fk && $_drd_fk['DELETE_RULE'] !== 'SET NULL') {
 }
 unset($_drd_uniq, $_drd_fk, $_drd_fk_name);
 
+// Ensure contact_messages table exists
+$conn->query("CREATE TABLE IF NOT EXISTS contact_messages (
+    message_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+// Add is_read column to existing tables that were created before this migration
+@$conn->query("ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS is_read TINYINT(1) NOT NULL DEFAULT 0");
+
 // Retention cleanup — runs on ~1% of requests (no cron needed).
 // visitor_stats: keep 90 days | user_logs: keep 365 days
 if (mt_rand(1, 100) === 1) {
@@ -1617,6 +1629,137 @@ switch ($action) {
             http_response_code(500); echo json_encode(["error" => $conn->error]);
         }
         $stmt->close();
+        break;
+
+    case 'submit_contact':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        $input = json_decode(file_get_contents('php://input'), true);
+        $name = trim($input['name'] ?? '');
+        $email = trim($input['email'] ?? '');
+        $message = trim($input['message'] ?? '');
+
+        if ($name === '' || $email === '' || $message === '') {
+            http_response_code(400);
+            echo json_encode(["error" => "ກະລຸນາຕື່ມຂໍ້ມູນໃຫ້ຄົບຖ້ວນ"]);
+            break;
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(["error" => "Email ບໍ່ຖືກຕ້ອງ"]);
+            break;
+        }
+
+        $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $name, $email, $message);
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "message" => "ສົ່ງຂໍ້ຄວາມສຳເລັດ!"]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["error" => "ເກີດຂໍ້ຜິດພາດ ກະລຸນາລອງໃໝ່"]);
+        }
+        $stmt->close();
+        break;
+
+    case 'list_contacts':
+        requireAuth('staff');
+
+        $search   = trim($_GET['search'] ?? '');
+        $page     = max(1, (int)($_GET['page'] ?? 1));
+        $perPage  = min(100, max(5, (int)($_GET['per_page'] ?? 15)));
+        $offset   = ($page - 1) * $perPage;
+
+        $where = [];
+        $params = [];
+        $types = '';
+
+        if ($search !== '') {
+            $where[] = "(name LIKE ? OR email LIKE ? OR message LIKE ?)";
+            $like = '%' . $search . '%';
+            $params = [$like, $like, $like];
+            $types = 'sss';
+        }
+
+        $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        // Count total
+        $countSql = "SELECT COUNT(*) AS total FROM contact_messages {$whereSql}";
+        if ($search !== '') {
+            $stmt = $conn->prepare($countSql);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $total = (int)$stmt->get_result()->fetch_assoc()['total'];
+            $stmt->close();
+        } else {
+            $total = (int)$conn->query($countSql)->fetch_assoc()['total'];
+        }
+
+        // Fetch records
+        $sql = "SELECT message_id, name, email, message, is_read, created_at FROM contact_messages {$whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        $stmt = $conn->prepare($sql);
+        if ($search !== '') {
+            $stmt->bind_param($types . 'ii', ...array_merge($params, [$perPage, $offset]));
+        } else {
+            $stmt->bind_param('ii', $perPage, $offset);
+        }
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        echo json_encode([
+            "data" => $rows,
+            "total" => $total,
+            "page" => $page,
+            "per_page" => $perPage,
+            "last_page" => ceil($total / $perPage)
+        ]);
+        break;
+
+    case 'delete_contact':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); echo json_encode(["error" => "Only POST allowed"]); break;
+        }
+        $admin = requireAuth('admin');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $mid   = (int)($input['message_id'] ?? 0);
+        if ($mid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid message_id"]); break; }
+        
+        $stmt = $conn->prepare("DELETE FROM contact_messages WHERE message_id=?");
+        $stmt->bind_param("i", $mid);
+        if ($stmt->execute()) {
+            // Log action
+            $ip = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+            $act = 'Delete contact message #' . $mid;
+            $logStmt = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?,?,?)");
+            $logStmt->bind_param("iss", $admin['user_id'], $act, $ip);
+            $logStmt->execute();
+            $logStmt->close();
+
+            echo json_encode(["success" => true]);
+        } else {
+            http_response_code(500); echo json_encode(["error" => $conn->error]);
+        }
+        $stmt->close();
+        break;
+
+    case 'get_unread_contact_count':
+        requireAuth('staff');
+        $result = $conn->query("SELECT COUNT(*) AS count FROM contact_messages WHERE is_read = 0");
+        $count  = $result ? (int)$result->fetch_assoc()['count'] : 0;
+        echo json_encode(["count" => $count]);
+        break;
+
+    case 'mark_contact_read':
+        requireAuth('staff');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $mid   = (int)($input['message_id'] ?? 0);
+        if ($mid <= 0) { http_response_code(400); echo json_encode(["error" => "Invalid message_id"]); break; }
+        $stmt = $conn->prepare("UPDATE contact_messages SET is_read = 1 WHERE message_id = ?");
+        $stmt->bind_param("i", $mid);
+        $stmt->execute();
+        $stmt->close();
+        echo json_encode(["success" => true]);
         break;
 
     default:
