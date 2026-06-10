@@ -1,99 +1,327 @@
 import { useStatistics } from '../hooks/useStatistics';
 
+/* ─── Inline styles ──────────────────────────────────────────── */
+const STYLE = `
+  /* ── Root ── */
+  .tm-root {
+    position: relative;
+    background: linear-gradient(158deg, #060911 0%, #080c17 52%, #050810 100%);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  .tm-mesh {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.009) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.009) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+  .tm-orb-green {
+    position: absolute; width: 320px; height: 320px; border-radius: 50%;
+    top: -110px; left: -70px; pointer-events: none;
+    background: radial-gradient(circle, rgba(22,163,74,0.11) 0%, transparent 68%);
+  }
+  .tm-orb-red {
+    position: absolute; width: 280px; height: 280px; border-radius: 50%;
+    bottom: -80px; right: -60px; pointer-events: none;
+    background: radial-gradient(circle, rgba(220,38,38,0.09) 0%, transparent 68%);
+  }
+
+  /* ── Header ── */
+  .tm-hdr {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 22px; position: relative; z-index: 10;
+  }
+  .tm-icon-box {
+    width: 44px; height: 44px; border-radius: 15px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #14532d 0%, #15803d 50%, #4ade80 100%);
+    box-shadow: 0 0 24px rgba(22,163,74,0.50), inset 0 1px 0 rgba(255,255,255,0.20);
+  }
+  .tm-title {
+    font-size: 17px; font-weight: 900; letter-spacing: -0.01em; margin: 0;
+    color: rgba(226,232,240,0.88);
+  }
+  .tm-sub { font-size: 11px; color: rgba(255,255,255,0.28); margin-top: 2px; }
+
+  /* ── Section headers ── */
+  .tm-sec-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .tm-sec-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .tm-sec-lbl  { font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+  .tm-sec-cnt  {
+    font-size: 11px; font-weight: 900; margin-left: auto;
+    padding: 2px 9px; border-radius: 20px;
+  }
+
+  /* ── Items list ── */
+  .tm-list { display: flex; flex-direction: column; gap: 6px; }
+
+  /* ── Single item row ── */
+  .tm-item {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 10px 12px; border-radius: 13px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.020);
+    transition: all 0.18s; position: relative; overflow: hidden;
+  }
+  .tm-item.tm-up {
+    border-color: rgba(22,163,74,0.18);
+    background: rgba(22,163,74,0.05);
+  }
+  .tm-item.tm-up:hover {
+    background: rgba(22,163,74,0.09);
+    border-color: rgba(74,222,128,0.28);
+    transform: translateY(-1px);
+  }
+  .tm-item.tm-dn {
+    border-color: rgba(220,38,38,0.18);
+    background: rgba(220,38,38,0.05);
+  }
+  .tm-item.tm-dn:hover {
+    background: rgba(220,38,38,0.09);
+    border-color: rgba(248,113,113,0.28);
+    transform: translateY(-1px);
+  }
+  /* top-1 shimmer */
+  .tm-item.tm-top-item::before {
+    content: '';
+    position: absolute; top: 0; left: -120%; width: 55%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    animation: tm-shimmer 2.8s ease-in-out infinite;
+  }
+  @keyframes tm-shimmer {
+    0%   { left: -120%; }
+    100% { left: 200%; }
+  }
+
+  /* ── Lottery balls ── */
+  .tm-ball {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 15px; color: #fff;
+    position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .tm-ball::after {
+    content: '';
+    position: absolute; top: 8%; left: 12%; width: 44%; height: 34%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.55) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .tm-ball-green {
+    background: radial-gradient(circle at 35% 30%, #86efac 0%, #16a34a 42%, #14532d 78%, #052e16 100%);
+    box-shadow: 0 4px 14px rgba(22,163,74,0.48), inset 0 -3px 6px rgba(0,0,0,0.22);
+  }
+  .tm-ball-red {
+    background: radial-gradient(circle at 35% 30%, #fca5a5 0%, #dc2626 42%, #7f1d1d 78%, #450a0a 100%);
+    box-shadow: 0 4px 14px rgba(220,38,38,0.48), inset 0 -3px 6px rgba(0,0,0,0.22);
+  }
+
+  /* ── Arrow animation ── */
+  .tm-arrow-up {
+    font-size: 16px; color: rgba(74,222,128,0.78); flex-shrink: 0;
+    animation: tm-bounce-up 1.7s ease-in-out infinite;
+  }
+  .tm-arrow-dn {
+    font-size: 16px; color: rgba(248,113,113,0.78); flex-shrink: 0;
+    animation: tm-bounce-dn 1.7s ease-in-out infinite;
+  }
+  @keyframes tm-bounce-up {
+    0%, 100% { transform: translateY(0);   opacity: 0.65; }
+    50%       { transform: translateY(-4px); opacity: 1.00; }
+  }
+  @keyframes tm-bounce-dn {
+    0%, 100% { transform: translateY(0);   opacity: 0.65; }
+    50%       { transform: translateY(4px);  opacity: 1.00; }
+  }
+
+  /* ── Info text ── */
+  .tm-info { flex: 1; min-width: 0; }
+  .tm-dir-up  { font-size: 11px; font-weight: 900; color: rgba(74,222,128,0.88); }
+  .tm-dir-dn  { font-size: 11px; font-weight: 900; color: rgba(248,113,113,0.88); }
+  .tm-compare { font-size: 10px; color: rgba(255,255,255,0.28); font-weight: 600; margin-top: 2px; }
+
+  /* ── Momentum % badge ── */
+  .tm-badge {
+    font-size: 13px; font-weight: 900;
+    padding: 5px 10px; border-radius: 10px; white-space: nowrap; flex-shrink: 0;
+  }
+  .tm-badge-green {
+    background: rgba(22,163,74,0.14);
+    color: rgba(74,222,128,0.92);
+    border: 1px solid rgba(74,222,128,0.18);
+  }
+  .tm-badge-red {
+    background: rgba(220,38,38,0.14);
+    color: rgba(248,113,113,0.92);
+    border: 1px solid rgba(248,113,113,0.18);
+  }
+
+  /* ── Empty ── */
+  .tm-empty {
+    font-size: 12px; color: rgba(255,255,255,0.22);
+    text-align: center; padding: 18px 0; font-weight: 700;
+    border: 1px dashed rgba(255,255,255,0.08);
+    border-radius: 12px;
+  }
+
+  /* ── Footer ── */
+  .tm-footer {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 20px; position: relative; z-index: 10;
+  }
+  .tm-footer-txt { font-size: 10px; color: rgba(255,255,255,0.20); font-weight: 600; }
+`;
+
+/* ─── MomentumBadge row ─────────────────────────────────────── */
+function MomentumRow({ item, type, isFirst }) {
+  const isRising = type === 'rising';
+  const pct = (Math.abs(item.momentum) * 100).toFixed(0);
+
+  return (
+    <div className={`tm-item ${isRising ? 'tm-up' : 'tm-dn'} ${isFirst ? 'tm-top-item' : ''}`}>
+      {/* Ball */}
+      <div className={`tm-ball ${isRising ? 'tm-ball-green' : 'tm-ball-red'}`}>
+        <span style={{ position: 'relative', zIndex: 1 }}>{item.number}</span>
+      </div>
+
+      {/* Direction arrow */}
+      <span className={`material-symbols-outlined ${isRising ? 'tm-arrow-up' : 'tm-arrow-dn'}`}>
+        {isRising ? 'trending_up' : 'trending_down'}
+      </span>
+
+      {/* Info */}
+      <div className="tm-info">
+        <div className={isRising ? 'tm-dir-up' : 'tm-dir-dn'}>
+          {isRising ? '▲ ກຳລັງຂຶ້ນ' : '▼ ກຳລັງລົງ'}
+        </div>
+        <div className="tm-compare">
+          {item.recentCount}/5 vs {item.baselineCount}/20
+        </div>
+      </div>
+
+      {/* Momentum badge */}
+      <span className={`tm-badge ${isRising ? 'tm-badge-green' : 'tm-badge-red'}`}>
+        {isRising ? '+' : ''}{pct}%
+      </span>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────── */
 export default function TrendMomentum({ timeframe }) {
   const { stats, loading } = useStatistics(timeframe);
   if (loading || !stats) return null;
   const { rising, falling } = stats.trendMomentum;
 
-  const MomentumBadge = ({ item, type }) => {
-    const isRising = type === 'rising';
-    const pct = (Math.abs(item.momentum) * 100).toFixed(0);
-    return (
-      <div className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all hover:-translate-y-0.5 duration-200
-        ${isRising
-          ? 'bg-[#edfdf5] dark:bg-[#052e16] border-[#6cf8bb]/30 dark:border-[#166534]/40'
-          : 'bg-[#fff4f4] dark:bg-[#2a1010] border-[#ffdad6]/50 dark:border-[#7f1d1d]/40'
-        }`}>
-        <div className="flex items-center gap-2.5">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-sm
-            ${isRising
-              ? 'bg-gradient-to-br from-[#006c49] to-[#00a36c] text-white'
-              : 'bg-gradient-to-br from-[#ba1a1a] to-[#dc2626] text-white'
-            }`}>
-            {item.number}
+  return (
+    <>
+      <style>{STYLE}</style>
+      <div className="tm-root p-6 sm:p-8">
+        <div className="tm-mesh" />
+        <div className="tm-orb-green" />
+        <div className="tm-orb-red" />
+
+        {/* ── Header ── */}
+        <div className="tm-hdr">
+          <div className="tm-icon-box">
+            <span
+              className="material-symbols-outlined text-white"
+              style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}
+            >
+              trending_up
+            </span>
           </div>
           <div>
-            <p className={`text-[11px] font-bold ${isRising ? 'text-[#006c49] dark:text-[#4ade80]' : 'text-[#ba1a1a] dark:text-[#f87171]'}`}>
-              {isRising ? '▲ ກຳລັງຂຶ້ນ' : '▼ ກຳລັງລົງ'}
-            </p>
-            <p className="text-[10px] text-muted-foreground">
-              {item.recentCount}/5 vs {item.baselineCount}/20
-            </p>
+            <h2 className="tm-title">ແນວໂນ້ມ Momentum</h2>
+            <p className="tm-sub">5 ງວດຫຼ້າສຸດ vs 20 ງວດ</p>
           </div>
         </div>
-        <span className={`text-[11px] font-black px-2 py-1 rounded-lg
-          ${isRising ? 'bg-[#006c49]/10 text-[#006c49] dark:text-[#4ade80]' : 'bg-[#ba1a1a]/10 text-[#ba1a1a] dark:text-[#f87171]'}`}>
-          {isRising ? '+' : ''}{pct}%
-        </span>
-      </div>
-    );
-  };
 
-  return (
-    <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm overflow-hidden relative">
-      <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-[#6cf8bb]/5 blur-3xl pointer-events-none" />
+        {/* ── Grid ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" style={{ position: 'relative', zIndex: 10 }}>
 
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6 relative z-10">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#006c49] to-[#4f46e5] flex items-center justify-center shadow-sm">
-          <span className="material-symbols-outlined text-white text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-            trending_up
+          {/* Rising */}
+          <div>
+            <div className="tm-sec-hdr">
+              <span
+                className="tm-sec-dot"
+                style={{ background: '#4ade80', boxShadow: '0 0 8px rgba(74,222,128,0.65)' }}
+              />
+              <span className="tm-sec-lbl" style={{ color: 'rgba(74,222,128,0.60)' }}>
+                ເລກຂຶ້ນ
+              </span>
+              <span
+                className="tm-sec-cnt"
+                style={{
+                  background: 'rgba(22,163,74,0.14)',
+                  color: 'rgba(74,222,128,0.85)',
+                  border: '1px solid rgba(74,222,128,0.18)',
+                }}
+              >
+                {rising.length}
+              </span>
+            </div>
+
+            {rising.length === 0 ? (
+              <div className="tm-empty">ບໍ່ມີ momentum ໃໝ່</div>
+            ) : (
+              <div className="tm-list">
+                {rising.map((item, i) => (
+                  <MomentumRow key={item.number} item={item} type="rising" isFirst={i === 0} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Falling */}
+          <div>
+            <div className="tm-sec-hdr">
+              <span
+                className="tm-sec-dot"
+                style={{ background: '#f87171', boxShadow: '0 0 8px rgba(248,113,113,0.65)' }}
+              />
+              <span className="tm-sec-lbl" style={{ color: 'rgba(248,113,113,0.60)' }}>
+                ເລກລົງ
+              </span>
+              <span
+                className="tm-sec-cnt"
+                style={{
+                  background: 'rgba(220,38,38,0.14)',
+                  color: 'rgba(248,113,113,0.85)',
+                  border: '1px solid rgba(248,113,113,0.18)',
+                }}
+              >
+                {falling.length}
+              </span>
+            </div>
+
+            {falling.length === 0 ? (
+              <div className="tm-empty">ບໍ່ມີ momentum ທີ່ຫຼຸດລົງ</div>
+            ) : (
+              <div className="tm-list">
+                {falling.map((item, i) => (
+                  <MomentumRow key={item.number} item={item} type="falling" isFirst={i === 0} />
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* ── Footer note ── */}
+        <div className="tm-footer">
+          <span
+            className="material-symbols-outlined"
+            style={{ fontSize: 12, color: 'rgba(255,255,255,0.20)', flexShrink: 0 }}
+          >
+            info
+          </span>
+          <span className="tm-footer-txt">
+            ເທียบ rate ການອອກ 5 ງວດຫຼ້າສຸດ vs 20 ງວດ — ຄ່າ +/– ຄື % ຄວາມຕ່າງ
           </span>
         </div>
-        <div>
-          <h2 className="text-base font-extrabold text-foreground tracking-tight">Trend Momentum</h2>
-          <p className="text-[11px] text-muted-foreground font-medium">5 ງວດຫຼ້າສຸດ vs 20 ງວດ</p>
-        </div>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 relative z-10">
-        {/* Rising */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full bg-[#00a36c]" />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              🔺 ເລກກຳລັງຂຶ້ນ ({rising.length})
-            </p>
-          </div>
-          {rising.length === 0
-            ? <p className="text-xs text-[#a0a3bd] py-4 text-center">ບໍ່ມີ momentum ໃໝ່</p>
-            : <div className="space-y-2">
-                {rising.map(item => <MomentumBadge key={item.number} item={item} type="rising" />)}
-              </div>
-          }
-        </div>
-
-        {/* Falling */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full bg-[#dc2626]" />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              🔻 ເລກກຳລັງລົງ ({falling.length})
-            </p>
-          </div>
-          {falling.length === 0
-            ? <p className="text-xs text-[#a0a3bd] py-4 text-center">ບໍ່ມີ momentum ທີ່ຫຼຸດລົງ</p>
-            : <div className="space-y-2">
-                {falling.map(item => <MomentumBadge key={item.number} item={item} type="falling" />)}
-              </div>
-          }
-        </div>
-      </div>
-
-      <p className="mt-5 text-[10px] text-[#a0a3bd] dark:text-[#555870] flex items-start gap-1.5 relative z-10">
-        <span className="material-symbols-outlined text-[12px] mt-px shrink-0">info</span>
-        ເທียบ rate ການອອກ 5 ງວດຫຼ້າສຸດ vs 20 ງວດ — ຄ່າ +/– ຄື % ຄວາມຕ່າງ
-      </p>
-    </div>
+    </>
   );
 }

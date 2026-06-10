@@ -144,17 +144,6 @@ const RANGE_OPTIONS = [
   { value: 'all', label: 'ທັງໝົດ' },
 ]
 
-const MODES = [
-  { value: 'heatmap',  label: 'Heatmap',       icon: 'grid_view'      },
-  { value: 'charts',   label: 'Charts',         icon: 'show_chart'     },
-  { value: 'trend',    label: 'Trend',          icon: 'trending_up'    },
-  { value: 'ai',       label: 'AI Engine',      icon: 'psychology'     },
-  { value: 'decision', label: 'ຕັດສິນໃຈ',        icon: 'stars'          },
-  { value: 'predict',  label: 'ທຳນາຍງວດໜ້າ',    icon: 'auto_awesome'   },
-  { value: 'news',     label: 'ຂ່າວ AI',         icon: 'newspaper'      },
-  { value: 'dsbacktest', label: 'DS Backtest',  icon: 'verified'       },
-  { value: 'backtest', label: 'Backtest',        icon: 'science'        },
-]
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHART TOOLTIPS
@@ -838,6 +827,87 @@ function PredictionEnginePanel({ prediction, backtest, epTrials, setEpTrials }) 
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// DESIGN SYSTEM — DEEP SPACE COMMAND TERMINAL
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MODE_META = {
+  heatmap:    { color: '#ef4444', label: 'Heatmap',     desc: 'Frequency Grid 00–99', icon: 'grid_view',    group: 'ວິເຄາະ' },
+  charts:     { color: '#818cf8', label: 'Charts',       desc: 'Time-Series Chart',    icon: 'show_chart',   group: 'ວິເຄາະ' },
+  trend:      { color: '#4ade80', label: 'Trend',        desc: 'Rising / Falling',     icon: 'trending_up',  group: 'ວິເຄາະ' },
+  ai:         { color: '#22d3ee', label: 'AI Engine',    desc: '3-Signal Score',       icon: 'psychology',   group: 'AI' },
+  decision:   { color: '#fbbf24', label: 'ຕັດສິນໃຈ',     desc: '★★★ Signals',          icon: 'stars',        group: 'AI' },
+  predict:    { color: '#a78bfa', label: 'ທຳນາຍ',        desc: '8-Signal Predict',     icon: 'auto_awesome', group: 'AI' },
+  news:       { color: '#fb923c', label: 'ຂ່າວ AI',       desc: 'Auto News Report',     icon: 'newspaper',    group: 'ທົດສອບ' },
+  dsbacktest: { color: '#6cf8bb', label: 'DS Backtest',  desc: 'Decision Accuracy',    icon: 'verified',     group: 'ທົດສອບ' },
+  backtest:   { color: '#f472b6', label: 'Backtest',      desc: 'Number Simulation',    icon: 'science',      group: 'ທົດສອບ' },
+}
+
+const MODE_GROUPS = [
+  { id: 'analysis', label: 'ວິເຄາະ', modes: ['heatmap', 'charts', 'trend'] },
+  { id: 'ai',       label: 'AI',      modes: ['ai', 'decision', 'predict'] },
+  { id: 'test',     label: 'ທົດສອບ',  modes: ['news', 'dsbacktest', 'backtest'] },
+]
+
+function ModeNav({ mode, setMode }) {
+  return (
+    <div className="overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div className="flex items-start gap-0 min-w-max">
+        {MODE_GROUPS.map((group, gi) => (
+          <div key={group.id} className="flex items-start">
+            {/* Group */}
+            <div className="flex flex-col gap-1.5 px-3 first:pl-0">
+              <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/30 font-jakarta px-1">
+                {group.label}
+              </span>
+              <div className="flex gap-1">
+                {group.modes.map(m => {
+                  const meta = MODE_META[m]
+                  const isActive = mode === m
+                  return (
+                    <button
+                      key={m}
+                      onClick={() => setMode(m)}
+                      className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold font-jakarta whitespace-nowrap transition-all duration-200"
+                      style={isActive ? {
+                        background: meta.color + '20',
+                        color: meta.color,
+                        border: `1px solid ${meta.color}50`,
+                        boxShadow: `0 0 16px ${meta.color}22, inset 0 1px 0 rgba(255,255,255,0.05)`,
+                      } : {
+                        background: 'rgba(255,255,255,0.025)',
+                        color: 'rgba(255,255,255,0.32)',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[13px]">{meta.icon}</span>
+                      {meta.label}
+                      {/* Active bottom dot */}
+                      {isActive && (
+                        <span
+                          className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                          style={{ background: meta.color }}
+                        />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            {/* Separator between groups */}
+            {gi < MODE_GROUPS.length - 1 && (
+              <div
+                className="self-stretch w-px mx-1 mt-5 mb-0.5 rounded-full opacity-20"
+                style={{ background: 'rgba(255,255,255,0.4)' }}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -853,33 +923,49 @@ export default function AnalyticsPage() {
   const [epTrials, setEpTrials] = useState(21)
   const [selectedType, setSelectedType] = useState('all')
 
+
   const filteredDraws = useMemo(() => (
     selectedType === 'all' ? draws : draws?.filter(d => String(d.type_id) === selectedType)
   ), [draws, selectedType])
 
-  const analytics         = useMemo(() => computeAnalytics(filteredDraws, range), [filteredDraws, range])
-  const backtest          = useMemo(() => computeBacktest(filteredDraws, range, backtestNum), [filteredDraws, range, backtestNum])
-  const aiBacktest        = useMemo(() => computeAIBacktest(filteredDraws, aiTrials), [filteredDraws, aiTrials])
-  const dsBacktest        = useMemo(() => computeDecisionBacktest(filteredDraws, dsTrials), [filteredDraws, dsTrials])
+  const analytics          = useMemo(() => computeAnalytics(filteredDraws, range), [filteredDraws, range])
+  const backtest           = useMemo(() => computeBacktest(filteredDraws, range, backtestNum), [filteredDraws, range, backtestNum])
+  const aiBacktest         = useMemo(() => computeAIBacktest(filteredDraws, aiTrials), [filteredDraws, aiTrials])
+  const dsBacktest         = useMemo(() => computeDecisionBacktest(filteredDraws, dsTrials), [filteredDraws, dsTrials])
   const enhancedPrediction = useMemo(() => computeEnhancedPrediction(filteredDraws, range), [filteredDraws, range])
-  const enhancedBacktest  = useMemo(() => computeEnhancedBacktest(filteredDraws, epTrials), [filteredDraws, epTrials])
+  const enhancedBacktest   = useMemo(() => computeEnhancedBacktest(filteredDraws, epTrials), [filteredDraws, epTrials])
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-violet-400" />
+      <div className="w-10 h-10 rounded-full border-[1.5px] border-[#22d3ee]/20 border-t-[#22d3ee] animate-spin" />
     </div>
   )
-  if (!analytics) return <div className="text-center py-20 text-white/50">ບໍ່ມີຂໍ້ມູນ</div>
+  if (!analytics) return <div className="text-center py-20 text-white/30 text-sm">ບໍ່ມີຂໍ້ມູນ</div>
 
   const { n, scores, series, freqBars, hot, cold, aiTop, rising, falling, overdue, decisionTop } = analytics
-
+  const meta   = MODE_META[mode]
   const topHot = hot?.[0]?.num ?? ''
 
   return (
     <div className="space-y-5">
+      <style>{`
+        @keyframes ap-scan {
+          0%   { transform: translateY(-100%); opacity: 0; }
+          10%  { opacity: 0.35; }
+          90%  { opacity: 0.35; }
+          100% { transform: translateY(100vh); opacity: 0; }
+        }
+        .ap-scan-line { animation: ap-scan 7s linear infinite; }
+        @keyframes ap-dot-pulse {
+          0%, 100% { transform: scale(1); opacity: 0.6; }
+          50%       { transform: scale(1.15); opacity: 1; }
+        }
+        .ap-dot-pulse { animation: ap-dot-pulse 2.5s ease-in-out infinite; }
+      `}</style>
+
       <SEO
         title={`AI Analytics ວິເຄາະຫວຍລາວ ${n} ງວດ | วิเคราะห์หวยลาว AI เลขเด็ดวันนี้`}
-        description={`ລະບົບວິເຄາະ Big Data ຫວຍລາວ ${n} ງວດ. Heatmap, Trend, Gap Analysis, AI Score, Backtest | วิเคราะห์ Big Data หวยลาว ${n} งวด Heatmap เทรนด์ Gap Analysis AI Score ตรวจผลหวยแบบเรียลไทม์`}
+        description={`ລະບົບວິເຄາະ Big Data ຫວຍລາວ ${n} ງວດ. Heatmap, Trend, Gap Analysis, AI Score, Backtest | วิเคราะห์ Big Data หวยลาว ${n} งวด`}
         keywords={[
           'AI Analytics', 'Big Data ຫວຍ', 'Heatmap ຫວຍ', 'Gap Analysis ຫວຍ',
           'วิเคราะห์หวย AI', 'หวยออกอะไร', 'เลขเด็ดวันนี้', 'AI หวยลาว',
@@ -899,45 +985,135 @@ export default function AnalyticsPage() {
         ]}
       />
 
-      {/* ── Hero Header ─────────────────────────────────────────────────────── */}
-      <div className="relative rounded-3xl overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#020818] via-[#001040] to-[#0f172a]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.3),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(108,248,187,0.08),transparent_55%)]" />
-        <div className="absolute right-6 bottom-0 text-[7rem] font-black text-white/[0.03] leading-none select-none pointer-events-none tracking-tighter">
+      {/* ── HERO ─────────────────────────────────────────────────────────────── */}
+      <div className="relative rounded-[2rem] overflow-hidden border border-white/[0.07] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8)]">
+        <div className="absolute inset-0" style={{ background: '#06091a' }} />
+        <div
+          className="absolute inset-0 transition-all duration-700"
+          style={{ background: `radial-gradient(ellipse 70% 80% at 90% 10%, ${meta.color}18, transparent 65%)` }}
+        />
+        <div className="absolute inset-0 bg-grid-glow bg-repeat opacity-30" />
+        <div className="absolute inset-x-0 top-0 h-[2px] ap-scan-line pointer-events-none"
+          style={{ background: `linear-gradient(90deg,transparent 0%,${meta.color}60 40%,${meta.color}90 50%,${meta.color}60 60%,transparent 100%)` }} />
+        <div className="absolute right-4 bottom-0 text-[9rem] sm:text-[13rem] font-jakarta font-black text-white/[0.025] leading-none select-none pointer-events-none">
           BIG DATA
         </div>
-        <div className="relative z-10 px-6 sm:px-10 py-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl border border-white/[0.15] rounded-full px-3 py-1 mb-4 shadow-lg shadow-violet-500/10">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-300 animate-pulse" />
-                <span className="text-white/70 text-[11px] font-bold uppercase tracking-widest">AI-Powered Analytics</span>
+
+        <div className="relative z-10 px-6 sm:px-12 py-10 sm:py-12">
+          <div className="flex flex-col lg:flex-row lg:items-start gap-8">
+            <div className="flex-1 min-w-0">
+              {/* Badge */}
+              <div
+                className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5 border font-jakarta"
+                style={{
+                  background: `${meta.color}10`,
+                  borderColor: `${meta.color}32`,
+                  boxShadow: `0 0 24px ${meta.color}14, inset 0 1px 0 rgba(255,255,255,0.04)`,
+                }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full ap-dot-pulse" style={{ background: meta.color }} />
+                <span className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: meta.color }}>
+                  Deep Space Analytics
+                </span>
+                <span className="w-px h-3 opacity-25" style={{ background: meta.color }} />
+                <span className="text-[10px] font-bold opacity-50" style={{ color: meta.color }}>
+                  {n} ງວດ
+                </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 leading-tight">
-                Analytics <span className="text-violet-300">Dashboard</span>
+
+              <h1
+                className="font-black text-white leading-[1.1] mb-2 font-jakarta"
+                style={{ fontSize: 'clamp(2rem, 5vw, 3.25rem)' }}
+              >
+                Analytics{' '}
+                <span className="transition-colors duration-500" style={{ color: meta.color }}>Dashboard</span>
               </h1>
-              <p className="text-white/50 text-sm max-w-md">
-                ລະບົບວິເຄາະ Big Data — ຄວາມຖີ່ · Trend · Gap · AI Score
+
+              {/* Lao subtitle */}
+              <p className="text-white/40 text-sm leading-relaxed mb-5">
+                ວິເຄາະສະຖິຕິຫວຍລາວ — Heatmap · Trend · AI Score · Backtest
+              </p>
+
+              {/* Mode pill + desc */}
+              <div className="flex items-center gap-3 mb-5 flex-wrap">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg"
+                  style={{ background: `${meta.color}15`, border: `1px solid ${meta.color}30` }}>
+                  <span className="material-symbols-outlined text-[14px]" style={{ color: meta.color }}>{meta.icon}</span>
+                  <span className="text-xs font-black" style={{ color: meta.color }}>{meta.label}</span>
+                </div>
+                <span className="text-white/25 text-xs">·</span>
+                <span className="text-white/40 text-xs">{meta.desc}</span>
                 {selectedType !== 'all' && types && (() => {
                   const t = types.find(x => String(x.type_id) === selectedType)
-                  return t ? <span className="ml-1 font-bold text-white/70">· {t.type_name}</span> : null
+                  return t ? <span className="text-xs font-bold" style={{ color: meta.color }}>· {t.type_name}</span> : null
                 })()}
-              </p>
+              </div>
+
+              {/* Controls */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <div className="flex items-center gap-0.5 p-0.5 rounded-xl border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  {RANGE_OPTIONS.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => setRange(value)}
+                      className="px-3 py-1.5 rounded-[10px] text-[11px] font-black transition-all duration-200"
+                      style={range === value
+                        ? { background: meta.color, color: '#06091a' }
+                        : { color: 'rgba(255,255,255,0.35)' }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {types && types.length > 1 && (
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <button
+                      onClick={() => setSelectedType('all')}
+                      className="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all"
+                      style={selectedType === 'all'
+                        ? { background: `${meta.color}20`, color: meta.color, borderColor: `${meta.color}40` }
+                        : { background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.35)', borderColor: 'rgba(255,255,255,0.08)' }}
+                    >
+                      ທັງໝົດ ({draws?.length ?? 0})
+                    </button>
+                    {types.filter(t => t.is_active != 0).map(t => {
+                      const color = t.color || '#003fb1'
+                      const active = selectedType === String(t.type_id)
+                      const cnt = draws?.filter(d => String(d.type_id) === String(t.type_id)).length ?? 0
+                      return (
+                        <button
+                          key={t.type_id}
+                          onClick={() => setSelectedType(String(t.type_id))}
+                          className="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all"
+                          style={active
+                            ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 2px 8px ${color}40` }
+                            : { background: 'rgba(255,255,255,0.03)', color: `${color}cc`, borderColor: `${color}35` }}
+                        >
+                          {t.type_name} ({cnt})
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* KPI cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
+            <div className="grid grid-cols-2 gap-2.5 shrink-0">
               {[
-                { label: 'ງວດທີ່ວິເຄາະ', val: n,                           sub: 'draws',             c: '#818cf8' },
-                { label: 'Hot #1',         val: hot[0]?.num ?? '-',          sub: `${hot[0]?.freq ?? 0}x`,      c: '#f87171' },
-                { label: 'ຊ້ານານ',         val: cold[0]?.num ?? '-',         sub: `${cold[0]?.gap ?? 0} ງວດ`,  c: '#fbbf24' },
-                { label: 'AI Pick',        val: aiTop[0]?.num ?? '-',        sub: `${aiTop[0]?.aiScore ?? 0} pts`, c: '#6cf8bb' },
+                { label: 'ງວດທີ່ວິເຄາະ', val: n,                    sub: 'draws',                    c: '#818cf8' },
+                { label: 'Hot #1',        val: hot[0]?.num ?? '—',   sub: `${hot[0]?.freq ?? 0}x`,   c: '#ef4444' },
+                { label: 'ຊ້ານານ',        val: cold[0]?.num ?? '—',  sub: `${cold[0]?.gap ?? 0} ງ`, c: '#fbbf24' },
+                { label: 'AI Pick',       val: aiTop[0]?.num ?? '—', sub: `${aiTop[0]?.aiScore ?? 0}pts`, c: '#22d3ee' },
               ].map(({ label, val, sub, c }) => (
-                <div key={label} className="bg-white/[0.07] backdrop-blur-xl border border-white/[0.11] rounded-2xl px-4 py-3 text-center shadow-lg shadow-black/30">
-                  <p className="text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: c + 'aa' }}>{label}</p>
-                  <p className="text-2xl font-black text-white font-mono">{val}</p>
-                  <p className="text-[9px] mt-0.5" style={{ color: c + '80' }}>{sub}</p>
+                <div key={label} className="relative overflow-hidden backdrop-blur-xl rounded-2xl p-4 text-center transition-all duration-300 group"
+                  style={{ background: `${c}08`, border: `1px solid ${c}20` }}>
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ background: `radial-gradient(circle at center,${c}12,transparent 70%)` }} />
+                  <p className="text-[9px] font-black uppercase tracking-widest mb-1.5 relative" style={{ color: `${c}aa` }}>{label}</p>
+                  <p className="text-2xl font-black text-white font-space tracking-tight relative">{val}</p>
+                  <p className="text-[9px] mt-0.5 relative" style={{ color: `${c}70` }}>{sub}</p>
                 </div>
               ))}
             </div>
@@ -945,119 +1121,54 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* ── Type Selector ───────────────────────────────────────────────────── */}
-      {types && types.length > 1 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ປະເພດ:</span>
-          <button
-            onClick={() => setSelectedType('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-              selectedType === 'all'
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
-                : 'bg-card/70 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
-            }`}
-          >
-            ທັງໝົດ ({draws?.length ?? 0})
-          </button>
-          {types.filter(t => t.is_active != 0).map(t => {
-            const color = t.color || '#003fb1'
-            const active = selectedType === String(t.type_id)
-            const cnt = draws?.filter(d => String(d.type_id) === String(t.type_id)).length ?? 0
-            return (
-              <button
-                key={t.type_id}
-                onClick={() => setSelectedType(String(t.type_id))}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all"
-                style={active
-                  ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 2px 8px ${color}40` }
-                  : { background: 'transparent', color, borderColor: `${color}50` }
-                }
-              >
-                {t.type_name} ({cnt})
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {/* ── Control Panel ───────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
-        {/* Range */}
-        <div className="flex items-center gap-1 bg-card/60 backdrop-blur-md p-1 rounded-2xl border border-border/60 shadow-sm">
-          <span className="text-[10px] font-bold text-muted-foreground/60 px-2 uppercase tracking-widest">ງວດ</span>
-          {RANGE_OPTIONS.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => setRange(value)}
-              className={`px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all
-                ${range === value
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-primary'}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Mode tabs */}
-        <div className="bg-card/60 backdrop-blur-md p-1 rounded-2xl border border-border/60 shadow-sm">
-          <div className="flex flex-wrap gap-1">
-            {MODES.map(({ value, label, icon }) => (
-              <button
-                key={value}
-                onClick={() => setMode(value)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] sm:text-[12px] font-bold whitespace-nowrap transition-all
-                  ${mode === value
-                    ? 'bg-card text-primary shadow-sm'
-                    : 'text-muted-foreground hover:text-primary'}`}
-              >
-                <span className="material-symbols-outlined text-[13px] sm:text-[14px]">{icon}</span>
-                {label}
-              </button>
-            ))}
-          </div>
+      {/* ── MODE NAV ─────────────────────────────────────────────────────────── */}
+      <div className="rounded-2xl overflow-hidden border border-white/[0.07]" style={{ background: '#0a0e1f' }}>
+        {/* Color-reactive top accent */}
+        <div
+          className="h-[2px] transition-all duration-500"
+          style={{ background: `linear-gradient(90deg, transparent 0%, ${meta.color}70 30%, ${meta.color}95 50%, ${meta.color}70 70%, transparent 100%)` }}
+        />
+        <div className="px-4 py-3.5">
+          <ModeNav mode={mode} setMode={setMode} />
         </div>
       </div>
 
-      {/* ── TAB: HEATMAP ────────────────────────────────────────────────────── */}
+      {/* ── HEATMAP ──────────────────────────────────────────────────────────── */}
       {mode === 'heatmap' && (
         <div className="space-y-5">
-          <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60 shadow-sm">
+          <div className="rounded-2xl p-6 border border-white/[0.08]" style={{ background: '#080c1c' }}>
             <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
               <div>
-                <h3 className="font-black text-foreground text-lg">Frequency Heatmap 00–99</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Hover ເພື່ອເບິ່ງລາຍລະອຽດ · ສີແດງ = ອອກຫຼາຍ · ສີນ້ຳເງິນ = ອອກໜ້ອຍ
-                </p>
+                <h3 className="font-black text-white text-lg font-jakarta">Frequency Heatmap 00–99</h3>
+                <p className="text-xs text-white/35 mt-0.5">Hover ເພື່ອເບິ່ງລາຍລະອຽດ · ສີແດງ = ອອກຫຼາຍ · ສີນ້ຳເງິນ = ອອກໜ້ອຍ</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 {[{ v: 'freq', label: 'ຄວາມຖີ່' }, { v: 'overdue', label: 'Overdue' }].map(({ v, label }) => (
-                  <button
-                    key={v}
-                    onClick={() => setHeatMode(v)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all
-                      ${heatMode === v ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:text-foreground'}`}
-                  >
+                  <button key={v} onClick={() => setHeatMode(v)}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+                    style={heatMode === v
+                      ? { background: '#ef444430', color: '#ef4444', border: '1px solid #ef444455' }
+                      : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     {label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Hover info bar */}
             <div className={`mb-4 transition-all duration-200 ${hoveredNum ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               {(() => {
                 const s = scores.find(x => x.num === hoveredNum)
                 if (!s) return null
                 return (
-                  <div className="p-3 bg-muted/50 backdrop-blur-sm border border-border/60 rounded-xl flex items-center gap-5 flex-wrap text-sm">
-                    <span className="text-3xl font-black text-primary font-mono w-12">{s.num}</span>
-                    <span className="text-muted-foreground">ອອກ <b className="text-foreground">{s.freq}</b> ຄັ້ງ ({s.pct}%)</span>
-                    <span className="text-muted-foreground">ຫ່າງ <b className="text-foreground">{s.gap}</b> ງວດ</span>
-                    <span className="text-muted-foreground">Avg Gap <b className="text-foreground">{s.avgGap}</b></span>
-                    <span className="text-muted-foreground">Overdue <b className={s.overdue >= 2 ? 'text-[#ef4444]' : s.overdue >= 1.5 ? 'text-[#f97316]' : 'text-foreground'}>{s.overdue}x</b></span>
-                    <span className="text-muted-foreground">AI Score <b className="text-[#818cf8]">{s.aiScore}</b></span>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.momentum > 0 ? 'bg-[#6cf8bb]/20 text-[#059669]' : 'bg-[#f87171]/20 text-[#dc2626]'}`}>
+                  <div className="p-3 rounded-xl border border-[#22d3ee]/20 flex items-center gap-5 flex-wrap text-sm"
+                    style={{ background: 'rgba(34,211,238,0.06)' }}>
+                    <span className="text-3xl font-black text-[#22d3ee] font-mono w-12">{s.num}</span>
+                    <span className="text-white/40">ອອກ <b className="text-white">{s.freq}</b> ຄັ້ງ ({s.pct}%)</span>
+                    <span className="text-white/40">ຫ່າງ <b className="text-white">{s.gap}</b> ງວດ</span>
+                    <span className="text-white/40">Avg Gap <b className="text-white">{s.avgGap}</b></span>
+                    <span className="text-white/40">Overdue <b className={s.overdue >= 2 ? 'text-[#ef4444]' : s.overdue >= 1.5 ? 'text-[#f97316]' : 'text-white'}>{s.overdue}x</b></span>
+                    <span className="text-white/40">AI <b className="text-[#22d3ee]">{s.aiScore}</b></span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.momentum > 0 ? 'bg-[#4ade80]/15 text-[#4ade80]' : 'bg-[#f87171]/15 text-[#f87171]'}`}>
                       {s.momentum > 0 ? '↑ Rising' : '↓ Falling'}
                     </span>
                   </div>
@@ -1065,7 +1176,6 @@ export default function AnalyticsPage() {
               })()}
             </div>
 
-            {/* 10×10 Grid */}
             <div className="grid grid-cols-10 gap-1">
               {Array.from({ length: 100 }, (_, i) => {
                 const num = i.toString().padStart(2, '0')
@@ -1073,30 +1183,25 @@ export default function AnalyticsPage() {
                 const intensity = heatMode === 'freq' ? (s?.heatIntensity ?? 0) : Math.min((s?.overdue ?? 0) / 4, 1)
                 const isHovered = hoveredNum === num
                 return (
-                  <div
-                    key={num}
+                  <div key={num}
                     onMouseEnter={() => setHoveredNum(num)}
                     onMouseLeave={() => setHoveredNum(null)}
-                    className={`aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-150 relative select-none
+                    className={`aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-150 select-none
                       ${isHovered ? 'scale-125 z-10 shadow-lg ring-2 ring-white/40' : 'hover:scale-110 hover:z-10'}`}
-                    style={{ background: heatBg(intensity) }}
-                  >
+                    style={{ background: heatBg(intensity) }}>
                     <span className="text-[11px] font-black text-white leading-none">{num}</span>
-                    {s?.freq > 0 && (
-                      <span className="text-[7px] text-white/60 leading-none mt-0.5">{s.freq}</span>
-                    )}
+                    {s?.freq > 0 && <span className="text-[7px] text-white/60 leading-none mt-0.5">{s.freq}</span>}
                   </div>
                 )
               })}
             </div>
 
-            {/* Legend */}
             <div className="flex items-center gap-2 mt-5 justify-end">
-              <span className="text-[10px] text-white/50">ໜ້ອຍ</span>
+              <span className="text-[10px] text-white/30">ໜ້ອຍ</span>
               {[0.1, 0.3, 0.5, 0.7, 0.9].map((t, i) => (
                 <div key={i} className="w-7 h-3.5 rounded" style={{ background: heatBg(t) }} />
               ))}
-              <span className="text-[10px] text-white/50">ຫຼາຍ</span>
+              <span className="text-[10px] text-white/30">ຫຼາຍ</span>
             </div>
           </div>
 
@@ -1107,36 +1212,36 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* ── TAB: CHARTS ─────────────────────────────────────────────────────── */}
+      {/* ── CHARTS ───────────────────────────────────────────────────────────── */}
       {mode === 'charts' && (
         <div className="space-y-5">
-          <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60 shadow-sm">
-            <h3 className="font-black text-foreground text-lg mb-1">Time-Series: ຕົວເລກ 2 ໂຕ ຕາມງວດ</h3>
-            <p className="text-xs text-muted-foreground mb-5">ແກນ Y = ຕົວເລກ 00–99 · ສະແດງ {series.length} ງວດລ່າສຸດ</p>
+          <div className="rounded-2xl p-6 border border-white/[0.08]" style={{ background: '#080c1c' }}>
+            <h3 className="font-black text-white text-lg mb-1 font-jakarta">Time-Series: ຕົວເລກ 2 ໂຕ ຕາມງວດ</h3>
+            <p className="text-xs text-white/35 mb-5">ແກນ Y = ຕົວເລກ 00–99 · ສະແດງ {series.length} ງວດລ່າສຸດ</p>
             <ResponsiveContainer width="100%" height={290}>
               <LineChart data={series} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(43,58,84,0.5)" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval={4} />
-                <YAxis domain={[0, 99]} tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <XAxis dataKey="date" tick={{ fill: '#475569', fontSize: 10 }} tickLine={false} axisLine={false} interval={4} />
+                <YAxis domain={[0, 99]} tick={{ fill: '#475569', fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<ChartTip />} />
-                <ReferenceLine y={49} stroke="#2b3a54" strokeDasharray="4 4" label={{ value: '50', fill: '#475569', fontSize: 9 }} />
+                <ReferenceLine y={49} stroke="#1e2d4a" strokeDasharray="4 4" label={{ value: '50', fill: '#334155', fontSize: 9 }} />
                 <Line type="monotone" dataKey="val" stroke="#818cf8" strokeWidth={2}
                   dot={{ fill: '#818cf8', r: 2.5, strokeWidth: 0 }}
-                  activeDot={{ r: 5, fill: '#6cf8bb', strokeWidth: 0 }} />
+                  activeDot={{ r: 5, fill: '#22d3ee', strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60 shadow-sm">
-            <h3 className="font-black text-foreground text-lg mb-5">Top 20 ຄວາມຖີ່</h3>
+          <div className="rounded-2xl p-6 border border-white/[0.08]" style={{ background: '#080c1c' }}>
+            <h3 className="font-black text-white text-lg mb-5 font-jakarta">Top 20 ຄວາມຖີ່</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={freqBars} margin={{ top: 0, right: 10, bottom: 0, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(43,58,84,0.5)" vertical={false} />
-                <XAxis dataKey="num" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <XAxis dataKey="num" tick={{ fill: '#475569', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#475569', fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<FreqTip />} />
                 <Bar dataKey="freq" radius={[4, 4, 0, 0]}>
-                  {freqBars.map((entry, i) => (
+                  {freqBars.map((_, i) => (
                     <Cell key={i} fill={i === 0 ? '#fbbf24' : i < 3 ? '#ef4444' : i < 8 ? '#f97316' : '#818cf8'} />
                   ))}
                 </Bar>
@@ -1146,46 +1251,45 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* ── TAB: TREND ──────────────────────────────────────────────────────── */}
+      {/* ── TREND ────────────────────────────────────────────────────────────── */}
       {mode === 'trend' && (
         <div className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <TrendList title="📈 ກຳລັງຂຶ້ນ (Rising)" accent="#6cf8bb" data={rising}  field="momentum" fieldLabel="r10" />
+            <TrendList title="📈 ກຳລັງຂຶ້ນ (Rising)" accent="#4ade80" data={rising}  field="momentum" fieldLabel="r10" />
             <TrendList title="📉 ກຳລັງລົງ (Falling)"  accent="#f87171" data={falling} field="momentum" fieldLabel="r10" />
           </div>
 
-          <div className="bg-card/70 backdrop-blur-md rounded-2xl p-6 border border-border/60 shadow-sm">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#d97706] to-[#f59e0b] flex items-center justify-center shadow-sm">
+          <div className="rounded-2xl p-6 border border-white/[0.08]" style={{ background: '#080c1c' }}>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm"
+                style={{ background: 'linear-gradient(135deg,#d97706,#f59e0b)' }}>
                 <span className="material-symbols-outlined text-white text-[18px]">hourglass_top</span>
               </div>
               <div>
-                <h3 className="font-black text-foreground">ເລກທີ່ຊ້ານານ (Overdue Numbers)</h3>
-                <p className="text-xs text-muted-foreground">Overdue ≥ 1.0× = ເກີນຄ່າສະເລ່ຍ — ສູງ = ຄາດວ່າຈະອອກ</p>
+                <h3 className="font-black text-white font-jakarta">ເລກທີ່ຊ້ານານ (Overdue Numbers)</h3>
+                <p className="text-xs text-white/35">Overdue ≥ 1.0× = ເກີນຄ່າສະເລ່ຍ — ສູງ = ຄາດວ່າຈະອອກ</p>
               </div>
             </div>
-            <div className="space-y-2.5 mt-5">
+            <div className="space-y-2.5">
               {overdue.map((s, i) => (
                 <div key={s.num} className="flex items-center gap-3">
-                  <span className="text-[10px] text-muted-foreground w-5 text-right">{i + 1}</span>
-                  <span className="font-black font-mono text-white bg-zinc-700 rounded-lg px-3 py-1.5 text-sm w-12 text-center shadow-sm ring-1 ring-white/10">{s.num}</span>
-                  <div className="flex-1 relative h-7 bg-zinc-800/80 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
+                  <span className="text-[10px] text-white/30 w-5 text-right">{i + 1}</span>
+                  <span className="font-black font-mono text-white rounded-lg px-3 py-1.5 text-sm w-12 text-center"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>{s.num}</span>
+                  <div className="flex-1 relative h-7 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                    <div className="h-full rounded-full transition-all duration-700"
                       style={{
                         width: `${Math.min(s.overdue / 5, 1) * 100}%`,
                         background: s.overdue >= 3 ? 'linear-gradient(90deg,#dc2626,#ef4444)'
                           : s.overdue >= 2 ? 'linear-gradient(90deg,#d97706,#f59e0b)'
-                          : 'linear-gradient(90deg,#0369a1,#0ea5e9)'
-                      }}
-                    />
-                    <span className="absolute inset-0 flex items-center px-3 text-[11px] font-bold text-white/90">
+                          : 'linear-gradient(90deg,#0369a1,#22d3ee)'
+                      }} />
+                    <span className="absolute inset-0 flex items-center px-3 text-[11px] font-bold text-white/80">
                       {s.overdue}× overdue — ຫ່າງ {s.gap} ງວດ (avg {s.avgGap})
                     </span>
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0
-                    ${s.overdue >= 3 ? 'bg-[#ef4444]/20 text-[#f87171]' : s.overdue >= 2 ? 'bg-[#f59e0b]/20 text-[#fbbf24]' : 'bg-[#0ea5e9]/20 text-[#38bdf8]'}`}
-                  >
+                    ${s.overdue >= 3 ? 'bg-[#ef4444]/15 text-[#f87171]' : s.overdue >= 2 ? 'bg-[#f59e0b]/15 text-[#fbbf24]' : 'bg-[#22d3ee]/15 text-[#22d3ee]'}`}>
                     {s.freq}x
                   </span>
                 </div>
@@ -1195,59 +1299,52 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* ── TAB: AI ENGINE ──────────────────────────────────────────────────── */}
+      {/* ── AI ENGINE ────────────────────────────────────────────────────────── */}
       {mode === 'ai' && (
         <div className="space-y-5">
-          <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-6 border border-white/[0.09] shadow-2xl shadow-black/50">
+          <div className="rounded-2xl p-6 border border-white/[0.09]" style={{ background: '#06091a' }}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#818cf8] to-[#6cf8bb] flex items-center justify-center shadow-lg">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
+                style={{ background: 'linear-gradient(135deg,#22d3ee,#818cf8)' }}>
                 <span className="material-symbols-outlined text-white text-[22px]">psychology</span>
               </div>
               <div>
-                <h3 className="font-black text-white text-xl">AI Prediction Engine</h3>
-                <p className="text-xs text-white/40">Composite score: Frequency + Gap + Momentum</p>
+                <h3 className="font-black text-white text-xl font-jakarta">AI Prediction Engine</h3>
+                <p className="text-xs text-white/35">Composite score: Frequency + Gap + Momentum</p>
               </div>
             </div>
-
-            <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/25 rounded-xl px-4 py-2.5 mb-6 text-xs text-[#fbbf24] flex items-start gap-2">
+            <div className="rounded-xl px-4 py-2.5 mb-6 text-xs text-[#fbbf24] flex items-start gap-2"
+              style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.20)' }}>
               <span className="material-symbols-outlined text-[14px] mt-0.5 shrink-0">warning</span>
               ຫວຍລາວເປັນການສຸ່ມ — AI Score ເປັນພຽງການວິເຄາະສະຖິຕິ ບໍ່ຮັບປະກັນການອອກລາງວັນ
             </div>
-
             <div className="space-y-3.5">
               {aiTop.map((s, i) => (
                 <div key={s.num} className="flex items-center gap-3">
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0
-                    ${i === 0 ? 'bg-[#fbbf24] text-black' : i === 1 ? 'bg-[#94a3b8] text-black' : i === 2 ? 'bg-[#b45309] text-white' : 'bg-white/[0.06] text-white/30'}`}
-                  >
+                    ${i === 0 ? 'bg-[#fbbf24] text-black' : i === 1 ? 'bg-[#94a3b8] text-black' : i === 2 ? 'bg-[#b45309] text-white' : 'bg-white/[0.06] text-white/30'}`}>
                     {i + 1}
                   </div>
                   <span className="font-black text-white text-2xl font-mono w-12 shrink-0">{s.num}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="relative h-5 bg-white/[0.06] rounded-full overflow-hidden mb-1">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${s.aiScore}%`,
-                          background: `linear-gradient(90deg, #818cf8 0%, #6cf8bb 100%)`
-                        }}
-                      />
+                    <div className="relative h-5 rounded-full overflow-hidden mb-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                      <div className="h-full rounded-full"
+                        style={{ width: `${s.aiScore}%`, background: 'linear-gradient(90deg,#22d3ee,#818cf8)' }} />
                       <span className="absolute inset-0 flex items-center justify-end pr-2.5 text-[10px] font-black text-white">
                         {s.aiScore} pts
                       </span>
                     </div>
                     <div className="flex gap-3 text-[10px] text-white/30">
-                      <span className="text-white/40">Freq <span className="text-white/50">{s.freq}× ({s.pct}%)</span></span>
-                      <span className="text-white/40">Gap <span className="text-white/50">{s.gap}/{s.avgGap}</span></span>
-                      <span className="text-white/40">10ງວດ <span className="text-white/50">{s.r10}×</span></span>
-                      <span className={s.momentum > 0 ? 'text-[#6cf8bb]' : 'text-[#f87171]'}>
+                      <span>Freq <span className="text-white/50">{s.freq}× ({s.pct}%)</span></span>
+                      <span>Gap <span className="text-white/50">{s.gap}/{s.avgGap}</span></span>
+                      <span>10ງ <span className="text-white/50">{s.r10}×</span></span>
+                      <span className={s.momentum > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'}>
                         {s.momentum > 0 ? '↑' : '↓'} momentum
                       </span>
                     </div>
                   </div>
                   <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0
-                    ${s.aiScore >= 60 ? 'bg-[#6cf8bb]/15 text-[#6cf8bb]' : s.aiScore >= 40 ? 'bg-[#fbbf24]/15 text-[#fbbf24]' : 'bg-[#94a3b8]/10 text-white/50'}`}
-                  >
+                    ${s.aiScore >= 60 ? 'bg-[#22d3ee]/12 text-[#22d3ee]' : s.aiScore >= 40 ? 'bg-[#fbbf24]/12 text-[#fbbf24]' : 'bg-white/[0.04] text-white/40'}`}>
                     {s.aiScore >= 60 ? 'HIGH' : s.aiScore >= 40 ? 'MID' : 'LOW'}
                   </span>
                 </div>
@@ -1255,47 +1352,43 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Score model explanation */}
-          <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
-            <h3 className="font-black text-foreground mb-5">ສູດຄຳນວນ AI Score</h3>
+          <div className="rounded-2xl p-6 border border-white/[0.08]" style={{ background: '#080c1c' }}>
+            <h3 className="font-black text-white mb-5 font-jakarta">ສູດຄຳນວນ AI Score</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { name: 'Frequency Score', weight: '35 pts', icon: 'equalizer',   color: '#818cf8', desc: '(ຈຳນວນຄັ້ງ / max) × 35 — ອອກຫຼາຍ = ຄະແນນສູງ' },
-                { name: 'Gap Score',       weight: '35 pts', icon: 'timer',        color: '#fbbf24', desc: '(Overdue ÷ 3) × 35 — ຊ້ານານ = ຄາດອອກ' },
-                { name: 'Momentum',        weight: '30 pts', icon: 'trending_up',  color: '#6cf8bb', desc: '(Rate 10ງວດ vs 30ງວດ) × 30 — ຂຶ້ນໃຫ້ຫຼາຍ' },
+                { name: 'Frequency Score', weight: '35 pts', icon: 'equalizer',  color: '#818cf8', desc: '(ຈຳນວນຄັ້ງ / max) × 35 — ອອກຫຼາຍ = ຄະແນນສູງ' },
+                { name: 'Gap Score',       weight: '35 pts', icon: 'timer',       color: '#fbbf24', desc: '(Overdue ÷ 3) × 35 — ຊ້ານານ = ຄາດອອກ' },
+                { name: 'Momentum',        weight: '30 pts', icon: 'trending_up', color: '#4ade80', desc: '(Rate 10ງວດ vs 30ງວດ) × 30 — ຂຶ້ນໃຫ້ຫຼາຍ' },
               ].map(({ name, weight, icon, color, desc }) => (
-                <div key={name} className="bg-secondary rounded-2xl p-5">
+                <div key={name} className="rounded-2xl p-5 border border-white/[0.06]" style={{ background: `${color}08` }}>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined text-[20px]" style={{ color }}>{icon}</span>
-                    <span className="font-black text-foreground text-sm">{name}</span>
+                    <span className="font-black text-white text-sm">{name}</span>
                   </div>
                   <p className="text-3xl font-black mb-2" style={{ color }}>{weight}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                  <p className="text-xs text-white/35 leading-relaxed">{desc}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* AI Accuracy Backtest */}
-          <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-6 border border-white/[0.09] shadow-2xl shadow-black/50">
+          <div className="rounded-2xl p-6 border border-white/[0.09]" style={{ background: '#06091a' }}>
             <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#fbbf24] to-[#f97316] flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
+                  style={{ background: 'linear-gradient(135deg,#fbbf24,#f97316)' }}>
                   <span className="material-symbols-outlined text-white text-[20px]">fact_check</span>
                 </div>
                 <div>
-                  <h3 className="font-black text-white text-lg">AI Accuracy Backtest</h3>
-                  <p className="text-xs text-white/40">ຖ້າຊື້ຕາມ AI ຍ້ອນຫຼັງ — ຈະຖືກຈັກຄັ້ງ?</p>
+                  <h3 className="font-black text-white text-lg font-jakarta">AI Accuracy Backtest</h3>
+                  <p className="text-xs text-white/35">ຖ້າຊື້ຕາມ AI ຍ້ອນຫຼັງ — ຈະຖືກຈັກຄັ້ງ?</p>
                 </div>
               </div>
               <div className="flex gap-1.5">
                 {[10, 20, 30, 50].map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setAiTrials(t)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all
-                      ${aiTrials === t ? 'bg-[#fbbf24] text-black' : 'bg-white/[0.06] text-white/40 hover:text-white'}`}
-                  >
+                  <button key={t} onClick={() => setAiTrials(t)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-black transition-all"
+                    style={aiTrials === t ? { background: '#fbbf24', color: '#000' } : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.40)' }}>
                     {t} ຄັ້ງ
                   </button>
                 ))}
@@ -1303,24 +1396,24 @@ export default function AnalyticsPage() {
             </div>
 
             {!aiBacktest ? (
-              <p className="text-white/30 text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
+              <p className="text-white/25 text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
             ) : (
               <>
-                {/* Summary cards */}
                 <div className="grid grid-cols-3 gap-3 mb-5">
                   {[
                     { label: 'Top 1 ຖືກ',  hits: aiBacktest.hits1,  color: '#fbbf24', sublabel: 'ເລກດຽວ' },
                     { label: 'Top 5 ຖືກ',  hits: aiBacktest.hits5,  color: '#818cf8', sublabel: 'ໃນ 5 ເລກ' },
-                    { label: 'Top 10 ຖືກ', hits: aiBacktest.hits10, color: '#6cf8bb', sublabel: 'ໃນ 10 ເລກ' },
+                    { label: 'Top 10 ຖືກ', hits: aiBacktest.hits10, color: '#22d3ee', sublabel: 'ໃນ 10 ເລກ' },
                   ].map(({ label, hits, color, sublabel }) => {
                     const pct = Math.round((hits / aiBacktest.trials) * 100)
                     return (
-                      <div key={label} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl p-4 border border-white/[0.08] text-center">
+                      <div key={label} className="rounded-2xl p-4 border text-center"
+                        style={{ background: `${color}06`, borderColor: `${color}20` }}>
                         <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: color + 'aa' }}>{label}</p>
                         <p className="text-4xl font-black" style={{ color }}>
-                          {hits}<span className="text-xl text-white/30">/{aiBacktest.trials}</span>
+                          {hits}<span className="text-xl text-white/25">/{aiBacktest.trials}</span>
                         </p>
-                        <div className="mt-2 h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
+                        <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
                           <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
                         </div>
                         <p className="text-[11px] mt-1.5 font-bold" style={{ color }}>{pct}% · {sublabel}</p>
@@ -1328,33 +1421,26 @@ export default function AnalyticsPage() {
                     )
                   })}
                 </div>
-
-                {/* Per-draw results */}
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-3">ລາຍລະອຽດແຕ່ລະງວດ</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-3">ລາຍລະອຽດແຕ່ລະງວດ</p>
                   {aiBacktest.results.map((r, i) => (
-                    <div key={i} className={`flex flex-col gap-2 rounded-xl px-3 py-2.5
-                      ${r.hit1 ? 'bg-[#fbbf24]/10 border border-[#fbbf24]/25' : r.hit5 ? 'bg-[#818cf8]/10 border border-[#818cf8]/20' : r.hit10 ? 'bg-[#6cf8bb]/10 border border-[#6cf8bb]/15' : 'bg-white/[0.03] border border-white/[0.06]'}`}
-                    >
-                      {/* ── Row 1: meta + result + verdict ── */}
+                    <div key={i} className={`flex flex-col gap-2 rounded-xl px-3 py-2.5 border
+                      ${r.hit1 ? 'bg-[#fbbf24]/08 border-[#fbbf24]/20' : r.hit5 ? 'bg-[#818cf8]/08 border-[#818cf8]/15' : r.hit10 ? 'bg-[#22d3ee]/08 border-[#22d3ee]/12' : 'bg-white/[0.02] border-white/[0.05]'}`}>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] text-white/30 w-4 shrink-0">{i + 1}</span>
-                        <span className="text-[10px] font-bold text-white/30 shrink-0">#{r.drawNum}</span>
-                        <span className="text-[10px] text-white/30 shrink-0">{r.date?.slice(0, 10)}</span>
+                        <span className="text-[10px] text-white/25 w-4 shrink-0">{i + 1}</span>
+                        <span className="text-[10px] font-bold text-white/25 shrink-0">#{r.drawNum}</span>
+                        <span className="text-[10px] text-white/25 shrink-0">{r.date?.slice(0, 10)}</span>
                         <div className="flex-1" />
                         <span className="font-black font-mono text-base text-white shrink-0">{r.actual}</span>
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0
-                          ${r.hit1 ? 'bg-[#fbbf24]/20 text-[#fbbf24]' : r.hit5 ? 'bg-[#818cf8]/20 text-[#818cf8]' : r.hit10 ? 'bg-[#6cf8bb]/20 text-[#6cf8bb]' : 'bg-white/[0.04] text-white/30'}`}
-                        >
+                          ${r.hit1 ? 'bg-[#fbbf24]/15 text-[#fbbf24]' : r.hit5 ? 'bg-[#818cf8]/15 text-[#818cf8]' : r.hit10 ? 'bg-[#22d3ee]/15 text-[#22d3ee]' : 'bg-white/[0.04] text-white/25'}`}>
                           {r.hit1 ? '✓ #1' : r.hit5 ? '✓ Top5' : r.hit10 ? '✓ Top10' : '✗ Miss'}
                         </span>
                       </div>
-                      {/* ── Row 2: top10 number badges ── */}
                       <div className="flex gap-1 flex-wrap">
                         {r.top10.map((num, j) => (
                           <span key={j} className={`font-black font-mono text-[11px] px-1.5 py-0.5 rounded-md
-                            ${num === r.actual ? 'bg-[#fbbf24] text-black' : j === 0 ? 'bg-violet-500/10 text-violet-300' : 'bg-white/[0.04] text-white/30'}`}
-                          >
+                            ${num === r.actual ? 'bg-[#fbbf24] text-black' : j === 0 ? 'bg-[#22d3ee]/12 text-[#22d3ee]' : 'bg-white/[0.04] text-white/25'}`}>
                             {num}
                           </span>
                         ))}
@@ -1368,27 +1454,27 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* ── TAB: DECISION ───────────────────────────────────────────────────── */}
+      {/* ── DECISION ─────────────────────────────────────────────────────────── */}
       {mode === 'decision' && (
-        <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-5 border border-white/[0.09] shadow-2xl shadow-black/50 space-y-5">
-          {/* Header */}
-          <div className="relative rounded-2xl overflow-hidden bg-zinc-950/90 backdrop-blur-2xl border border-white/[0.09] p-6">
+        <div className="rounded-2xl p-5 border border-white/[0.09] space-y-5" style={{ background: '#06091a' }}>
+          <div className="rounded-2xl p-6 border border-white/[0.09]" style={{ background: 'rgba(0,0,0,0.40)' }}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#fbbf24] to-[#f97316] flex items-center justify-center shadow-lg">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
+                style={{ background: 'linear-gradient(135deg,#fbbf24,#f97316)' }}>
                 <span className="material-symbols-outlined text-white text-[22px]">stars</span>
               </div>
               <div>
-                <h3 className="font-black text-white text-xl">Decision Score</h3>
-                <p className="text-xs text-white/40">ນັບ Signal ທີ່ຜ່ານ — ★★★ = ສັນຍານທຸກຢ່າງຊ້ອນກັນ</p>
+                <h3 className="font-black text-white text-xl font-jakarta">Decision Score</h3>
+                <p className="text-xs text-white/35">ນັບ Signal ທີ່ຜ່ານ — ★★★ = ສັນຍານທຸກຢ່າງຊ້ອນກັນ</p>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { sig: '★ Signal 1', label: 'Overdue ≥ 1.0×', desc: 'ຊ້ານານກວ່າສະເລ່ຍ', color: '#fbbf24' },
-                { sig: '★ Signal 2', label: 'Momentum ↑',      desc: 'ອອກ 10 ງວດ > 30 ງວດ', color: '#6cf8bb' },
+                { sig: '★ Signal 1', label: 'Overdue ≥ 1.0×', desc: 'ຊ້ານານກວ່າສະເລ່ຍ',   color: '#fbbf24' },
+                { sig: '★ Signal 2', label: 'Momentum ↑',      desc: 'ອອກ 10 ງວດ > 30 ງວດ', color: '#4ade80' },
                 { sig: '★ Signal 3', label: 'AI Score ≥ 60',   desc: 'Composite score HIGH', color: '#818cf8' },
               ].map(({ sig, label, desc, color }) => (
-                <div key={sig} className="bg-white/5 rounded-xl p-3 border border-white/10">
+                <div key={sig} className="rounded-xl p-3 border border-white/[0.08]" style={{ background: `${color}08` }}>
                   <p className="text-[10px] font-black mb-1" style={{ color }}>{sig}</p>
                   <p className="text-sm font-black text-white">{label}</p>
                   <p className="text-[10px] text-white/30 mt-0.5">{desc}</p>
@@ -1397,66 +1483,52 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Legend */}
           <div className="flex gap-3 flex-wrap">
             {[
-              { stars: 3, label: '★★★ ສັນຍານຄົບ 3', bg: 'bg-[#fbbf24]/15 border-[#fbbf24]/40 text-[#fbbf24]', badge: 'ຊື້ໄດ້' },
-              { stars: 2, label: '★★☆ ສັນຍານ 2/3',   bg: 'bg-[#818cf8]/15 border-[#818cf8]/40 text-[#818cf8]', badge: 'ເຝົ້າລໍ' },
-              { stars: 1, label: '★☆☆ ສັນຍານ 1/3',   bg: 'bg-[#475569]/15 border-[#475569]/40 text-white/50', badge: 'ອ່ອນ' },
-            ].map(({ stars, label, bg, badge }) => (
-              <div key={stars} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold ${bg}`}>
+              { stars: 3, label: '★★★ ສັນຍານຄົບ 3', color: '#fbbf24', badge: 'ຊື້ໄດ້' },
+              { stars: 2, label: '★★☆ ສັນຍານ 2/3',   color: '#818cf8', badge: 'ເຝົ້າລໍ' },
+              { stars: 1, label: '★☆☆ ສັນຍານ 1/3',   color: 'rgba(255,255,255,0.4)', badge: 'ອ່ອນ' },
+            ].map(({ stars, label, color, badge }) => (
+              <div key={stars} className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold"
+                style={{ background: `rgba(255,255,255,0.04)`, borderColor: `rgba(255,255,255,0.10)`, color }}>
                 <span>{label}</span>
-                <span className="text-[10px] opacity-70">— {badge}</span>
+                <span className="text-[10px] opacity-60">— {badge}</span>
               </div>
             ))}
           </div>
 
-          {/* Numbers list */}
           {decisionTop.length === 0 ? (
-            <p className="text-center text-white/30 py-10">ບໍ່ມີຕົວເລກທີ່ຜ່ານ signal ໃດ</p>
+            <p className="text-center text-white/25 py-10">ບໍ່ມີຕົວເລກທີ່ຜ່ານ signal ໃດ</p>
           ) : (
             <div className="space-y-2.5">
               {decisionTop.map((s, i) => {
                 const is3 = s.decisionScore === 3
                 const is2 = s.decisionScore === 2
+                const accent = is3 ? '#fbbf24' : is2 ? '#818cf8' : 'rgba(255,255,255,0.25)'
                 return (
-                  <div key={s.num} className={`rounded-2xl p-4 border flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap transition-all
-                    ${is3 ? 'bg-[#fbbf24]/10 border-[#fbbf24]/30' : is2 ? 'bg-[#818cf8]/10 border-[#818cf8]/20' : 'bg-white/[0.03] border-white/[0.06]'}`}
-                  >
-                    {/* Rank */}
-                    <span className="text-[10px] text-white/30 w-4 shrink-0 text-right">{i + 1}</span>
-
-                    {/* Number */}
-                    <span className={`font-black font-mono text-3xl w-14 text-center shrink-0
-                      ${is3 ? 'text-[#fbbf24]' : is2 ? 'text-[#818cf8]' : 'text-white/50'}`}
-                    >{s.num}</span>
-
-                    {/* Stars */}
+                  <div key={s.num} className="rounded-2xl p-4 border flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap transition-all"
+                    style={{ background: is3 ? '#fbbf2408' : is2 ? '#818cf808' : 'rgba(255,255,255,0.02)', borderColor: is3 ? '#fbbf2428' : is2 ? '#818cf818' : 'rgba(255,255,255,0.06)' }}>
+                    <span className="text-[10px] text-white/25 w-4 shrink-0 text-right">{i + 1}</span>
+                    <span className="font-black font-mono text-3xl w-14 text-center shrink-0" style={{ color: accent }}>{s.num}</span>
                     <div className="flex gap-1 shrink-0">
-                      {[0, 1, 2].map(j => (
-                        <span key={j} className={`text-lg ${j < s.decisionScore ? (is3 ? 'text-[#fbbf24]' : is2 ? 'text-[#818cf8]' : 'text-white/50') : 'text-white/[0.08]'}`}>★</span>
+                      {[0,1,2].map(j => (
+                        <span key={j} className="text-lg" style={{ color: j < s.decisionScore ? accent : 'rgba(255,255,255,0.08)' }}>★</span>
                       ))}
                     </div>
-
-                    {/* Signal badges */}
                     <div className="flex gap-1.5 flex-wrap flex-1">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border
-                        ${s.sig1 ? 'bg-[#fbbf24]/15 border-[#fbbf24]/30 text-[#fbbf24]' : 'bg-transparent border-white/[0.06] text-white/20'}`}>
-                        Overdue {s.overdue}×
-                      </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border
-                        ${s.sig2 ? 'bg-[#6cf8bb]/15 border-[#6cf8bb]/30 text-[#6cf8bb]' : 'bg-transparent border-white/[0.06] text-white/20'}`}>
-                        {s.momentum > 0 ? '↑' : '↓'} Momentum {s.r10}×/10ງວດ
-                      </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border
-                        ${s.sig3 ? 'bg-[#818cf8]/15 border-[#818cf8]/30 text-[#818cf8]' : 'bg-transparent border-white/[0.06] text-white/20'}`}>
-                        AI {s.aiScore} pts
-                      </span>
+                      {[
+                        { ok: s.sig1, c: '#fbbf24', text: `Overdue ${s.overdue}×` },
+                        { ok: s.sig2, c: '#4ade80', text: `${s.momentum > 0 ? '↑' : '↓'} Momentum ${s.r10}×/10` },
+                        { ok: s.sig3, c: '#818cf8', text: `AI ${s.aiScore} pts` },
+                      ].map(({ ok, c, text }) => (
+                        <span key={text} className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                          style={ok ? { background: `${c}18`, borderColor: `${c}35`, color: c } : { background: 'transparent', borderColor: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.15)' }}>
+                          {text}
+                        </span>
+                      ))}
                     </div>
-
-                    {/* Verdict */}
-                    <span className={`text-xs font-black px-3 py-1 rounded-full shrink-0
-                      ${is3 ? 'bg-[#fbbf24] text-black' : is2 ? 'bg-[#818cf8]/20 text-[#818cf8]' : 'bg-white/[0.04] text-white/30'}`}>
+                    <span className="text-xs font-black px-3 py-1 rounded-full shrink-0"
+                      style={is3 ? { background: '#fbbf24', color: '#000' } : is2 ? { background: '#818cf820', color: '#818cf8' } : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)' }}>
                       {is3 ? '✓ ຊື້ໄດ້' : is2 ? 'ເຝົ້າລໍ' : 'ອ່ອນ'}
                     </span>
                   </div>
@@ -1467,40 +1539,31 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* ── TAB: NEWS ───────────────────────────────────────────────────────── */}
+      {/* ── NEWS ─────────────────────────────────────────────────────────────── */}
       {mode === 'news' && (
-        <NewsPanel
-          analytics={analytics}
-          draws={filteredDraws}
-          n={n}
-          selectedType={selectedType}
-          types={types}
-        />
+        <NewsPanel analytics={analytics} draws={filteredDraws} n={n} selectedType={selectedType} types={types} />
       )}
 
-      {/* ── TAB: DS BACKTEST ────────────────────────────────────────────────── */}
+      {/* ── DS BACKTEST ──────────────────────────────────────────────────────── */}
       {mode === 'dsbacktest' && (
-        <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-5 border border-white/[0.09] shadow-2xl shadow-black/50 space-y-5">
-          {/* Header */}
-          <div className="relative rounded-2xl overflow-hidden bg-zinc-950/90 backdrop-blur-2xl border border-white/[0.09] p-6">
+        <div className="rounded-2xl p-5 border border-white/[0.09] space-y-5" style={{ background: '#06091a' }}>
+          <div className="rounded-2xl p-6 border border-white/[0.09]" style={{ background: 'rgba(0,0,0,0.40)' }}>
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#6cf8bb] to-[#818cf8] flex items-center justify-center shadow-lg">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
+                  style={{ background: 'linear-gradient(135deg,#6cf8bb,#818cf8)' }}>
                   <span className="material-symbols-outlined text-white text-[22px]">verified</span>
                 </div>
                 <div>
-                  <h3 className="font-black text-white text-xl">Decision Score Accuracy Backtest</h3>
-                  <p className="text-xs text-white/40">ຖ້ານຳໃຊ້ Decision Score ຍ້ອນຫຼັງ — ★★★/★★/★ ທຳນາຍຖືກຈັກ %?</p>
+                  <h3 className="font-black text-white text-xl font-jakarta">DS Accuracy Backtest</h3>
+                  <p className="text-xs text-white/35">★★★/★★/★ Decision Score ທຳນາຍຖືກຈັກ %?</p>
                 </div>
               </div>
               <div className="flex gap-1.5 flex-wrap">
                 {[10, 21, 30, 50].map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setDsTrials(t)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all
-                      ${dsTrials === t ? 'bg-[#6cf8bb] text-black' : 'bg-white/[0.06] text-white/40 hover:text-white'}`}
-                  >
+                  <button key={t} onClick={() => setDsTrials(t)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-black transition-all"
+                    style={dsTrials === t ? { background: '#6cf8bb', color: '#000' } : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)' }}>
                     {t} ງວດ
                   </button>
                 ))}
@@ -1509,25 +1572,25 @@ export default function AnalyticsPage() {
           </div>
 
           {!dsBacktest ? (
-            <p className="text-white/30 text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
+            <p className="text-white/25 text-sm text-center py-8">ຂໍ້ມູນບໍ່ພໍ</p>
           ) : (
             <>
-              {/* Summary cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: '★★★ ຖືກ',    hits: dsBacktest.hitsStar3, color: '#fbbf24', sub: 'ສັນຍານຄົບ 3' },
-                  { label: '★★☆ ຖືກ',   hits: dsBacktest.hitsStar2, color: '#818cf8', sub: 'ສັນຍານ 2/3' },
-                  { label: '★☆☆ ຖືກ',   hits: dsBacktest.hitsStar1, color: '#94a3b8', sub: 'ສັນຍານ 1/3' },
+                  { label: '★★★ ຖືກ',     hits: dsBacktest.hitsStar3, color: '#fbbf24', sub: 'ສັນຍານຄົບ 3' },
+                  { label: '★★☆ ຖືກ',    hits: dsBacktest.hitsStar2, color: '#818cf8', sub: 'ສັນຍານ 2/3' },
+                  { label: '★☆☆ ຖືກ',    hits: dsBacktest.hitsStar1, color: '#94a3b8', sub: 'ສັນຍານ 1/3' },
                   { label: 'ຮວມຖືກ (any)', hits: dsBacktest.hitsAny,  color: '#6cf8bb', sub: 'ຢ່າງໜ້ອຍ 1 ★' },
                 ].map(({ label, hits, color, sub }) => {
                   const pct = Math.round((hits / dsBacktest.trials) * 100)
                   return (
-                    <div key={label} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl p-4 border border-white/[0.08] text-center">
+                    <div key={label} className="rounded-2xl p-4 border text-center"
+                      style={{ background: `${color}06`, borderColor: `${color}20` }}>
                       <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: color + 'aa' }}>{label}</p>
                       <p className="text-4xl font-black" style={{ color }}>
-                        {hits}<span className="text-xl text-white/30">/{dsBacktest.trials}</span>
+                        {hits}<span className="text-xl text-white/25">/{dsBacktest.trials}</span>
                       </p>
-                      <div className="mt-2 h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
+                      <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
                         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
                       </div>
                       <p className="text-[11px] mt-1.5 font-bold" style={{ color }}>{pct}% · {sub}</p>
@@ -1536,26 +1599,22 @@ export default function AnalyticsPage() {
                 })}
               </div>
 
-              {/* Accuracy bar */}
-              <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl p-5 border border-white/[0.08]">
-                <p className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">ສັດສ່ວນຄວາມຖືກຕ້ອງ</p>
+              <div className="rounded-2xl p-5 border border-white/[0.07]" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <p className="text-xs font-bold text-white/25 uppercase tracking-widest mb-4">ສັດສ່ວນຄວາມຖືກຕ້ອງ</p>
                 <div className="space-y-3.5">
                   {[
                     { label: '★★★  ສັນຍານຄົບ', hits: dsBacktest.hitsStar3, color: '#fbbf24', total: dsBacktest.trials },
                     { label: '★★  ສັນຍານ 2/3',  hits: dsBacktest.hitsStar2, color: '#818cf8', total: dsBacktest.trials },
                     { label: '★  ສັນຍານ 1/3',   hits: dsBacktest.hitsStar1, color: '#94a3b8', total: dsBacktest.trials },
-                    { label: 'ຮວມ (any signal)',  hits: dsBacktest.hitsAny,   color: '#6cf8bb', total: dsBacktest.trials },
+                    { label: 'ຮວມ (any)',         hits: dsBacktest.hitsAny,   color: '#6cf8bb', total: dsBacktest.trials },
                   ].map(({ label, hits, color, total }) => {
                     const pct = Math.round((hits / total) * 100)
                     return (
                       <div key={label} className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-white/40 w-40 shrink-0">{label}</span>
-                        <div className="flex-1 h-5 bg-white/[0.08] rounded-full overflow-hidden relative">
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${pct}%`, background: color }}
-                          />
-                          <span className="absolute inset-0 flex items-center px-3 text-[11px] font-black text-white/80">
+                        <span className="text-xs font-bold text-white/35 w-40 shrink-0">{label}</span>
+                        <div className="flex-1 h-5 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
+                          <span className="absolute inset-0 flex items-center px-3 text-[11px] font-black text-white/75">
                             {hits}/{total} ງວດ
                           </span>
                         </div>
@@ -1566,65 +1625,44 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* Per-draw list — 21 rows */}
-              <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl p-5 border border-white/[0.08]">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-4">
+              <div className="rounded-2xl p-5 border border-white/[0.07]" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-4">
                   ລາຍລະອຽດ {dsBacktest.results.length} ງວດ
                 </p>
                 <div className="space-y-2">
                   {dsBacktest.results.map((r, i) => {
                     const tier = r.hitStar3 ? 3 : r.hitStar2 ? 2 : r.hitStar1 ? 1 : 0
                     const rowColor = tier === 3 ? '#fbbf24' : tier === 2 ? '#818cf8' : tier === 1 ? '#94a3b8' : null
-                    const rowBg   = tier === 3 ? 'bg-[#fbbf24]/10 border-[#fbbf24]/25'
-                                  : tier === 2 ? 'bg-[#818cf8]/10 border-[#818cf8]/20'
-                                  : tier === 1 ? 'bg-white/[0.04] border-white/[0.07]'
-                                  : 'bg-zinc-950/80 border-white/[0.05]'
+                    const rowStyle = tier === 3 ? { background: '#fbbf2408', borderColor: '#fbbf2425' }
+                                   : tier === 2 ? { background: '#818cf808', borderColor: '#818cf820' }
+                                   : { background: 'rgba(255,255,255,0.015)', borderColor: 'rgba(255,255,255,0.05)' }
                     return (
-                      <div key={i} className={`rounded-xl px-3 py-2.5 border flex flex-col gap-2 ${rowBg}`}>
-                        {/* ── Row 1: meta + result + verdict ── */}
+                      <div key={i} className="rounded-xl px-3 py-2.5 border flex flex-col gap-2" style={rowStyle}>
                         <div className="flex items-center gap-2 flex-wrap">
-                          {/* rank */}
-                          <span className="text-[10px] text-white/30 w-4 shrink-0 text-right">{i + 1}</span>
-                          {/* draw info */}
-                          <span className="text-[10px] font-bold text-white/30 shrink-0">#{r.drawNum}</span>
-                          <span className="text-[10px] text-white/30 shrink-0">{r.date?.slice(0, 10)}</span>
+                          <span className="text-[10px] text-white/25 w-4 shrink-0">{i + 1}</span>
+                          <span className="text-[10px] font-bold text-white/25 shrink-0">#{r.drawNum}</span>
+                          <span className="text-[10px] text-white/25 shrink-0">{r.date?.slice(0, 10)}</span>
                           <div className="flex-1" />
-                          {/* actual result */}
                           <span className="font-black font-mono text-base text-white shrink-0">{r.actual}</span>
-                          {/* DS stars of actual */}
                           <div className="flex gap-0.5 shrink-0">
                             {[0,1,2].map(j => (
-                              <span key={j} className={`text-sm ${j < r.actualDecisionScore ? (rowColor ? '' : 'text-white/[0.08]') : 'text-white/[0.08]'}`}
-                                style={j < r.actualDecisionScore && rowColor ? { color: rowColor } : {}}>
-                                ★
-                              </span>
+                              <span key={j} className="text-sm"
+                                style={{ color: j < r.actualDecisionScore && rowColor ? rowColor : 'rgba(255,255,255,0.08)' }}>★</span>
                             ))}
                           </div>
-                          {/* verdict badge */}
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0
-                            ${tier === 3 ? 'bg-[#fbbf24]/20 text-[#fbbf24]'
-                              : tier === 2 ? 'bg-[#818cf8]/20 text-[#818cf8]'
-                              : tier === 1 ? 'bg-[#94a3b8]/20 text-white/50'
-                              : 'bg-white/[0.04] text-white/30'}`}
-                          >
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0"
+                            style={rowColor ? { background: `${rowColor}18`, color: rowColor } : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)' }}>
                             {tier === 3 ? '★★★ ຖືກ' : tier === 2 ? '★★ ຖືກ' : tier === 1 ? '★ ຖືກ' : '✗ Miss'}
                           </span>
                         </div>
-                        {/* ── Row 2: all 21 number badges ── */}
                         <div className="flex gap-1 flex-wrap">
                           {r.all21.map((item, j) => (
-                            <span
-                              key={j}
-                              title={`★${item.tier}`}
-                              className={`font-black font-mono text-[11px] px-1.5 py-0.5 rounded-md transition-all
-                                ${item.num === r.actual
-                                  ? item.tier === 3 ? 'bg-[#fbbf24] text-black ring-1 ring-[#fbbf24]'
-                                    : item.tier === 2 ? 'bg-[#818cf8] text-white ring-1 ring-[#818cf8]'
-                                    : 'bg-[#94a3b8] text-black ring-1 ring-[#94a3b8]'
-                                  : item.tier === 3 ? 'bg-white/[0.04] text-[#fbbf24]/80'
-                                    : item.tier === 2 ? 'bg-white/[0.04] text-[#818cf8]/65'
-                                    : 'bg-white/[0.04] text-white/30'}`}
-                            >
+                            <span key={j} className="font-black font-mono text-[11px] px-1.5 py-0.5 rounded-md"
+                              style={item.num === r.actual
+                                ? { background: item.tier === 3 ? '#fbbf24' : item.tier === 2 ? '#818cf8' : '#94a3b8', color: item.tier >= 2 ? '#000' : '#fff' }
+                                : item.tier === 3 ? { background: 'rgba(255,255,255,0.04)', color: '#fbbf2480' }
+                                : item.tier === 2 ? { background: 'rgba(255,255,255,0.04)', color: '#818cf865' }
+                                : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)' }}>
                               {item.num}
                             </span>
                           ))}
@@ -1635,17 +1673,17 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* Disclaimer */}
-              <div className="bg-[#fbbf24]/10 border border-[#fbbf24]/25 rounded-xl px-4 py-2.5 text-xs text-[#fbbf24] flex items-start gap-2">
+              <div className="rounded-xl px-4 py-2.5 text-xs text-[#fbbf24] flex items-start gap-2"
+                style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.20)' }}>
                 <span className="material-symbols-outlined text-[14px] mt-0.5 shrink-0">warning</span>
-                ຫວຍລາວເປັນການສຸ່ມ — ຕົວເລກ Decision Score ★★★ ຮວມຢູ່ໃນກຸ່ມທຳນາຍ ບໍ່ໄດ້ໝາຍຄວາມວ່າຈະຖືກທຸກງວດ
+                ຫວຍລາວເປັນການສຸ່ມ — ຕົວເລກ Decision Score ★★★ ບໍ່ຮັບປະກັນຈະຖືກທຸກງວດ
               </div>
             </>
           )}
         </div>
       )}
 
-      {/* ── TAB: PREDICT ────────────────────────────────────────────────────── */}
+      {/* ── PREDICT ──────────────────────────────────────────────────────────── */}
       {mode === 'predict' && (
         <PredictionEnginePanel
           prediction={enhancedPrediction}
@@ -1655,7 +1693,7 @@ export default function AnalyticsPage() {
         />
       )}
 
-      {/* ── TAB: BACKTEST ───────────────────────────────────────────────────── */}
+      {/* ── BACKTEST ─────────────────────────────────────────────────────────── */}
       {mode === 'backtest' && (
         <BacktestPanel
           draws={filteredDraws}

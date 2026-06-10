@@ -57,23 +57,23 @@ export function ResultCardSkeleton({ compact = false }) {
 
 function ResultCardCompact({ draw, animal, twoDigitResult }) {
   return (
-    <Card className="p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-muted-foreground">ງວດທີ {draw.draw_number}</span>
-        <span className="text-xs text-muted-foreground">{formatLaoDate(draw.draw_date, true)}</span>
+    <div className="p-5 bg-[#0d0e1c]/80 backdrop-blur-md border border-[#d4af37]/15 rounded-2xl hover:border-[#d4af37]/35 hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)] transition-all duration-300 hover:-translate-y-0.5">
+      <div className="flex items-center justify-between mb-3.5">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#ffd700]/60">ງວດທີ {draw.draw_number}</span>
+        <span className="text-[10px] text-white/45">{formatLaoDate(draw.draw_date, true)}</span>
       </div>
-      <div className="text-2xl font-black text-primary tracking-widest mb-2 font-mono">
+      <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ffd700] via-[#e5c158] to-[#aa7c11] tracking-widest mb-3 font-mono">
         {draw.full_result}
       </div>
       {animal && (
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">
-            2 ຕົວ: <span className="font-bold text-foreground">{twoDigitResult.result_value}</span>
-            {' — '}{animal.animal_name_lao}
+        <div className="flex items-center gap-2 pt-2 border-t border-white/[0.04]">
+          <span className="text-xs text-white/50">
+            2 ຕົວ: <span className="font-bold text-[#ffd700] font-mono">{twoDigitResult.result_value}</span>
+            {' — '}<span className="text-white/80 font-semibold">{animal.animal_name_lao}</span>
           </span>
         </div>
       )}
-    </Card>
+    </div>
   )
 }
 
@@ -101,7 +101,7 @@ export default function ResultCard({ draw, compact = false }) {
         quality: 1.0,
         pixelRatio: 2,
         skipFonts: true,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#060410',
       });
       const link = document.createElement('a');
       link.download = `lao-lottery-result-${draw.draw_number}.png`;
@@ -119,61 +119,67 @@ export default function ResultCard({ draw, compact = false }) {
   }
 
   return (
-    <Card className="relative">
+    <div className="relative overflow-hidden bg-[#0d0e1c]/80 backdrop-blur-md border border-[#d4af37]/20 rounded-3xl shadow-[0_24px_48px_rgba(0,0,0,0.6)] p-6 sm:p-8">
+      {/* Top golden shimmer accent */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#d4af37]/50 to-transparent" />
+
       {/* Off-screen capture element for share image */}
       <div className="absolute left-[-9999px] top-[-9999px]">
         <ShareResultCapture ref={captureRef} draw={draw} animal={animal} animalDisplayUrl={animalDisplayUrl} lotteryType={lotteryType} />
       </div>
 
-      <CardHeader className="pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            {typeName && (() => {
-              const typeObj = lotteryTypes.find(t => t.type_id === draw.type_id)
-              const color = typeObj?.color || '#006c49'
-              return (
-                <span
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border mb-1"
-                  style={{ color, background: `${color}12`, borderColor: `${color}40` }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                  {typeName}
-                </span>
-              )
-            })()}
-            <h2 className="text-xl font-bold text-foreground">
-              ງວດທີ {draw.draw_number} — {formatLaoDate(draw.draw_date, false)}
-            </h2>
-            <div className="flex items-center gap-1 mt-2 text-[10px] text-muted-foreground">
-              <BadgeCheck className="w-3.5 h-3.5" />
-              ອັບເດດລ່າສຸດ: {formatLaoDate(draw.draw_date, true)} - ເວລາ 20:30
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <Button
-              size="sm"
-              onClick={handleShare}
-              disabled={isGenerating}
-              className="gap-2 rounded-full px-4 shadow-sm"
-            >
-              {isGenerating
-                ? <Loader2 className="w-4 h-4 animate-spin" />
-                : <Share2 className="w-4 h-4" />}
-              {isGenerating ? 'ກຳລັງສ້າງຮູບ...' : 'ແຊຣ໌ຜົນນີ້'}
-            </Button>
-
-            <Badge variant={draw.status === 'published' ? 'success' : 'secondary'}>
-              {draw.status === 'published' ? 'ປະກາດແລ້ວ' : 'ລໍຖ້າ'}
-            </Badge>
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.06] mb-6">
+        <div>
+          {typeName && (() => {
+            const typeObj = lotteryTypes.find(t => t.type_id === draw.type_id)
+            const color = typeObj?.color || '#ffd700'
+            return (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border mb-2 shadow-[0_2px_10px_rgba(212,175,55,0.1)]"
+                style={{ color, background: `${color}15`, borderColor: `${color}35` }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color }} />
+                {typeName}
+              </span>
+            )
+          })()}
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            ງວດທີ {draw.draw_number} — {formatLaoDate(draw.draw_date, false)}
+          </h2>
+          <div className="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-white/45">
+            <span className="material-symbols-outlined text-[13px] text-[#ffd700]">verified</span>
+            ອັບເດດລ່າສຸດ: {formatLaoDate(draw.draw_date, true)} - ເວລາ 20:30
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-6">
-        {/* Main 6-digit result */}
-        <div className="bg-[#003fb1] rounded-xl p-6 sm:p-8 text-center">
-          <p className="text-[#b5c4ff] text-sm font-bold uppercase tracking-widest mb-4">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <button
+            onClick={handleShare}
+            disabled={isGenerating}
+            className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 bg-gradient-to-r from-[#d4af37] to-[#aa7c11] hover:from-[#ffd700] hover:to-[#d4af37] text-[#060410] font-black text-xs shadow-[0_4px_15px_rgba(212,175,55,0.25)] hover:shadow-[0_6px_20px_rgba(212,175,55,0.35)] transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+          >
+            {isGenerating
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <Share2 className="w-3.5 h-3.5" />}
+            {isGenerating ? 'ກຳລັງສ້າງຮູບ...' : 'ແຊຣ໌ຜົນນີ້'}
+          </button>
+
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${
+            draw.status === 'published' 
+              ? 'bg-[#10b981]/10 text-[#34d399] border-[#10b981]/25' 
+              : 'bg-white/[0.04] text-white/50 border-white/[0.08]'
+          }`}>
+            {draw.status === 'published' ? 'ປະກາດແລ້ວ' : 'ລໍຖ້າ'}
+          </span>
+        </div>
+      </div>
+
+      {/* Content section */}
+      <div className="space-y-6">
+        {/* Main 6-digit result board */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#0c0e1a] to-[#151a30] border border-[#d4af37]/15 rounded-2xl p-6 sm:p-8 text-center shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)]">
+          <p className="text-[#ffd700] text-xs font-black uppercase tracking-[0.25em] mb-5">
             ຜົນລາງວັນທີ 1 ປະຈຳວັນທີ {formatLaoDate(draw.draw_date, false)}
           </p>
 
@@ -183,7 +189,7 @@ export default function ResultCard({ draw, compact = false }) {
               {draw.full_result.split('').map((digit, i) => (
                 <span
                   key={i}
-                  className="w-12 h-16 sm:w-16 sm:h-20 bg-white dark:bg-[#152033] shadow-inner rounded-xl flex items-center justify-center text-3xl sm:text-5xl font-black text-[#003fb1]"
+                  className="w-12 h-16 sm:w-16 sm:h-20 bg-gradient-to-b from-[#1b1e35] to-[#0a0b14] border border-[#d4af37]/35 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8),0_4px_12px_rgba(212,175,55,0.12)] rounded-xl flex items-center justify-center text-3.5xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#ffd700] via-[#e5c158] to-[#aa7c11] font-mono select-none"
                   aria-label={`ເລກ ${digit}`}
                 >
                   {digit}
@@ -193,8 +199,8 @@ export default function ResultCard({ draw, compact = false }) {
 
             {/* Animal display */}
             {animal && (
-              <div className="flex items-center gap-4 bg-white dark:bg-[#152033]/10 px-5 sm:px-6 py-3 h-auto sm:h-[80px] rounded-xl border border-[#b5c4ff]/20 shadow-sm backdrop-blur-sm shrink-0 w-full sm:w-auto justify-center xl:justify-start">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white dark:bg-[#152033] rounded-full flex items-center justify-center overflow-hidden border-2 border-white shrink-0 shadow-sm">
+              <div className="flex items-center gap-4 bg-[#0a0b14]/75 px-5 sm:px-6 py-3 h-auto sm:h-[80px] rounded-xl border border-[#d4af37]/15 shadow-[0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-sm shrink-0 w-full sm:w-auto justify-center xl:justify-start">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-[#d4af37]/40 shrink-0 shadow-md">
                   <img
                     src={animalDisplayUrl}
                     alt={animal.animal_name_lao}
@@ -202,9 +208,9 @@ export default function ResultCard({ draw, compact = false }) {
                     onError={(e) => { e.target.style.display = 'none' }}
                   />
                 </div>
-                <div className="text-left text-white">
-                  <p className="text-lg sm:text-xl font-bold leading-tight mb-0.5">{animal.animal_name_lao}</p>
-                  <p className="text-xs sm:text-sm font-medium text-[#d4dcff]">
+                <div className="text-left">
+                  <p className="text-white font-black text-lg sm:text-xl leading-tight mb-0.5">{animal.animal_name_lao}</p>
+                  <p className="text-xs sm:text-sm font-semibold text-[#ffd700]/70">
                     ນາມສັດ (ເລກ: {twoDigitResult.result_value})
                   </p>
                 </div>
@@ -213,8 +219,8 @@ export default function ResultCard({ draw, compact = false }) {
           </div>
         </div>
 
-        {/* Prize breakdown */}
-        <div className="space-y-0">
+        {/* Prize breakdown list */}
+        <div className="divide-y divide-[#d4af37]/10 bg-white/[0.02] border border-white/[0.05] rounded-2xl px-5 py-2">
           {draw.results_detail?.filter(r => r.prize_type !== '6_digits').map(r => {
             const animalForRow = r.animal_id
               ? animals.find(a => String(a.animal_id) === String(r.animal_id))
@@ -222,16 +228,16 @@ export default function ResultCard({ draw, compact = false }) {
             return (
               <div
                 key={r.detail_id}
-                className="flex items-center justify-between py-2.5 border-b border-border last:border-0"
+                className="flex items-center justify-between py-3.5"
               >
-                <span className="text-sm text-muted-foreground">{prizeLabels[r.prize_type]}</span>
-                <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-white/60">{prizeLabels[r.prize_type]}</span>
+                <div className="flex items-center gap-3.5">
                   {animalForRow && (
-                    <Badge variant="secondary" className="gap-1.5">
-                      <span className="text-xs font-semibold">{animalForRow.animal_name_lao}</span>
-                    </Badge>
+                    <span className="inline-flex items-center bg-[#d4af37]/10 text-[#ffd700] border border-[#d4af37]/25 px-2.5 py-0.5 rounded-md text-[11px] font-black">
+                      {animalForRow.animal_name_lao}
+                    </span>
                   )}
-                  <span className="text-lg font-black text-primary min-w-[60px] text-right font-mono">
+                  <span className="text-lg font-black text-[#ffd700] min-w-[60px] text-right font-mono tracking-wider">
                     {r.result_value}
                   </span>
                 </div>
@@ -239,7 +245,7 @@ export default function ResultCard({ draw, compact = false }) {
             )
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

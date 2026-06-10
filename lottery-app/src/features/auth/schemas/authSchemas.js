@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const LAO_PHONE_RE = /^(\+856|0)[2-9]\d{7,8}$/;
+const LAO_PHONE_RE = /^(\+856|0)[2-9]\d{7,9}$/;
 const USERNAME_RE  = /^[a-zA-Z0-9_]+$/;
 const HAS_UPPER    = /[A-Z]/;
 const HAS_LOWER    = /[a-z]/;

@@ -65,14 +65,14 @@ export default function OTPInput({ length = 6, value = '', onChange, disabled = 
           onPaste={handlePaste}
           onFocus={e => e.target.select()}
           className={`
-            w-11 h-14 text-center text-2xl font-black rounded-xl border-2 transition-all duration-150
-            bg-accent text-foreground
+            w-11 h-14 text-center text-2xl font-black rounded-xl border transition-all duration-150
+            bg-black/45 text-white
             focus:outline-none
             ${digit
-              ? 'border-[#003fb1] bg-card shadow-md shadow-[#003fb1]/15 scale-105'
-              : 'border-border'
+              ? 'border-[#d4af37] bg-[#0e1124] shadow-md shadow-[#d4af37]/10 scale-105'
+              : 'border-white/[0.08]'
             }
-            focus:border-[#003fb1] focus:bg-white dark:focus:bg-[#152033] focus:scale-105 focus:shadow-md focus:shadow-[#003fb1]/15
+            focus:border-[#d4af37] focus:bg-[#0e1124] focus:scale-105 focus:shadow-md focus:shadow-[#d4af37]/15
             disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100
           `}
         />

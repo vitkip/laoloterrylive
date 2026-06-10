@@ -2,16 +2,294 @@ import { useState, useMemo } from 'react';
 import { animals } from '../data/animals';
 import { dreamDictionary } from '../data/dreams';
 
-const QUICK_HINTS = ['ງູ', 'ປາ', 'ຊ້າງ', 'ແມວ', 'ໝາ', 'ນ້ຳ', 'ໄຟ', 'ເງິນ']
+const QUICK_HINTS = ['ງູ', 'ປາ', 'ຊ້າງ', 'ແມວ', 'ໝາ', 'ນ້ຳ', 'ໄຟ', 'ເງິນ'];
 
-const CATEGORY_COLOR = {
-  'ສັດ': { bg: 'bg-[#edfdf5]', text: 'text-[#006c49]', border: 'border-[#6cf8bb]/40' },
-  'ທຳມະຊາດ': { bg: 'bg-[#eff6ff]', text: 'text-[#0369a1]', border: 'border-[#93c5fd]/40' },
-  'ສັດນ້ຳ': { bg: 'bg-[#f0fdff]', text: 'text-[#0891b2]', border: 'border-[#67e8f9]/40' },
-  'ສັດທົ່ວໄປ': { bg: 'bg-[#f5f3ff]', text: 'text-[#7c3aed]', border: 'border-[#c4b5fd]/40' },
-}
-const defaultCat = { bg: 'bg-[#f5f7ff]', text: 'text-[#555870]', border: 'border-[#e8edf8]' }
+const CATEGORY_STYLE = {
+  'ສັດ':        { neon: '#10b981', bg: 'rgba(16,185,129,0.10)',  border: 'rgba(16,185,129,0.24)'  },
+  'ທຳມະຊາດ':  { neon: '#38bdf8', bg: 'rgba(56,189,248,0.10)',  border: 'rgba(56,189,248,0.24)'  },
+  'ສັດນ້ຳ':    { neon: '#22d3ee', bg: 'rgba(34,211,238,0.10)',  border: 'rgba(34,211,238,0.24)'  },
+  'ສັດທົ່ວໄປ': { neon: '#a78bfa', bg: 'rgba(167,139,250,0.10)', border: 'rgba(167,139,250,0.24)' },
+};
+const DEFAULT_CAT = { neon: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.18)' };
 
+/* ─── Inline styles ─────────────────────────────────────────── */
+const STYLE = `
+  /* ── Left panel oracle console ── */
+  .dd-left-card {
+    position: relative;
+    background: linear-gradient(148deg, #0d0a1e 0%, #160d2e 55%, #0f0818 100%);
+    border: 1px solid rgba(167,139,250,0.20);
+    border-radius: 20px;
+    padding: 24px 20px 22px;
+    overflow: hidden;
+  }
+  .dd-left-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent 5%, rgba(167,139,250,0.6) 40%, rgba(251,191,36,0.5) 60%, transparent 95%);
+  }
+
+  /* Starfield */
+  .dd-stars {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      radial-gradient(circle 1.1px at  7% 14%, rgba(255,255,255,0.55) 0%, transparent 1.1px),
+      radial-gradient(circle  1px at 17% 62%, rgba(255,255,255,0.35) 0%, transparent 1px),
+      radial-gradient(circle 1.3px at 28% 32%, rgba(167,139,250,0.40) 0%, transparent 1.3px),
+      radial-gradient(circle  1px at 44% 78%, rgba(255,255,255,0.28) 0%, transparent 1px),
+      radial-gradient(circle  1px at 54% 18%, rgba(255,255,255,0.38) 0%, transparent 1px),
+      radial-gradient(circle 1.5px at 67% 52%, rgba(167,139,250,0.32) 0%, transparent 1.5px),
+      radial-gradient(circle  1px at 77% 88%, rgba(255,255,255,0.28) 0%, transparent 1px),
+      radial-gradient(circle  1px at 87% 28%, rgba(255,255,255,0.38) 0%, transparent 1px),
+      radial-gradient(circle  1px at 94% 68%, rgba(255,255,255,0.32) 0%, transparent 1px),
+      radial-gradient(circle  1px at 23%  8%, rgba(255,255,255,0.42) 0%, transparent 1px),
+      radial-gradient(circle  1px at 71% 12%, rgba(251,191,36,0.22) 0%, transparent 1px),
+      radial-gradient(circle  1px at 38% 95%, rgba(167,139,250,0.28) 0%, transparent 1px),
+      radial-gradient(circle  1px at 60% 40%, rgba(255,255,255,0.20) 0%, transparent 1px);
+  }
+
+  /* Rotating mandala rings (decorative) */
+  .dd-ring-a {
+    position: absolute;
+    width: 160px; height: 160px; border-radius: 50%;
+    top: -45px; left: -45px;
+    border: 1px solid rgba(167,139,250,0.10);
+    animation: dd-spin-cw 28s linear infinite;
+    pointer-events: none;
+  }
+  .dd-ring-a::before {
+    content: '';
+    position: absolute; inset: 16px; border-radius: 50%;
+    border: 1px dashed rgba(167,139,250,0.07);
+  }
+  .dd-ring-b {
+    position: absolute;
+    width: 110px; height: 110px; border-radius: 50%;
+    bottom: -28px; right: -28px;
+    border: 1px dashed rgba(251,191,36,0.10);
+    animation: dd-spin-ccw 18s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes dd-spin-cw  { from { transform: rotate(0deg);   } to { transform: rotate(360deg);  } }
+  @keyframes dd-spin-ccw { from { transform: rotate(0deg);   } to { transform: rotate(-360deg); } }
+
+  /* Icon wrapper */
+  .dd-hdr-icon {
+    position: relative; z-index: 1;
+    width: 50px; height: 50px; border-radius: 16px;
+    background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 55%, #a78bfa 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 26px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.18);
+    margin-bottom: 14px;
+  }
+  .dd-hdr-icon-glyph {
+    font-size: 24px; color: #fff;
+    animation: dd-icon-glow 3s ease-in-out infinite;
+  }
+  @keyframes dd-icon-glow {
+    0%, 100% { filter: drop-shadow(0 0 4px rgba(255,255,255,0.35)); }
+    50%       { filter: drop-shadow(0 0 14px rgba(255,255,255,0.80)); }
+  }
+
+  /* Header text */
+  .dd-hdr-title {
+    position: relative; z-index: 1;
+    font-size: 18px; font-weight: 900; letter-spacing: -0.015em; margin: 0 0 4px;
+    background: linear-gradient(120deg, #c4b5fd 0%, #e9d5ff 45%, #fde68a 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .dd-hdr-sub {
+    position: relative; z-index: 1;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(167,139,250,0.48);
+  }
+
+  /* ── Search input ── */
+  .dd-search-wrap { position: relative; }
+  .dd-search-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: rgba(139,92,246,0.58); font-size: 20px; pointer-events: none;
+  }
+  .dd-search-input {
+    width: 100%;
+    background: rgba(13,10,30,0.90);
+    border: 1.5px solid rgba(124,58,237,0.24);
+    border-radius: 14px;
+    padding: 13px 44px 13px 48px;
+    font-size: 14px; font-weight: 500; color: #e9d5ff;
+    outline: none; backdrop-filter: blur(12px);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .dd-search-input::placeholder { color: rgba(139,92,246,0.40); font-size: 13px; }
+  .dd-search-input:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.15), 0 0 22px rgba(124,58,237,0.10);
+  }
+  .dd-clear-btn {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    color: rgba(139,92,246,0.50); background: none; border: none;
+    cursor: pointer; display: flex; align-items: center; padding: 2px;
+    transition: color 0.15s;
+  }
+  .dd-clear-btn:hover { color: #a78bfa; }
+
+  /* ── Quick hint rune chips ── */
+  .dd-hints-label {
+    font-size: 10px; font-weight: 900; letter-spacing: 0.20em;
+    text-transform: uppercase; color: rgba(167,139,250,0.42); margin-bottom: 9px;
+  }
+  .dd-rune {
+    position: relative; overflow: hidden;
+    padding: 7px 16px; border-radius: 22px;
+    background: rgba(124,58,237,0.07);
+    border: 1px solid rgba(124,58,237,0.22);
+    font-size: 13px; font-weight: 800; color: rgba(196,181,253,0.78);
+    cursor: pointer; transition: all 0.18s;
+  }
+  .dd-rune::before {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 55%; height: 100%;
+    background: linear-gradient(105deg, transparent 35%, rgba(167,139,250,0.12) 50%, transparent 65%);
+    transition: left 0.45s;
+  }
+  .dd-rune:hover {
+    background: rgba(124,58,237,0.16); border-color: rgba(124,58,237,0.44);
+    color: #c4b5fd; box-shadow: 0 0 16px rgba(124,58,237,0.16);
+    transform: translateY(-1px);
+  }
+  .dd-rune:hover::before { left: 150%; }
+
+  /* ── Result count badges ── */
+  .dd-badge-found {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(16,185,129,0.09); border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 11px; font-weight: 900; letter-spacing: 0.06em; color: #34d399;
+  }
+  .dd-badge-empty {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.22);
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 11px; font-weight: 900; letter-spacing: 0.06em; color: #f87171;
+  }
+  .dd-badge-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    animation: dd-dot-blink 1.5s ease-in-out infinite;
+  }
+  @keyframes dd-dot-blink {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+
+  /* ── Idle / empty states ── */
+  .dd-idle-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 60px 20px; gap: 14px; text-align: center;
+  }
+  .dd-orb {
+    position: relative;
+    width: 76px; height: 76px; border-radius: 50%;
+    background: linear-gradient(135deg, #1e0d3d 0%, #2d1260 100%);
+    border: 1px solid rgba(124,58,237,0.25);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 32px rgba(124,58,237,0.22);
+  }
+  .dd-orb-red {
+    background: linear-gradient(135deg, #1e0808 0%, #3a0f0f 100%);
+    border-color: rgba(239,68,68,0.22); box-shadow: 0 0 28px rgba(239,68,68,0.14);
+  }
+  .dd-orb-icon { font-size: 30px; color: #a78bfa; }
+  .dd-orb-ring {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(124,58,237,0.18);
+    animation: dd-orb-pulse 2.6s ease-out infinite;
+  }
+  .dd-orb-ring-1 { inset: -12px; }
+  .dd-orb-ring-2 { inset: -24px; animation-delay: 1.3s; }
+  @keyframes dd-orb-pulse {
+    0%   { opacity: 0.65; transform: scale(1);    }
+    100% { opacity: 0;    transform: scale(1.35); }
+  }
+  .dd-idle-title { font-size: 15px; font-weight: 900; color: rgba(196,181,253,0.65); }
+  .dd-idle-sub   { font-size: 12px; color: rgba(124,58,237,0.42); max-width: 220px; line-height: 1.5; }
+
+  /* ── Result cards ── */
+  .dd-card {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, rgba(13,10,30,0.96) 0%, rgba(22,13,46,0.90) 100%);
+    border: 1px solid rgba(124,58,237,0.13);
+    border-radius: 16px;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    animation: dd-card-rise 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes dd-card-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .dd-card:hover {
+    border-color: rgba(124,58,237,0.28); transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(13,10,30,0.55);
+  }
+  .dd-card-bar { height: 2.5px; width: 100%; flex-shrink: 0; }
+
+  /* Icon box inside card */
+  .dd-card-icon-box {
+    width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+    background: rgba(124,58,237,0.09);
+    border: 1px solid rgba(124,58,237,0.16);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Card title */
+  .dd-card-title {
+    font-size: 16px; font-weight: 900; letter-spacing: -0.01em; margin: 0;
+    background: linear-gradient(90deg, #e9d5ff 0%, #c4b5fd 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  /* Category badge */
+  .dd-cat-pill {
+    font-size: 9px; font-weight: 900; letter-spacing: 0.10em;
+    text-transform: uppercase; padding: 3px 9px; border-radius: 20px;
+  }
+
+  /* Keywords */
+  .dd-kw { font-size: 11px; color: rgba(167,139,250,0.42); margin: 2px 0 0; font-weight: 500; }
+
+  /* ── Lottery balls ── */
+  .dd-ball {
+    position: relative;
+    width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+    background: radial-gradient(circle at 35% 30%, #ffd060 0%, #f59e0b 42%, #b45309 78%, #78350f 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(251,191,36,0.42), inset 0 -3px 6px rgba(0,0,0,0.28);
+  }
+  /* Specular highlight */
+  .dd-ball::after {
+    content: '';
+    position: absolute;
+    top: 8%; left: 12%; width: 42%; height: 34%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.56) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .dd-ball-n {
+    position: relative; z-index: 1;
+    font-size: 14px; font-weight: 900; color: #78350f; letter-spacing: -0.02em;
+  }
+
+  /* ── Meaning box (mystic parchment) ── */
+  .dd-meaning {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: rgba(124,58,237,0.06);
+    border: 1px solid rgba(124,58,237,0.13);
+    border-radius: 12px; padding: 10px 12px;
+    margin-top: 4px;
+  }
+  .dd-meaning-txt {
+    font-size: 11px; line-height: 1.75; color: rgba(196,181,253,0.65); margin: 0;
+  }
+`;
+
+/* ─────────────────────────────────────────────────────────────── */
 export default function DreamDictionary() {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -38,164 +316,217 @@ export default function DreamDictionary() {
     return combined;
   }, [searchTerm]);
 
-  const catStyle = (cat) => CATEGORY_COLOR[cat] || defaultCat;
+  const catStyle = (cat) => CATEGORY_STYLE[cat] || DEFAULT_CAT;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
+    <>
+      <style>{STYLE}</style>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
 
-      {/* ─── Left Panel: Search ─── */}
-      <div className="lg:col-span-2 flex flex-col gap-5">
+        {/* ═══ LEFT PANEL — Oracle Console ═══ */}
+        <div className="lg:col-span-2 flex flex-col gap-5">
 
-        {/* Header card */}
-        <div className="bg-gradient-to-br from-[#f5f3ff] to-[#ede9fe] dark:from-[#1e1333] dark:to-[#17102a] rounded-2xl p-6 border border-[#ddd6fe]/50 dark:border-[#4c1d95]/30">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center shadow-sm mb-4">
-            <span className="material-symbols-outlined text-white text-[20px]">menu_book</span>
-          </div>
-          <h2 className="text-lg font-extrabold text-foreground mb-1.5">ຕຳລາແປຄວາມຝັນ</h2>
-          <p className="text-xs text-[#6d28d9] dark:text-[#c4b5fd] leading-relaxed">
-            ພິມສິ່ງທີ່ທ່ານຝັນເຫັນ ເພື່ອຄົ້ນຫາຕົວເລກ ຫຼື ນາມສັດທີ່ກ່ຽວຂ້ອງ
-          </p>
-        </div>
+          {/* Header oracle card */}
+          <div className="dd-left-card">
+            <div className="dd-stars" />
+            <div className="dd-ring-a" />
+            <div className="dd-ring-b" />
 
-        {/* Search input */}
-        <div className="relative">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#a78bfa] text-[20px]">
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="ຄົ້ນຫາ ເຊັ່ນ: ງູ, ນ້ຳ, ໄຟ..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full bg-card pl-12 pr-10 py-3.5 rounded-xl border border-[#ddd6fe]/60 dark:border-[#4c1d95]/40 focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 outline-none text-sm font-medium text-foreground placeholder:text-[#a78bfa] shadow-sm transition-all"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a78bfa] hover:text-[#7c3aed] transition-colors"
-            >
-              <span className="material-symbols-outlined text-[18px]">close</span>
-            </button>
-          )}
-        </div>
-
-        {/* Quick hints */}
-        {!searchTerm && (
-          <div>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">ຄຳຄົ້ນຫາທີ່ນິຍົມ</p>
-            <div className="flex flex-wrap gap-1.5">
-              {QUICK_HINTS.map(hint => (
-                <button
-                  key={hint}
-                  onClick={() => setSearchTerm(hint)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#f5f3ff] dark:bg-[#1e1333] text-[#7c3aed] dark:text-[#c4b5fd] border border-[#ddd6fe]/60 dark:border-[#4c1d95]/30 hover:bg-[#ede9fe] hover:shadow-sm transition-all duration-150"
-                >
-                  {hint}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Results count */}
-        {searchTerm && (
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${results.length > 0 ? 'bg-[#edfdf5] text-[#006c49]' : 'bg-[#fff4f4] text-[#ba1a1a]'}`}>
-              {results.length > 0 ? `ພົບ ${results.length} ຜົນລັບ` : 'ບໍ່ພົບຂໍ້ມູນ'}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* ─── Right Panel: Results ─── */}
-      <div className="lg:col-span-3 flex flex-col min-h-0">
-        <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[65vh] lg:max-h-none">
-
-          {/* Empty / Idle */}
-          {!searchTerm && (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#f5f3ff] to-[#ede9fe] dark:from-[#1e1333] dark:to-[#17102a] flex items-center justify-center shadow-sm">
-                <span className="material-symbols-outlined text-[28px] text-[#7c3aed]">auto_awesome</span>
-              </div>
-              <div className="text-center">
-                <p className="font-bold text-muted-foreground mb-1">ເລີ່ມຄົ້ນຫາ</p>
-                <p className="text-xs text-[#a0a3bd] dark:text-[#555870]">ພິມຄຳທີ່ທ່ານຝັນເຫັນ ຫຼື ຄລິກຄຳຮ້ອນ</p>
-              </div>
-            </div>
-          )}
-
-          {/* No results */}
-          {searchTerm && results.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#fff4f4] dark:bg-[#2a1010] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[26px] text-[#ba1a1a]">search_off</span>
-              </div>
-              <div className="text-center">
-                <p className="font-bold text-muted-foreground mb-1">ບໍ່ພົບຂໍ້ມູນ</p>
-                <p className="text-xs text-[#a0a3bd] dark:text-[#555870]">ລອງໃຊ້ຄຳອື່ນ ເຊັ່ນ: ງູ, ໄຟ, ນ້ຳ</p>
-              </div>
-            </div>
-          )}
-
-          {/* Results */}
-          {results.map((res, idx) => {
-            const numbers = res.type === 'animal'
-              ? res.data.animal_numbers.split(',')
-              : res.numbers.split(',');
-            const cs = catStyle(res.category);
-            return (
-              <div
-                key={idx}
-                className="group bg-card rounded-2xl p-5 border border-border shadow-sm hover:shadow-md hover:border-[#7c3aed]/30 dark:hover:border-[#7c3aed]/30 hover:-translate-y-0.5 transition-all duration-200"
+            <div className="dd-hdr-icon">
+              <span
+                className="material-symbols-outlined dd-hdr-icon-glyph"
+                style={{ fontVariationSettings: "'FILL' 1" }}
               >
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#f5f3ff] to-[#ede9fe] dark:from-[#1e1333] dark:to-[#17102a] flex items-center justify-center shrink-0 border border-[#ddd6fe]/40">
-                    <span className="material-symbols-outlined text-[#7c3aed] text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      {res.type === 'animal' ? res.data.icon : 'format_list_numbered'}
-                    </span>
-                  </div>
+                auto_awesome
+              </span>
+            </div>
+            <h2 className="dd-hdr-title">ຕຳລາແປຄວາມຝັນ</h2>
+            <p className="dd-hdr-sub">Dream Oracle · ຄົ້ນຫາໂຊກດີຈາກຄວາມຝັນ</p>
+          </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <h3 className="font-extrabold text-foreground text-[15px] leading-tight">
-                        {res.type === 'animal' ? res.data.animal_name_lao : 'ເລກເດັດ'}
-                      </h3>
-                      <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${cs.bg} ${cs.text} ${cs.border}`}>
-                        {res.category}
+          {/* Search input */}
+          <div className="dd-search-wrap">
+            <span className="material-symbols-outlined dd-search-icon">search</span>
+            <input
+              type="text"
+              placeholder="ຝັນເຫັນຫຍັງ? ເຊັ່ນ: ງູ, ນ້ຳ, ໄຟ..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="dd-search-input"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="dd-clear-btn">
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+              </button>
+            )}
+          </div>
+
+          {/* Quick hint rune chips */}
+          {!searchTerm && (
+            <div>
+              <p className="dd-hints-label">✦ ຄຳຄົ້ນຫາທີ່ນິຍົມ</p>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_HINTS.map(hint => (
+                  <button key={hint} onClick={() => setSearchTerm(hint)} className="dd-rune">
+                    {hint}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Result count */}
+          {searchTerm && (
+            <div>
+              {results.length > 0 ? (
+                <span className="dd-badge-found">
+                  <span className="dd-badge-dot" />
+                  ພົບ {results.length} ຄຳທຳນາຍ
+                </span>
+              ) : (
+                <span className="dd-badge-empty">
+                  <span className="dd-badge-dot" />
+                  ບໍ່ພົບໃນຕຳລາ
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ═══ RIGHT PANEL — Oracle Scroll ═══ */}
+        <div className="lg:col-span-3 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[65vh] lg:max-h-none">
+
+            {/* Idle state */}
+            {!searchTerm && (
+              <div className="dd-idle-wrap">
+                <div className="dd-orb">
+                  <span
+                    className="material-symbols-outlined dd-orb-icon"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    visibility
+                  </span>
+                  <div className="dd-orb-ring dd-orb-ring-1" />
+                  <div className="dd-orb-ring dd-orb-ring-2" />
+                </div>
+                <p className="dd-idle-title">Oracle ພ້ອມແລ້ວ</p>
+                <p className="dd-idle-sub">ພິມຄຳທີ່ທ່ານຝັນ ຫຼື ຄລິກຄຳຮ້ອນດ້ານຊ້າຍ</p>
+              </div>
+            )}
+
+            {/* No results */}
+            {searchTerm && results.length === 0 && (
+              <div className="dd-idle-wrap">
+                <div className="dd-orb dd-orb-red">
+                  <span
+                    className="material-symbols-outlined dd-orb-icon"
+                    style={{ fontVariationSettings: "'FILL' 1", color: '#f87171' }}
+                  >
+                    search_off
+                  </span>
+                </div>
+                <p className="dd-idle-title" style={{ color: 'rgba(248,113,113,0.75)' }}>
+                  ບໍ່ພົບໃນຕຳລາ
+                </p>
+                <p className="dd-idle-sub">ລອງໃຊ້ຄຳອື່ນ ເຊັ່ນ: ງູ, ໄຟ, ນ້ຳ</p>
+              </div>
+            )}
+
+            {/* Result cards */}
+            {results.map((res, idx) => {
+              const numbers = res.type === 'animal'
+                ? res.data.animal_numbers.split(',')
+                : res.numbers.split(',');
+              const cs = catStyle(res.category);
+
+              return (
+                <div
+                  key={idx}
+                  className="dd-card"
+                  style={{ animationDelay: `${idx * 0.07}s` }}
+                >
+                  {/* Category-colored top bar */}
+                  <div className="dd-card-bar" style={{ background: cs.neon }} />
+
+                  <div className="flex items-start gap-4 p-4">
+                    {/* Icon box */}
+                    <div
+                      className="dd-card-icon-box"
+                      style={{ boxShadow: `0 0 18px ${cs.neon}30` }}
+                    >
+                      <span
+                        className="material-symbols-outlined"
+                        style={{
+                          fontSize: 22, color: cs.neon,
+                          fontVariationSettings: "'FILL' 1",
+                        }}
+                      >
+                        {res.type === 'animal' ? res.data.icon : 'format_list_numbered'}
                       </span>
                     </div>
-                    <p className="text-[11px] text-[#a0a3bd] dark:text-[#555870] mb-2">
-                      ຈາກ: <span className="text-[#7c3aed] dark:text-[#c4b5fd] font-semibold">{res.keywords}</span>
-                    </p>
 
-                    {/* Numbers */}
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {numbers.map(n => (
+                    <div className="flex-1 min-w-0">
+                      {/* Title + category */}
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h3 className="dd-card-title">
+                          {res.type === 'animal' ? res.data.animal_name_lao : 'ເລກເດັດ'}
+                        </h3>
                         <span
-                          key={n}
-                          className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#006c49] to-[#00a36c] text-white text-sm font-black shadow-sm"
+                          className="dd-cat-pill"
+                          style={{
+                            background: cs.bg,
+                            color: cs.neon,
+                            border: `1px solid ${cs.border}`,
+                          }}
                         >
-                          {n.trim()}
+                          {res.category}
                         </span>
-                      ))}
-                    </div>
-
-                    {/* Meaning */}
-                    {res.meaning && (
-                      <div className="flex items-start gap-2 bg-[#f5f3ff] dark:bg-[#1e1333]/60 rounded-xl p-3 border border-[#ddd6fe]/40 dark:border-[#4c1d95]/20">
-                        <span className="material-symbols-outlined text-[#a78bfa] text-[15px] mt-0.5 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
-                        <p className="text-xs text-[#555870] dark:text-[#c4b5fd] leading-relaxed">{res.meaning}</p>
                       </div>
-                    )}
+
+                      {/* Keywords source */}
+                      <p className="dd-kw">
+                        ຈາກ:{' '}
+                        <span style={{ color: '#c4b5fd', fontWeight: 700 }}>
+                          {res.keywords}
+                        </span>
+                      </p>
+
+                      {/* Lottery balls */}
+                      <div className="flex flex-wrap gap-2 my-3">
+                        {numbers.map(n => (
+                          <div key={n} className="dd-ball">
+                            <span className="dd-ball-n">{n.trim()}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Meaning (mystic parchment) */}
+                      {res.meaning && (
+                        <div className="dd-meaning">
+                          <span
+                            className="material-symbols-outlined"
+                            style={{
+                              fontSize: 14, color: '#a78bfa',
+                              flexShrink: 0, marginTop: 1,
+                              fontVariationSettings: "'FILL' 1",
+                            }}
+                          >
+                            lightbulb
+                          </span>
+                          <p className="dd-meaning-txt">{res.meaning}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              );
+            })}
+
+          </div>
         </div>
+
       </div>
-    </div>
-  )
+    </>
+  );
 }

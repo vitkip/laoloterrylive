@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -33,16 +31,14 @@ export default function Pagination({ total, page, pageSize, onPageChange, onPage
     <div className="flex flex-wrap items-center justify-center gap-1.5 mt-6 select-none">
 
       {/* Prev */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 rounded-full"
+      <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
+        className="h-8 w-8 rounded-full bg-white/[0.03] border border-white/[0.08] text-white/60 hover:bg-[#d4af37]/22 hover:text-[#ffd700] hover:border-[#d4af37]/30 disabled:opacity-30 disabled:pointer-events-none transition-all duration-200 flex items-center justify-center outline-none"
         aria-label="ໜ້າກ່ອນ"
       >
         <ChevronLeft className="w-4 h-4" />
-      </Button>
+      </button>
 
       {/* Page numbers */}
       {getPages().map((p, i) =>
@@ -50,38 +46,36 @@ export default function Pagination({ total, page, pageSize, onPageChange, onPage
           ? (
             <span
               key={`ellipsis-${i}`}
-              className="w-8 h-8 flex items-center justify-center text-muted-foreground text-sm"
+              className="w-8 h-8 flex items-center justify-center text-white/30 text-sm font-sans"
             >
               …
             </span>
           )
           : (
-            <Button
+            <button
               key={p}
-              variant={p === page ? 'default' : 'ghost'}
-              size="icon"
               className={cn(
-                'h-8 w-8 rounded-full text-sm font-bold',
-                p === page && 'shadow-sm'
+                'h-8 w-8 rounded-full text-sm font-bold transition-all duration-200 flex items-center justify-center border outline-none font-mono',
+                p === page 
+                  ? 'bg-gradient-to-br from-[#ffd700] via-[#e5c158] to-[#aa7c11] text-[#0d0e1c] font-black shadow-[0_2px_8px_rgba(255,215,0,0.25)] border-[#ffd700]/30' 
+                  : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-[#d4af37]/22 hover:text-[#ffd700] hover:border-[#d4af37]/30'
               )}
               onClick={() => onPageChange(p)}
             >
               {p}
-            </Button>
+            </button>
           )
       )}
 
       {/* Next */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 rounded-full"
+      <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
+        className="h-8 w-8 rounded-full bg-white/[0.03] border border-white/[0.08] text-white/60 hover:bg-[#d4af37]/22 hover:text-[#ffd700] hover:border-[#d4af37]/30 disabled:opacity-30 disabled:pointer-events-none transition-all duration-200 flex items-center justify-center outline-none"
         aria-label="ໜ້າຕໍ່ໄປ"
       >
         <ChevronRight className="w-4 h-4" />
-      </Button>
+      </button>
 
       {/* Page size selector */}
       <div className="ml-2">
@@ -89,12 +83,12 @@ export default function Pagination({ total, page, pageSize, onPageChange, onPage
           value={String(pageSize)}
           onValueChange={v => { onPageSizeChange(parseInt(v)); onPageChange(1) }}
         >
-          <SelectTrigger className="h-8 w-[100px] rounded-full text-xs font-bold border-border">
+          <SelectTrigger className="h-8 w-[100px] rounded-full text-xs font-bold bg-[#0d0e1c]/60 border border-white/[0.08] text-white/80 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/20 outline-none font-sans">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#0d0e1c] border border-white/[0.08] text-white">
             {PAGE_SIZE_OPTIONS.map(s => (
-              <SelectItem key={s} value={String(s)} className="text-xs">
+              <SelectItem key={s} value={String(s)} className="text-xs focus:bg-[#d4af37]/15 focus:text-[#ffd700]">
                 {s} / ໜ້າ
               </SelectItem>
             ))}
@@ -103,16 +97,16 @@ export default function Pagination({ total, page, pageSize, onPageChange, onPage
       </div>
 
       {/* Go to page */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground ml-1">
+      <div className="flex items-center gap-2 text-sm text-white/40 ml-1 font-sans">
         <span className="text-xs">ໄປໜ້າ</span>
-        <Input
+        <input
           type="number"
           min={1}
           max={totalPages}
           value={goInput}
           onChange={e => setGoInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleGo()}
-          className="w-14 h-8 text-center rounded-full text-sm font-bold focus-visible:ring-primary px-2"
+          className="w-14 h-8 text-center rounded-full text-sm font-bold bg-[#0d0e1c]/60 border border-white/[0.08] text-[#ffd700] focus:ring-1 focus:ring-[#d4af37]/30 focus:border-[#d4af37] outline-none px-2 font-mono"
           placeholder="—"
           aria-label="ໄປໜ້າ"
         />

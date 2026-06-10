@@ -43,6 +43,19 @@
     <!-- Material Symbols: self-hosted — no Google Fonts roundtrip, loads instantly -->
     <link rel="preload" as="font" type="font/woff2" href="%BASE_URL%fonts/material-symbols-outlined.woff2" crossorigin>
     <link rel="stylesheet" href="%BASE_URL%fonts/material-symbols.css">
+    <script>
+      (function() {
+        try {
+          const theme = localStorage.getItem('theme');
+          const dark = theme ? theme === 'dark' : true;
+          if (dark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body>
     <!--
@@ -50,45 +63,45 @@
       React replaces this div entirely when it mounts. Pure inline styles, no external deps.
     -->
     <div id="root">
-      <div style="min-height:100vh;background:#f9f9ff;display:flex;flex-direction:column;font-family:system-ui,sans-serif;">
+      <div style="min-height:100vh;background:#060410;display:flex;flex-direction:column;font-family:system-ui,sans-serif;color:#eaf5ee;">
         <!-- Navbar skeleton -->
-        <div style="height:64px;background:#fff;border-bottom:1px solid #dee9fd;display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;">
-          <div style="width:32px;height:32px;background:#003fb1;border-radius:8px;flex-shrink:0;"></div>
-          <div style="width:110px;height:14px;background:#dee9fd;border-radius:4px;"></div>
+        <div style="height:64px;background:#060812;border-bottom:1px solid rgba(212,175,55,0.1);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;">
+          <div style="width:32px;height:32px;background:linear-gradient(135deg,#D4AF37 0%,#B8860B 100%);border-radius:50%;flex-shrink:0;"></div>
+          <div style="width:110px;height:14px;background:rgba(255,255,255,0.08);border-radius:4px;"></div>
           <div style="flex:1;"></div>
-          <div style="width:56px;height:13px;background:#e8edf8;border-radius:4px;"></div>
-          <div style="width:56px;height:13px;background:#e8edf8;border-radius:4px;margin-left:8px;"></div>
-          <div style="width:80px;height:34px;background:#eff3ff;border-radius:20px;margin-left:16px;"></div>
+          <div style="width:56px;height:13px;background:rgba(255,255,255,0.04);border-radius:4px;"></div>
+          <div style="width:56px;height:13px;background:rgba(255,255,255,0.04);border-radius:4px;margin-left:8px;"></div>
+          <div style="width:80px;height:34px;background:linear-gradient(135deg,#D4AF37 0%,#B8860B 100%);border-radius:20px;margin-left:16px;opacity:0.85;"></div>
         </div>
         <!-- Page content -->
         <div style="flex:1;max-width:1280px;margin:0 auto;width:100%;padding:40px 16px;box-sizing:border-box;">
           <!-- Hero skeleton: same gradient + approx height as real hero -->
-          <div style="border-radius:24px;background:linear-gradient(135deg,#001d6e 0%,#003fb1 50%,#1a56db 100%);padding:56px 48px;margin-bottom:40px;min-height:240px;position:relative;overflow:hidden;">
-            <div style="width:160px;height:12px;background:rgba(255,255,255,0.2);border-radius:20px;margin-bottom:20px;"></div>
-            <div style="width:260px;height:52px;background:rgba(255,255,255,0.15);border-radius:12px;margin-bottom:16px;"></div>
-            <div style="width:320px;height:14px;background:rgba(255,255,255,0.1);border-radius:8px;margin-bottom:32px;"></div>
+          <div style="border-radius:24px;background:linear-gradient(135deg,#0e1124 0%,#0b0d1b 100%);border:1px solid rgba(212,175,55,0.1);padding:56px 48px;margin-bottom:40px;min-height:240px;position:relative;overflow:hidden;">
+            <div style="width:160px;height:12px;background:rgba(255,255,255,0.08);border-radius:20px;margin-bottom:20px;"></div>
+            <div style="width:260px;height:52px;background:rgba(255,255,255,0.06);border-radius:12px;margin-bottom:16px;"></div>
+            <div style="width:320px;height:14px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:32px;"></div>
             <div style="display:flex;gap:12px;">
-              <div style="width:120px;height:40px;background:#fff;border-radius:20px;opacity:0.9;"></div>
-              <div style="width:130px;height:40px;background:rgba(255,255,255,0.15);border-radius:20px;"></div>
+              <div style="width:120px;height:40px;background:#D4AF37;border-radius:20px;opacity:0.9;"></div>
+              <div style="width:130px;height:40px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:20px;"></div>
             </div>
           </div>
           <!-- Section header skeleton -->
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-            <div style="width:4px;height:28px;background:#003fb1;border-radius:4px;opacity:0.4;"></div>
-            <div style="width:120px;height:20px;background:#dee9fd;border-radius:8px;"></div>
+            <div style="width:4px;height:28px;background:#D4AF37;border-radius:4px;opacity:0.5;"></div>
+            <div style="width:120px;height:20px;background:rgba(255,255,255,0.06);border-radius:8px;"></div>
           </div>
           <!-- Result card skeleton -->
-          <div style="background:#fff;border-radius:16px;padding:32px;border:1px solid #dee9fd;margin-bottom:32px;min-height:200px;">
-            <div style="width:180px;height:16px;background:#e8edf8;border-radius:8px;margin-bottom:24px;"></div>
-            <div style="width:220px;height:64px;background:#eff3ff;border-radius:12px;margin-bottom:16px;"></div>
-            <div style="width:160px;height:12px;background:#e8edf8;border-radius:8px;"></div>
+          <div style="background:#0e1124;border-radius:16px;padding:32px;border:1px solid rgba(212,175,55,0.08);margin-bottom:32px;min-height:200px;">
+            <div style="width:180px;height:16px;background:rgba(255,255,255,0.05);border-radius:8px;margin-bottom:24px;"></div>
+            <div style="width:220px;height:64px;background:rgba(255,255,255,0.03);border-radius:12px;margin-bottom:16px;"></div>
+            <div style="width:160px;height:12px;background:rgba(255,255,255,0.05);border-radius:8px;"></div>
           </div>
           <!-- Stat cards grid skeleton -->
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:32px;">
-            <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #e8edf8;height:96px;"></div>
-            <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #e8edf8;height:96px;"></div>
-            <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #e8edf8;height:96px;"></div>
-            <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #e8edf8;height:96px;"></div>
+            <div style="background:#0e1124;border-radius:16px;padding:20px;border:1px solid rgba(212,175,55,0.06);height:96px;"></div>
+            <div style="background:#0e1124;border-radius:16px;padding:20px;border:1px solid rgba(212,175,55,0.06);height:96px;"></div>
+            <div style="background:#0e1124;border-radius:16px;padding:20px;border:1px solid rgba(212,175,55,0.06);height:96px;"></div>
+            <div style="background:#0e1124;border-radius:16px;padding:20px;border:1px solid rgba(212,175,55,0.06);height:96px;"></div>
           </div>
         </div>
       </div>

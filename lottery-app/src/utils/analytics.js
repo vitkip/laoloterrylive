@@ -398,15 +398,14 @@ export function buildArticle(top10, analytics, latestDraw, n, selectedTypeName) 
   const typePart = selectedTypeName ? ` (${selectedTypeName})` : ''
 
   const rankFull = top10.map((s, i) =>
-    `  ${i + 1}. ເລກ ${s.num} — ຄວາມໜ້າຈະເປັນລວມ ${s.probability}%` +
-    ` (Overdue ${s.overdue}× · Momentum ${s.momentum > 0 ? '↑' : '↓'} · ★${s.decisionScore})`
+    `  ${i + 1}. ເລກ ${s.num}`
   ).join('\n')
 
   const star3    = decisionTop.filter(s => s.decisionScore === 3).slice(0, 3).map(s => s.num)
-  const hotTop   = hot.slice(0, 5).map(s => `${s.num}(${s.freq}ຄ)`)
-  const coldTop  = cold.slice(0, 5).map(s => `${s.num}(${s.gap}ງ)`)
+  const hotTop   = hot.slice(0, 5).map(s => s.num)
+  const coldTop  = cold.slice(0, 5).map(s => s.num)
   const risingTop  = rising.slice(0, 5).map(s => s.num)
-  const overdueTop = overdueList.slice(0, 5).map(s => `${s.num}(${s.overdue}×)`)
+  const overdueTop = overdueList.slice(0, 5).map(s => s.num)
 
   return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📰 ວິເຄາະຫວຍລາວ — ເລກເດັ່ນງວດນີ້${typePart}
@@ -437,7 +436,7 @@ ${rankFull}
    ${overdueTop.join(' · ')}
 
 🌟 AI TOP 5 (Composite Score):
-   ${aiTop.slice(0, 5).map(s => `${s.num}[${s.aiScore}pts]`).join(' · ')}
+   ${aiTop.slice(0, 5).map(s => s.num).join(' · ')}
 
 ⭐ ສັນຍານຄົບ 3 (★★★ Decision Score):
    ${star3.length ? star3.join(', ') : 'ບໍ່ມີງວດນີ້'}

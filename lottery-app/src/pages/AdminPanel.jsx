@@ -8,8 +8,8 @@ import { formatLaoDate } from '../utils/date';
 
 function FieldLabel({ children, icon }) {
   return (
-    <label className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">
-      {icon && <span className="material-symbols-outlined text-[14px]">{icon}</span>}
+    <label className="flex items-center gap-1.5 text-[10px] font-black text-white/45 uppercase tracking-widest mb-2 select-none">
+      {icon && <span className="material-symbols-outlined text-[13px] text-[#d4af37] shrink-0">{icon}</span>}
       {children}
     </label>
   );
@@ -17,7 +17,7 @@ function FieldLabel({ children, icon }) {
 
 function FieldBox({ children }) {
   return (
-    <div className="bg-[#f5f7ff] dark:bg-[#1a2844] border border-border rounded-xl overflow-hidden focus-within:border-[#003fb1] focus-within:ring-2 focus-within:ring-[#003fb1]/15 transition-all duration-200">
+    <div className="bg-[#0b0e1a] border border-white/[0.06] rounded-xl overflow-hidden focus-within:border-[#d4af37] focus-within:ring-2 focus-within:ring-[#d4af37]/20 transition-all duration-300">
       {children}
     </div>
   );
@@ -25,12 +25,12 @@ function FieldBox({ children }) {
 
 function SectionDivider({ icon, label }) {
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="w-6 h-6 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-        <span className="material-symbols-outlined text-[#003fb1] text-[13px]">{icon}</span>
+    <div className="flex items-center gap-3 py-1 select-none">
+      <div className="w-7 h-7 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+        <span className="material-symbols-outlined text-[#d4af37] text-[14px]">{icon}</span>
       </div>
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">{label}</p>
-      <div className="flex-1 h-px bg-gradient-to-r from-[#e8edf8] to-transparent dark:from-[#2b3a54]" />
+      <p className="text-[10px] font-black text-white/80 uppercase tracking-widest shrink-0 font-headline">{label}</p>
+      <div className="flex-1 h-px bg-gradient-to-r from-white/[0.08] to-transparent" />
     </div>
   );
 }
@@ -40,22 +40,28 @@ function ResultDigits({ result }) {
   const padded = result.padEnd(6, '·');
   const groups = [padded.slice(0, 2), padded.slice(2, 4), padded.slice(4, 6)];
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 select-none font-mono">
       {groups.map((grp, gi) => (
         <div key={gi} className="flex items-center gap-0.5">
-          {grp.split('').map((ch, ci) => (
-            <div
-              key={ci}
-              className={`w-8 h-9 rounded-lg flex items-center justify-center text-sm font-black transition-all duration-200
-                ${/\d/.test(ch)
-                  ? 'bg-gradient-to-br from-[#003fb1] to-[#1a56db] text-white shadow-sm'
-                  : 'bg-[#e8edf8] dark:bg-[#2b3a54] text-[#c3c5d7] dark:text-[#555870]'
-                }`}
-            >
-              {ch}
-            </div>
-          ))}
-          {gi < 2 && <span className="text-[#c3c5d7] dark:text-[#2b3a54] font-black text-xs mx-0.5">·</span>}
+          {grp.split('').map((ch, ci) => {
+            const hasVal = /\d/.test(ch);
+            return (
+              <div
+                key={ci}
+                className={`w-7.5 h-9 rounded-xl flex items-center justify-center text-sm font-black transition-all duration-300 border relative overflow-hidden
+                  ${hasVal
+                    ? 'bg-gradient-to-tr from-[#d4af37] via-[#f59e0b] to-[#fed7aa] text-black shadow-md border-[#fbbf24]/20 shadow-[#f59e0b]/10 scale-105'
+                    : 'bg-black/45 border-white/[0.05] text-white/10'
+                  }`}
+              >
+                {ch}
+                {hasVal && (
+                  <div className="absolute top-0.5 left-1 w-3 h-1 bg-white/35 rounded-full rotate-[-15deg]" />
+                )}
+              </div>
+            );
+          })}
+          {gi < 2 && <span className="text-white/[0.12] font-black text-xs mx-0.5">·</span>}
         </div>
       ))}
     </div>
@@ -102,7 +108,7 @@ export default function AdminPanel() {
     return Math.max(...inYear.map(d => parseInt(d.draw_number) || 0)) + 1;
   };
 
-  // Auto-populate draw number (useEffect for side effects, NOT useMemo)
+  // Auto-populate draw number
   useEffect(() => {
     if (!isEditing && !formData.draw_number && draws.length) {
       setFormData(f => ({ ...f, draw_number: getNextDrawNumber(f.draw_date).toString() }));
@@ -228,7 +234,7 @@ export default function AdminPanel() {
             ...prev,
             full_result: '',
             youtube_url: '',
-            draw_number: (parseInt(prev.draw_number) + 1).toString()
+            draw_number: (getNextDrawNumber(prev.draw_date, prev.type_id)).toString()
           }));
           digitRefs.current[0]?.focus();
         } else {
@@ -282,43 +288,94 @@ export default function AdminPanel() {
     });
   };
 
-  const inputCls = 'w-full bg-transparent px-3.5 py-3 text-foreground text-sm font-medium placeholder:text-[#a0a3bd] outline-none';
+  const inputCls = 'w-full bg-transparent px-3.5 py-3 text-white text-xs font-semibold placeholder:text-white/25 outline-none';
   const selectedAnimalObj = animals.find(a => a.animal_id == formData.animal_id)
     || (suggestedAnimals[0] && !formData.animal_id ? suggestedAnimals[0] : null);
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-6 text-left select-none">
+      <style>{`
+        @keyframes rotate-slow {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .animate-rotate-slow {
+          animation: rotate-slow 20s linear infinite;
+        }
+        .ticket-input {
+          font-family: 'Space Grotesk', sans-serif;
+        }
+        /* Glass styling custom overrides for form cards */
+        .glass-panel {
+          background: linear-gradient(158deg, rgba(14, 18, 44, 0.75) 0%, rgba(9, 12, 32, 0.85) 50%, rgba(5, 7, 18, 0.95) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(16px);
+        }
+        /* Curved specular overlay for inputs */
+        .specular-box {
+          position: relative;
+          overflow: hidden;
+        }
+        .specular-box::after {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+          pointer-events: none;
+        }
+      `}</style>
 
-      {/* ─── Page Header ─── */}
-      <div className="relative rounded-3xl overflow-hidden">
-        <div className={`absolute inset-0 ${isEditing ? 'bg-gradient-to-br from-[#78350f] via-[#d97706] to-[#f59e0b]' : 'bg-gradient-to-br from-[#001d6e] via-[#003fb1] to-[#1a56db]'}`} />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.08),transparent_60%)]" />
-        <div className="absolute right-0 bottom-0 text-[7rem] sm:text-[10rem] font-black text-white/[0.04] leading-none select-none pointer-events-none pr-4 pb-1">
-          {isEditing ? 'EDIT' : 'ADD'}
+      {/* ─── Page Header Banner ─── */}
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/[0.06]">
+        <div className={`absolute inset-0 transition-all duration-500 ${
+          isEditing 
+            ? 'bg-gradient-to-br from-[#2e1065] via-[#1e1b4b] to-[#090514]' 
+            : 'bg-gradient-to-br from-[#06141d] via-[#0b2432] to-[#040c11]'
+        }`} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.08),transparent_60%)]" />
+        
+        {/* Rotating graphic overlay */}
+        <div className="absolute -right-10 -bottom-10 w-48 h-48 opacity-10 pointer-events-none animate-rotate-slow">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="45" stroke="white" strokeWidth="2" strokeDasharray="6 6" />
+            <circle cx="50" cy="50" r="35" stroke="white" strokeWidth="1.5" strokeDasharray="4 4" />
+            <circle cx="50" cy="50" r="25" stroke="white" strokeWidth="1" />
+          </svg>
         </div>
-        <div className="relative z-10 px-7 sm:px-10 py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+
+        <div className="relative z-10 px-6 sm:px-8 py-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 mb-4">
-              <span className="material-symbols-outlined text-white/80 text-[13px]">{isEditing ? 'edit_square' : 'add_circle'}</span>
-              <span className="text-white/90 text-[11px] font-bold uppercase tracking-widest">{isEditing ? 'Edit Mode' : 'New Draw'}</span>
+            <div className={`inline-flex items-center gap-2 border rounded-full px-3 py-1 mb-3 backdrop-blur-sm
+              ${isEditing 
+                ? 'bg-[#d4af37]/10 border-[#d4af37]/25 text-[#d4af37]' 
+                : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'}`}>
+              <span className="material-symbols-outlined text-[13px] animate-pulse">
+                {isEditing ? 'edit_square' : 'add_circle'}
+              </span>
+              <span className="text-[9px] font-black uppercase tracking-widest">
+                {isEditing ? 'Edit Mode' : 'New Draw Entry'}
+              </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-              {isEditing
-                ? <span>ແກ້ໄຂ <span className="text-[#fcd34d]">ງວດທີ {formData.draw_number}</span></span>
-                : <span>ເພີ່ມຜົນ<span className="text-[#93c5fd] ml-2">ງວດໃໝ່</span></span>
-              }
+            <h1 className="text-xl sm:text-2.5xl font-black text-white leading-tight font-headline">
+              {isEditing ? (
+                <span>ແກ້ໄຂ <span className="text-[#d4af37]">ງວດທີ {formData.draw_number}</span></span>
+              ) : (
+                <span>ເພີ່ມຜົນ<span className="text-[#d4af37] ml-1.5">ງວດໃໝ່</span></span>
+              )}
             </h1>
-            <p className="text-white/60 text-xs mt-1.5">
-              {isEditing ? 'ແກ້ໄຂຂໍ້ມູນ ຈາກນັ້ນກົດ "ອັບເດດ"' : 'ປ້ອນຜົນລາງວັນ ແລ້ວ ກົດ "ບັນທຶກ"'}
+            <p className="text-white/50 text-[11px] mt-1.5 font-bold">
+              {isEditing ? 'ແກ້ໄຂຂໍ້ມູນຜົນລາງວັນ ຈາກນັ້ນກົດ "ອັບເດດ"' : 'ປ້ອນຜົນລາງວັນອອກຫວຍ ແລ້ວກົດ "ບັນທຶກ"'}
             </p>
           </div>
           {isEditing && (
             <button
               onClick={cancelEdit}
-              className="self-start sm:self-center flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/20 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all duration-200 backdrop-blur-sm"
+              className="self-start sm:self-center flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/25 text-white text-xs font-black px-4 py-2.5 rounded-xl transition-all duration-300 backdrop-blur-sm cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[16px]">close</span>
-              ຍົກເລີກແກ້ໄຂ
+              <span className="material-symbols-outlined text-base">close</span>
+              ຍົກເລີກການແກ້ໄຂ
             </button>
           )}
         </div>
@@ -326,533 +383,552 @@ export default function AdminPanel() {
 
       {/* ─── Message Toast ─── */}
       {message.text && (
-        <div className={`flex items-center gap-3 px-5 py-4 rounded-2xl border text-sm font-bold animate-pulse-once
+        <div className={`flex items-center gap-3 px-5 py-4 rounded-2xl border text-xs font-black transition-all duration-300 shadow-md
           ${message.ok
-            ? 'bg-[#edfdf5] dark:bg-[#052e16] border-[#6cf8bb]/40 text-[#006c49] dark:text-[#4ade80]'
-            : 'bg-[#fff4f4] dark:bg-[#2a1010] border-[#ffdad6]/50 text-[#ba1a1a] dark:text-[#f87171]'
+            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+            : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
           }`}>
-          <span className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${message.ok ? 'bg-[#006c49]/10' : 'bg-[#ba1a1a]/10'}`}>
-            <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${message.ok ? 'bg-emerald-500/15' : 'bg-rose-500/15'}`}>
+            <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
               {message.ok ? 'check_circle' : 'error'}
             </span>
-          </span>
-          <span className="flex-1">{message.text}</span>
-          <button onClick={() => setMessage({ text: '', ok: true })} className="opacity-50 hover:opacity-100 transition-opacity">
-            <span className="material-symbols-outlined text-[16px]">close</span>
+          </div>
+          <span className="flex-1 leading-relaxed">{message.text}</span>
+          <button onClick={() => setMessage({ text: '', ok: true })} className="opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
+            <span className="material-symbols-outlined text-base">close</span>
           </button>
         </div>
       )}
 
-      {/* ─── Two-column grid: Form | History ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-7 items-start">
+      {/* ─── Two-column layout grid ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
 
-      {/* ─── Col 1: Form Card ─── */}
-      <div className="lg:col-span-2">
-      <form onSubmit={handleSubmit}>
-        <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
+        {/* ─── Column 1: Form Card ─── */}
+        <div className="lg:col-span-2">
+          <form onSubmit={handleSubmit}>
+            <div className="glass-panel rounded-3xl border border-white/[0.05] overflow-hidden relative shadow-2xl">
+              
+              {/* Highlight bar for edit mode */}
+              {isEditing && (
+                <div className="h-[3px] bg-gradient-to-r from-amber-500 via-yellow-400 to-[#d4af37] shadow-lg shadow-amber-500/30" />
+              )}
+              
+              <div className="p-6 space-y-6">
 
-          {/* Edit indicator stripe */}
-          {isEditing && (
-            <div className="h-1 bg-gradient-to-r from-[#d97706] via-[#f59e0b] to-[#fcd34d]" />
-          )}
-
-          <div className="p-6 sm:p-8 space-y-7">
-
-            {/* Section 1: Draw Info */}
-            <div>
-              <SectionDivider icon="info" label="ຂໍ້ມູນງວດ" />
-              <div className="mt-4 space-y-4">
-                {/* Type */}
-                <div className="sm:col-span-3">
-                  <FieldLabel icon="category">ປະເພດຫວຍ</FieldLabel>
-                  {types && types.length > 1 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {types.map(t => {
-                        const color = t.color || '#003fb1'
-                        const active = formData.type_id === t.type_id
-                        return (
-                          <button
-                            key={t.type_id}
-                            type="button"
-                            onClick={() => {
-                            const nextNum = !isEditing ? getNextDrawNumber(formData.draw_date, t.type_id) : parseInt(formData.draw_number || '1');
-                            setFormData({ ...formData, type_id: t.type_id, draw_number: nextNum.toString() });
-                          }}
-                            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border-2 text-sm font-bold transition-all duration-200"
-                            style={active
-                              ? { borderColor: color, background: `${color}15`, color }
-                              : { borderColor: '#e8edf8', background: 'transparent', color: '#737686' }
-                            }
-                          >
-                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
-                            {t.type_name}
-                            {active && <span className="material-symbols-outlined text-[14px]">check</span>}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <FieldBox>
-                      <select
-                        className={inputCls + ' cursor-pointer'}
-                        value={formData.type_id}
-                        onChange={e => {
-                          const newTypeId = parseInt(e.target.value);
-                          const nextNum = !isEditing ? getNextDrawNumber(formData.draw_date, newTypeId).toString() : formData.draw_number;
-                          setFormData({ ...formData, type_id: newTypeId, draw_number: nextNum });
-                        }}
-                        required
-                      >
-                        {types?.map(t => (
-                          <option key={t.type_id} value={t.type_id}>{t.type_name}</option>
-                        ))}
-                      </select>
-                    </FieldBox>
-                  )}
-                </div>
-                {/* Date + Number row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Date */}
-                <div>
-                  <FieldLabel icon="calendar_today">ງວດວັນທີ</FieldLabel>
-                  <FieldBox>
-                    <input
-                      type="date"
-                      className={inputCls}
-                      value={formData.draw_date}
-                      onChange={e => {
-                        const newDate = e.target.value;
-                        const oldYear = new Date(formData.draw_date).getFullYear();
-                        const newYear = new Date(newDate).getFullYear();
-                        const nextNum = !isEditing && oldYear !== newYear
-                          ? getNextDrawNumber(newDate)
-                          : formData.draw_number;
-                        setFormData({ ...formData, draw_date: newDate, draw_number: nextNum.toString() });
-                      }}
-                      required
-                    />
-                  </FieldBox>
-                </div>
-                {/* Draw number */}
-                <div>
-                  <FieldLabel icon="tag">ງວດທີ</FieldLabel>
-                  <FieldBox>
-                    <input
-                      type="number"
-                      className={inputCls + ' font-black text-primary'}
-                      placeholder="1"
-                      value={formData.draw_number}
-                      onChange={e => setFormData({ ...formData, draw_number: e.target.value })}
-                      required
-                    />
-                  </FieldBox>
-                </div>
-                </div>{/* end date+number grid */}
-              </div>{/* end space-y-4 */}
-            </div>{/* end Section 1 */}
-
-            {/* Section 2: Result Entry */}
-            <div>
-              <SectionDivider icon="pin" label="ເລກທີ່ອອກ" />
-              <div className="mt-4 space-y-4">
-                {/* OTP-style digit boxes */}
-                <div>
-                  <FieldLabel>ປ້ອນ 6 ຕົວເລກ</FieldLabel>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    {[0, 1, 2, 3, 4, 5].map(i => (
-                      <div key={i} className="flex items-center gap-2 sm:gap-3">
-                        <input
-                          ref={el => (digitRefs.current[i] = el)}
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={1}
-                          value={formData.full_result[i] || ''}
-                          onChange={e => handleDigitInput(i, e.target.value)}
-                          onKeyDown={e => handleDigitKeyDown(i, e)}
-                          onPaste={i === 0 ? handleDigitPaste : undefined}
-                          className={`w-12 h-14 sm:w-14 sm:h-16 rounded-2xl text-center text-xl sm:text-2xl font-black border-2 outline-none transition-all duration-200 cursor-text
-                            ${formData.full_result[i]
-                              ? 'border-[#003fb1] bg-secondary text-primary shadow-sm'
-                              : 'border-border bg-[#f5f7ff] dark:bg-[#1a2844] text-transparent'
-                            }
-                            focus:border-[#003fb1] focus:ring-4 focus:ring-[#003fb1]/15 focus:bg-[#eff3ff] dark:focus:bg-[#1e2d4a]`}
-                        />
-                        {(i === 1 || i === 3) && (
-                          <span className="text-[#c3c5d7] dark:text-[#2b3a54] font-black text-lg hidden sm:block">·</span>
-                        )}
+                {/* Section 1: Draw Info */}
+                <div className="space-y-4">
+                  <SectionDivider icon="info" label="ຂໍ້ມູນງວດຫວຍ" />
+                  
+                  {/* Types selection wrapper */}
+                  <div className="space-y-2">
+                    <FieldLabel icon="category">ປະເພດຫວຍ</FieldLabel>
+                    {types && types.length > 1 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {types.map(t => {
+                          const color = t.color || '#d4af37';
+                          const active = formData.type_id === t.type_id;
+                          return (
+                            <button
+                              key={t.type_id}
+                              type="button"
+                              onClick={() => {
+                                const nextNum = !isEditing ? getNextDrawNumber(formData.draw_date, t.type_id) : parseInt(formData.draw_number || '1');
+                                setFormData({ ...formData, type_id: t.type_id, draw_number: nextNum.toString() });
+                              }}
+                              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border-2 text-xs font-black transition-all duration-300 cursor-pointer"
+                              style={active
+                                ? { borderColor: color, background: `${color}15`, color }
+                                : { borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.01)', color: 'rgba(255,255,255,0.45)' }
+                              }
+                            >
+                              <span className="w-2 h-2 rounded-full shrink-0 shadow-sm" style={{ background: color }} />
+                              {t.type_name}
+                              {active && <span className="material-symbols-outlined text-[13px] ml-1">check</span>}
+                            </button>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
-                  <p className="mt-2 text-[10px] text-[#a0a3bd] dark:text-[#555870]">
-                    ກົດ Tab / ລູກສອນ ເພື່ອຍ້າຍ · Backspace ເພື່ອລຶບ · Ctrl+V ວາງທັງໝົດ
-                  </p>
-                </div>
-
-                {/* Live preview */}
-                {formData.full_result.length > 0 && (
-                  <div className="flex items-center gap-4 bg-[#f5f7ff] dark:bg-[#1a2844] rounded-2xl px-5 py-4 border border-border">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">Preview</span>
-                    <ResultDigits result={formData.full_result} />
-                    {formData.full_result.length === 6 && (
-                      <span className="ml-auto text-[10px] font-bold text-[#006c49] dark:text-[#4ade80] bg-[#edfdf5] dark:bg-[#052e16] px-2.5 py-1 rounded-full border border-[#6cf8bb]/30">
-                        ✓ ຄົບ 6 ຕົວ
-                      </span>
+                    ) : (
+                      <FieldBox>
+                        <select
+                          className={inputCls + ' cursor-pointer bg-[#0b0e1a]'}
+                          value={formData.type_id}
+                          onChange={e => {
+                            const newTypeId = parseInt(e.target.value);
+                            const nextNum = !isEditing ? getNextDrawNumber(formData.draw_date, newTypeId).toString() : formData.draw_number;
+                            setFormData({ ...formData, type_id: newTypeId, draw_number: nextNum });
+                          }}
+                          required
+                        >
+                          {types?.map(t => (
+                            <option key={t.type_id} value={t.type_id} className="bg-[#0e1227]">{t.type_name}</option>
+                          ))}
+                        </select>
+                      </FieldBox>
                     )}
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Section 3: Animal */}
-            <div>
-              <SectionDivider icon="pets" label="ນາມສັດ (2 ຕົວສຸດທ້າຍ)" />
-              <div className="mt-4 space-y-3">
+                  {/* Date + Draw Number */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <FieldLabel icon="calendar_today">ງວດວັນທີ</FieldLabel>
+                      <FieldBox>
+                        <input
+                          type="date"
+                          className={inputCls + ' dark:color-scheme-dark'}
+                          value={formData.draw_date}
+                          onChange={e => {
+                            const newDate = e.target.value;
+                            const oldYear = new Date(formData.draw_date).getFullYear();
+                            const newYear = new Date(newDate).getFullYear();
+                            const nextNum = !isEditing && oldYear !== newYear
+                              ? getNextDrawNumber(newDate)
+                              : formData.draw_number;
+                            setFormData({ ...formData, draw_date: newDate, draw_number: nextNum.toString() });
+                          }}
+                          required
+                        />
+                      </FieldBox>
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <FieldLabel icon="tag">ງວດທີ</FieldLabel>
+                      <FieldBox>
+                        <input
+                          type="number"
+                          className={inputCls + ' font-black text-[#d4af37] ticket-input'}
+                          placeholder="1"
+                          value={formData.draw_number}
+                          onChange={e => setFormData({ ...formData, draw_number: e.target.value })}
+                          required
+                        />
+                      </FieldBox>
+                    </div>
+                  </div>
+                </div>
 
-                {/* Suggested animal cards */}
-                {suggestedAnimals.length > 0 && (
-                  <div>
-                    <p className="text-[10px] font-bold text-[#006c49] dark:text-[#4ade80] uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[12px]">auto_awesome</span>
-                      ແນະນຳອັດຕະໂນມັດ
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {suggestedAnimals.map(a => {
-                        const selected = formData.animal_id == a.animal_id;
-                        const imgSrc = resolveAnimalImage(a);
+                {/* Section 2: Result Entry */}
+                <div className="space-y-4">
+                  <SectionDivider icon="pin" label="ເລກທີ່ອອກ (RESULT)" />
+                  
+                  {/* Digit inputs */}
+                  <div className="space-y-2">
+                    <FieldLabel>ປ້ອນ 6 ຕົວເລກ</FieldLabel>
+                    <div className="flex items-center gap-2 sm:gap-2.5">
+                      {[0, 1, 2, 3, 4, 5].map(i => {
+                        const val = formData.full_result[i];
+                        const filled = val !== undefined && val !== ' ' && val !== '';
                         return (
-                          <button
-                            key={a.animal_id}
-                            type="button"
-                            onClick={() => setFormData(prev => ({
-                              ...prev,
-                              animal_id: selected ? '' : a.animal_id.toString()
-                            }))}
-                            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border-2 text-sm font-bold transition-all duration-200
-                              ${selected
-                                ? 'border-[#006c49] bg-[#edfdf5] dark:bg-[#052e16] text-[#006c49] dark:text-[#4ade80] shadow-sm'
-                                : 'border-border bg-[#f5f7ff] dark:bg-[#1a2844] text-muted-foreground hover:border-[#006c49]/40'
-                              }`}
-                          >
-                            {imgSrc
-                              ? <img src={imgSrc} alt={a.animal_name_lao} className="w-7 h-7 rounded-lg object-cover" />
-                              : <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>pets</span>
-                            }
-                            <div className="text-left">
-                              <p className="leading-tight">{a.animal_name_lao}</p>
-                              <p className="text-[10px] opacity-60 font-normal leading-tight">{a.animal_numbers}</p>
-                            </div>
-                            {selected && <span className="material-symbols-outlined text-[16px] ml-1">check_circle</span>}
-                          </button>
+                          <div key={i} className="flex items-center gap-1.5 sm:gap-2">
+                            <input
+                              ref={el => (digitRefs.current[i] = el)}
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={val || ''}
+                              onChange={e => handleDigitInput(i, e.target.value)}
+                              onKeyDown={e => handleDigitKeyDown(i, e)}
+                              onPaste={i === 0 ? handleDigitPaste : undefined}
+                              className={`w-11 h-13 sm:w-12 sm:h-14 rounded-2xl text-center text-xl font-black border-2 outline-none transition-all duration-300 cursor-text relative font-mono
+                                ${filled
+                                  ? 'border-[#fbbf24] bg-gradient-to-tr from-[#d4af37] via-[#f59e0b] to-[#fed7aa] text-black shadow-md shadow-[#f59e0b]/15'
+                                  : 'border-white/[0.06] bg-[#0b0e1a] text-white'
+                                }
+                                focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/10`}
+                            />
+                            {(i === 1 || i === 3) && (
+                              <span className="text-white/[0.12] font-black text-sm hidden sm:block">·</span>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
+                    <p className="text-[10px] text-white/30 font-bold leading-relaxed pt-1">
+                      ກົດ Tab/ລູກສອນ ເພື່ອຍ້າຍ · Backspace ເພື່ອລຶບ · Ctrl+V ວາງທັງໝົດ
+                    </p>
                   </div>
-                )}
 
-                {/* Manual select */}
-                <div>
-                  {suggestedAnimals.length > 0 && (
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">ຫຼື ເລືອກດ້ວຍຕົນເອງ</p>
-                  )}
-                  <FieldBox>
-                    <select
-                      className={inputCls + ' cursor-pointer'}
-                      value={formData.animal_id}
-                      onChange={e => setFormData({ ...formData, animal_id: e.target.value })}
-                    >
-                      <option value="">-- ໃຊ້ອັດຕະໂນມັດ (ຈາກເລກ 2 ຕົວ) --</option>
-                      {suggestedAnimals.length > 0 && (
-                        <optgroup label="✅ ແນະນຳ">
-                          {suggestedAnimals.map(a => (
-                            <option key={a.animal_id} value={a.animal_id}>{a.animal_name_lao} ({a.animal_numbers})</option>
-                          ))}
-                        </optgroup>
+                  {/* Preview banner */}
+                  {formData.full_result.length > 0 && (
+                    <div className="flex items-center justify-between bg-white/[0.02] rounded-2xl px-4 py-3.5 border border-white/[0.05]">
+                      <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Live Preview</span>
+                      <ResultDigits result={formData.full_result} />
+                      {formData.full_result.length === 6 ? (
+                        <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 shadow-sm">
+                          ຄົບ 6 ຕົວ
+                        </span>
+                      ) : (
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                       )}
-                      <optgroup label="ທັງໝົດ">
-                        {animals.map(a => (
-                          <option key={a.animal_id} value={a.animal_id}>{a.animal_name_lao} ({a.animal_numbers})</option>
-                        ))}
-                      </optgroup>
-                    </select>
-                  </FieldBox>
-                  {selectedAnimalObj && (
-                    <div className="mt-2 flex items-center gap-2 text-[11px] text-[#006c49] dark:text-[#4ade80] font-semibold">
-                      <span className="material-symbols-outlined text-[14px]">check</span>
-                      ເລືອກ: {selectedAnimalObj.animal_name_lao}
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
 
-            {/* Section 4: YouTube */}
-            <div>
-              <SectionDivider icon="smart_display" label="ລິ້ງວິດີໂອ (ທາງເລືອກ)" />
-              <div className="mt-4">
-                <FieldLabel icon="link">YouTube Shorts URL</FieldLabel>
-                <FieldBox>
-                  <div className="flex items-center">
-                    <span className="pl-3.5 shrink-0">
-                      <span className="material-symbols-outlined text-[#ba1a1a] text-[18px]">smart_display</span>
-                    </span>
-                    <input
-                      type="url"
-                      className={inputCls}
-                      placeholder="https://youtube.com/shorts/..."
-                      value={formData.youtube_url}
-                      onChange={e => setFormData({ ...formData, youtube_url: e.target.value })}
-                    />
-                  </div>
-                </FieldBox>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <div className={`flex gap-3 pt-2 ${isEditing ? 'flex-row' : ''}`}>
-              {isEditing && (
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  className="flex-none flex items-center gap-2 px-5 py-3.5 rounded-xl border border-border bg-[#f5f7ff] dark:bg-[#1a2844] text-muted-foreground text-sm font-bold hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] transition-all duration-200"
-                >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
-                  ຍົກເລີກ
-                </button>
-              )}
-              <button
-                type="submit"
-                disabled={loading}
-                className={`flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-white font-black text-base shadow-sm transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed
-                  ${isEditing
-                    ? 'bg-gradient-to-r from-[#d97706] to-[#f59e0b] hover:from-[#b45309] hover:to-[#d97706] hover:shadow-md'
-                    : 'bg-gradient-to-r from-[#003fb1] to-[#1a56db] hover:from-[#002d82] hover:to-[#003fb1] hover:shadow-md'
-                  }`}
-              >
-                {loading
-                  ? <>
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ກຳລັງປະມວນຜົນ...
-                    </>
-                  : <>
-                      <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        {isEditing ? 'save' : 'add_circle'}
-                      </span>
-                      {isEditing ? 'ອັບເດດຂໍ້ມູນ' : 'ບັນທຶກເຂົ້າຖານຂໍ້ມູນ'}
-                    </>
-                }
-              </button>
-            </div>
-          </div>
-        </div>
-      </form>
-      </div>{/* end col-1 form */}
-
-      {/* ─── Col 2: Recent Draws ─── */}
-      <div className="lg:col-span-3">
-      <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
-
-        {/* Card header + filter */}
-        <div className="px-5 sm:px-8 py-5 border-b border-border space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#003fb1] text-[18px]">history</span>
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm font-extrabold text-foreground truncate">
-                  ຜົນລ່າສຸດ{selectedType ? <span className="text-primary"> — {selectedType.type_name}</span> : ''}
-                </h3>
-                <p className="text-[10px] text-muted-foreground">
-                  {(historySearch || historyYear || historyMonth)
-                    ? `ສະແດງ ${searchedDraws.length} / ${filteredDraws.length} ງວດ`
-                    : `${filteredDraws.length} ງວດທັງໝົດ`}
-                </p>
-              </div>
-            </div>
-            <span className="text-[10px] font-bold text-primary bg-secondary px-3 py-1 rounded-full shrink-0">
-              {searchedDraws.length} ງວດ
-            </span>
-          </div>
-
-          {/* Search + year + month */}
-          <div className="flex flex-col sm:flex-row gap-2">
-            {/* Search */}
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[16px] text-muted-foreground pointer-events-none">search</span>
-              <input
-                type="text"
-                value={historySearch}
-                onChange={e => setHistorySearch(e.target.value)}
-                placeholder="ຄົ້ນຫາ ງວດ, ວັນທີ, ເລກ..."
-                className="w-full h-9 pl-9 pr-8 bg-[#f5f7ff] dark:bg-[#1a2844] border border-border rounded-xl text-xs font-medium text-foreground placeholder:text-[#a0a3bd] outline-none focus:border-[#003fb1] focus:ring-2 focus:ring-[#003fb1]/15 transition-all"
-              />
-              {historySearch && (
-                <button onClick={() => setHistorySearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive transition-colors">
-                  <span className="material-symbols-outlined text-[15px]">close</span>
-                </button>
-              )}
-            </div>
-            {/* Year */}
-            <select
-              value={historyYear}
-              onChange={e => setHistoryYear(e.target.value)}
-              className={`h-9 px-2.5 rounded-xl border text-xs font-bold outline-none transition-all cursor-pointer shrink-0
-                ${historyYear ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground bg-[#f5f7ff] dark:bg-[#1a2844]'}`}
-            >
-              <option value="">ທຸກປີ</option>
-              {historyAvailYears.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-            {/* Month */}
-            <select
-              value={historyMonth}
-              onChange={e => setHistoryMonth(e.target.value)}
-              className={`h-9 px-2.5 rounded-xl border text-xs font-bold outline-none transition-all cursor-pointer shrink-0
-                ${historyMonth ? 'border-[#003fb1] text-[#003fb1] bg-[#eff3ff] dark:bg-[#1e2d4a]' : 'border-border text-muted-foreground bg-[#f5f7ff] dark:bg-[#1a2844]'}`}
-            >
-              <option value="">ທຸກເດືອນ</option>
-              {historyAvailMonths.map(m => <option key={m} value={m}>{LAO_MONTHS[m]}</option>)}
-            </select>
-            {/* Clear */}
-            {(historySearch || historyYear || historyMonth) && (
-              <button
-                onClick={() => { setHistorySearch(''); setHistoryYear(''); setHistoryMonth(''); }}
-                className="h-9 px-3 rounded-xl border border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10 text-xs font-bold transition-all flex items-center justify-center gap-1 shrink-0"
-              >
-                <span className="material-symbols-outlined text-[14px]">filter_list_off</span>
-                <span className="hidden sm:inline">ລ້າງ</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Draw list */}
-        {searchedDraws.length === 0
-          ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <span className="material-symbols-outlined text-4xl text-[#c3c5d7]">
-                {filteredDraws.length === 0 ? 'inbox' : 'search_off'}
-              </span>
-              <p className="text-sm text-muted-foreground">
-                {filteredDraws.length === 0 ? 'ຍັງບໍ່ມີຂໍ້ມູນສຳລັບປະເພດນີ້' : 'ບໍ່ພົບຂໍ້ມູນທີ່ຕ້ອງການ'}
-              </p>
-              {(historySearch || historyYear || historyMonth) && (
-                <button
-                  onClick={() => { setHistorySearch(''); setHistoryYear(''); setHistoryMonth(''); }}
-                  className="text-xs text-primary font-bold hover:underline"
-                >ລ້າງ filter</button>
-              )}
-            </div>
-          )
-          : (
-            <div className="divide-y divide-[#f0f4ff] dark:divide-[#1e2d4a]">
-              {pagedDraws.map((d, idx) => {
-                const animalForDraw = (() => {
-                  const det = d.results_detail?.find(r => r.prize_type === '2_digits');
-                  const aid = det?.animal_id;
-                  const twoDigit = det?.result_value;
-                  return (aid ? animals.find(a => a.animal_id == aid) : null)
-                    ?? (twoDigit ? animals.find(a => a.animal_numbers.split(',').map(n => n.trim()).includes(twoDigit)) : null);
-                })();
-                const isCurrentEdit = isEditing && d.draw_id === editDrawId;
-                const rowNum = (safeHistoryPage - 1) * HISTORY_PAGE_SIZE + idx + 1;
-                return (
-                  <div
-                    key={d.draw_id}
-                    className={`flex items-center gap-3 px-4 sm:px-7 py-3.5 transition-all duration-200 hover:bg-[#f8faff] dark:hover:bg-[#1a2844]
-                      ${isCurrentEdit ? 'bg-[#fffbeb] dark:bg-[#1c1208]' : ''}`}
-                  >
-                    {/* Rank + Number */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] font-black text-[#c3c5d7] dark:text-[#2b3a54] w-4 text-center hidden sm:block">{rowNum}</span>
-                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-sm shrink-0
-                        ${isCurrentEdit ? 'bg-gradient-to-br from-[#d97706] to-[#f59e0b] text-white' : 'bg-secondary text-primary'}`}>
-                        {d.draw_number}
-                      </div>
-                    </div>
-
-                    {/* Date — short on mobile, full Lao date on desktop */}
-                    <div className="shrink-0">
-                      <p className="text-[11px] font-bold text-foreground leading-tight">
-                        <span className="hidden sm:inline">{formatLaoDate(d.draw_date, true)}</span>
-                        <span className="sm:hidden">{d.draw_date}</span>
-                      </p>
-                    </div>
-
-                    {/* Result digits */}
-                    <div className="flex-1 min-w-0 flex items-center justify-center">
-                      <ResultDigits result={d.full_result} />
-                    </div>
-
-                    {/* Animal — md+ only */}
-                    {animalForDraw && (
-                      <div className="shrink-0 hidden md:flex items-center gap-1.5">
-                        {resolveAnimalImage(animalForDraw)
-                          ? <img src={resolveAnimalImage(animalForDraw)} alt={animalForDraw.animal_name_lao} className="w-7 h-7 rounded-lg object-cover" />
-                          : <span className="material-symbols-outlined text-[#006c49] text-[18px]">pets</span>
-                        }
-                        <span className="text-xs text-muted-foreground font-medium">{animalForDraw.animal_name_lao}</span>
+                {/* Section 3: Recommended Animal */}
+                <div className="space-y-4">
+                  <SectionDivider icon="pets" label="ນາມສັດ (ANIMAL CODES)" />
+                  
+                  <div className="space-y-3">
+                    {suggestedAnimals.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-[9px] font-black text-[#10b981] uppercase tracking-widest flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[13px] animate-pulse">auto_awesome</span>
+                          ແນະນຳລະບົບອັດຕະໂນມັດ
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {suggestedAnimals.map(a => {
+                            const selected = formData.animal_id == a.animal_id;
+                            const imgSrc = resolveAnimalImage(a);
+                            return (
+                              <button
+                                key={a.animal_id}
+                                type="button"
+                                onClick={() => setFormData(prev => ({
+                                  ...prev,
+                                  animal_id: selected ? '' : a.animal_id.toString()
+                                }))}
+                                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border-2 text-xs font-black transition-all duration-300 cursor-pointer hover:scale-103
+                                  ${selected
+                                    ? 'border-transparent bg-gradient-to-br from-[#10b981] to-[#059669] text-white shadow-lg shadow-emerald-500/15'
+                                    : 'border-white/[0.06] bg-[#0b0e1a] text-white/60 hover:border-[#10b981]/40 hover:bg-[#0e1227]'
+                                  }`}
+                              >
+                                {imgSrc ? (
+                                  <img src={imgSrc} alt={a.animal_name_lao} className="w-7 h-7 rounded-lg object-cover bg-black/35 border border-white/10" />
+                                ) : (
+                                  <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>pets</span>
+                                )}
+                                <div className="text-left leading-none">
+                                  <p className="leading-none text-white font-black">{a.animal_name_lao}</p>
+                                  <p className={`text-[9.5px] font-bold mt-1 tracking-wider ${selected ? 'text-white/80' : 'text-white/35'}`}>{a.animal_numbers}</p>
+                                </div>
+                                {selected && <span className="material-symbols-outlined text-sm ml-0.5">check_circle</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 
-                    {/* Edit button — always visible (mobile-friendly) */}
-                    <button
-                      onClick={() => handleEdit(d)}
-                      className={`shrink-0 flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200
-                        ${isCurrentEdit
-                          ? 'bg-[#fcd34d]/30 text-[#92400e] dark:text-[#fcd34d]'
-                          : 'bg-[#f5f7ff] dark:bg-[#1a2844] text-muted-foreground hover:bg-[#eff3ff] dark:hover:bg-[#1e2d4a] hover:text-primary'
-                        }`}
-                    >
-                      <span className="material-symbols-outlined text-[14px]">{isCurrentEdit ? 'edit_square' : 'edit'}</span>
-                      <span className="hidden sm:inline">{isCurrentEdit ? 'ກຳລັງແກ້ໄຂ' : 'ແກ້ໄຂ'}</span>
-                    </button>
+                    <div className="space-y-1.5">
+                      {suggestedAnimals.length > 0 && (
+                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1.5">ຫຼື ເລືອກດ້ວຍຕົນເອງ</p>
+                      )}
+                      <FieldBox>
+                        <select
+                          className={inputCls + ' cursor-pointer bg-[#0b0e1a]'}
+                          value={formData.animal_id}
+                          onChange={e => setFormData({ ...formData, animal_id: e.target.value })}
+                        >
+                          <option value="" className="bg-[#0e1227]">-- ໃຊ້ອັດຕະໂນມັດ (ຈາກເລກ 2 ຕົວ) --</option>
+                          {suggestedAnimals.length > 0 && (
+                            <optgroup label="✅ ແນະນຳ" className="bg-[#0e1227]">
+                              {suggestedAnimals.map(a => (
+                                <option key={a.animal_id} value={a.animal_id}>{a.animal_name_lao} ({a.animal_numbers})</option>
+                              ))}
+                            </optgroup>
+                          )}
+                          <optgroup label="ທັງໝົດ" className="bg-[#0e1227]">
+                            {animals.map(a => (
+                              <option key={a.animal_id} value={a.animal_id}>{a.animal_name_lao} ({a.animal_numbers})</option>
+                            ))}
+                          </optgroup>
+                        </select>
+                      </FieldBox>
+                      {selectedAnimalObj && (
+                        <div className="mt-2 flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold">
+                          <span className="material-symbols-outlined text-xs">check_circle</span>
+                          ເລືອກ: {selectedAnimalObj.animal_name_lao} ({selectedAnimalObj.animal_numbers})
+                        </div>
+                      )}
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )
-        }
+                </div>
 
-        {/* Pagination */}
-        {totalHistoryPages > 1 && (
-          <div className="flex items-center justify-center gap-1.5 px-5 py-4 border-t border-border flex-wrap">
-            <button
-              onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
-              disabled={safeHistoryPage === 1}
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground bg-secondary hover:bg-[#eff3ff] hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-            </button>
-            {Array.from({ length: totalHistoryPages }, (_, i) => i + 1)
-              .filter(p => p === 1 || p === totalHistoryPages || Math.abs(p - safeHistoryPage) <= 1)
-              .reduce((acc, p, i, arr) => {
-                if (i > 0 && p - arr[i - 1] > 1) acc.push('...');
-                acc.push(p);
-                return acc;
-              }, [])
-              .map((item, i) =>
-                item === '...'
-                  ? <span key={`e${i}`} className="w-6 text-center text-xs text-muted-foreground">…</span>
-                  : <button
-                      key={item}
-                      onClick={() => setHistoryPage(item)}
-                      className={`w-8 h-8 rounded-xl text-xs font-bold transition-all
-                        ${safeHistoryPage === item ? 'bg-[#003fb1] text-white shadow-sm' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
-                    >{item}</button>
-              )
-            }
-            <button
-              onClick={() => setHistoryPage(p => Math.min(totalHistoryPages, p + 1))}
-              disabled={safeHistoryPage === totalHistoryPages}
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground bg-secondary hover:bg-[#eff3ff] hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-            </button>
-            <span className="text-[10px] text-muted-foreground ml-1">{safeHistoryPage}/{totalHistoryPages}</span>
+                {/* Section 4: Video */}
+                <div className="space-y-4">
+                  <SectionDivider icon="smart_display" label="ລິ້ງວິດີໂອ (VIDEO)" />
+                  <div className="space-y-1.5">
+                    <FieldLabel icon="link">YouTube Shorts URL</FieldLabel>
+                    <FieldBox>
+                      <div className="flex items-center">
+                        <span className="pl-3.5 shrink-0 text-rose-500">
+                          <span className="material-symbols-outlined text-base">smart_display</span>
+                        </span>
+                        <input
+                          type="url"
+                          className={inputCls}
+                          placeholder="https://youtube.com/shorts/..."
+                          value={formData.youtube_url}
+                          onChange={e => setFormData({ ...formData, youtube_url: e.target.value })}
+                        />
+                      </div>
+                    </FieldBox>
+                  </div>
+                </div>
+
+                {/* Submit buttons */}
+                <div className="flex gap-3 pt-4">
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="flex-none flex items-center gap-1.5 px-4.5 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white/70 hover:text-white text-xs font-black hover:bg-white/[0.06] transition-all duration-300 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-base">close</span>
+                      ຍົກເລີກ
+                    </button>
+                  )}
+                  
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-black font-black text-xs shadow-md transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer
+                      ${isEditing
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 shadow-amber-500/10'
+                        : 'bg-[#d4af37] hover:bg-[#b8860b] shadow-amber-500/5'
+                      }`}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-black/35 border-t-black rounded-full animate-spin" />
+                        ກຳລັງປະມວນຜົນ...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+                          {isEditing ? 'save' : 'add_circle'}
+                        </span>
+                        {isEditing ? 'ອັບເດດຂໍ້ມູນງວດ' : 'ບັນທຶກຜົນຫວຍ'}
+                      </>
+                    )}
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* ─── Column 2: Recent Draws ─── */}
+        <div className="lg:col-span-3">
+          <div className="glass-panel rounded-3xl border border-white/[0.05] overflow-hidden relative shadow-2xl">
+            
+            {/* Header / Filter Deck */}
+            <div className="px-5 sm:px-6 py-5.5 border-b border-white/[0.05] space-y-4 bg-black/15">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center shrink-0 text-[#d4af37]">
+                    <span className="material-symbols-outlined text-[18px]">history</span>
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <h3 className="text-sm font-black text-white font-headline truncate leading-tight">
+                      ຜົນລ່າສຸດ{selectedType ? <span className="text-[#d4af37]"> — {selectedType.type_name}</span> : ''}
+                    </h3>
+                    <p className="text-[10px] text-white/35 font-bold mt-1">
+                      {(historySearch || historyYear || historyMonth)
+                        ? `ສະແດງ ${searchedDraws.length} / ${filteredDraws.length} ງວດ`
+                        : `${filteredDraws.length} ງວດທັງໝົດ`}
+                    </p>
+                  </div>
+                </div>
+                
+                <span className="text-[10px] font-black text-[#d4af37] bg-[#d4af37]/10 border border-[#d4af37]/20 px-3 py-1.5 rounded-full shrink-0 shadow-sm">
+                  {searchedDraws.length} ງວດ
+                </span>
+              </div>
+
+              {/* Filters list */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                {/* Search text field */}
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[16px] text-white/30 pointer-events-none">search</span>
+                  <input
+                    type="text"
+                    value={historySearch}
+                    onChange={e => setHistorySearch(e.target.value)}
+                    placeholder="ຄົ້ນຫາ ງວດ, ວັນທີ, ເລກ..."
+                    className="w-full h-9 pl-9 pr-8 bg-[#0b0e1a] border border-white/[0.06] rounded-xl text-xs font-semibold text-white placeholder:text-white/20 outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/10 transition-all"
+                  />
+                  {historySearch && (
+                    <button onClick={() => setHistorySearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-rose-400 cursor-pointer transition-colors">
+                      <span className="material-symbols-outlined text-[15px]">close</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Year filter select */}
+                <select
+                  value={historyYear}
+                  onChange={e => setHistoryYear(e.target.value)}
+                  className={`h-9 px-3.5 rounded-xl border text-xs font-black outline-none transition-all cursor-pointer shrink-0 bg-[#0b0e1a]
+                    ${historyYear ? 'border-[#d4af37] text-[#d4af37] bg-[#d4af37]/10' : 'border-white/[0.06] text-white/45'}`}
+                >
+                  <option value="" className="bg-[#0e1227]">ທຸກປີ</option>
+                  {historyAvailYears.map(y => <option key={y} value={y} className="bg-[#0e1227]">{y}</option>)}
+                </select>
+
+                {/* Month filter select */}
+                <select
+                  value={historyMonth}
+                  onChange={e => setHistoryMonth(e.target.value)}
+                  className={`h-9 px-3.5 rounded-xl border text-xs font-black outline-none transition-all cursor-pointer shrink-0 bg-[#0b0e1a]
+                    ${historyMonth ? 'border-[#d4af37] text-[#d4af37] bg-[#d4af37]/10' : 'border-white/[0.06] text-white/45'}`}
+                >
+                  <option value="" className="bg-[#0e1227]">ທຸກເດືອນ</option>
+                  {historyAvailMonths.map(m => <option key={m} value={m} className="bg-[#0e1227]">{LAO_MONTHS[m]}</option>)}
+                </select>
+
+                {/* Clear button */}
+                {(historySearch || historyYear || historyMonth) && (
+                  <button
+                    onClick={() => { setHistorySearch(''); setHistoryYear(''); setHistoryMonth(''); }}
+                    className="h-9 px-3.5 rounded-xl border border-rose-500/20 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">filter_list_off</span>
+                    <span className="hidden sm:inline">ລ້າງ</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Draw Items List */}
+            {searchedDraws.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 select-none">
+                <span className="material-symbols-outlined text-4xl text-white/10">
+                  {filteredDraws.length === 0 ? 'inbox' : 'search_off'}
+                </span>
+                <p className="text-xs text-white/30 font-bold">
+                  {filteredDraws.length === 0 ? 'ຍັງບໍ່ມີຂໍ້ມູນສຳລັບປະເພດນີ້' : 'ບໍ່ພົບຂໍ້ມູນທີ່ຕ້ອງການ'}
+                </p>
+                {(historySearch || historyYear || historyMonth) && (
+                  <button
+                    onClick={() => { setHistorySearch(''); setHistoryYear(''); setHistoryMonth(''); }}
+                    className="text-xs text-[#d4af37] font-black hover:underline cursor-pointer"
+                  >
+                    ລ້າງ filter ທັງໝົດ
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-white/[0.05]">
+                {pagedDraws.map((d, idx) => {
+                  const animalForDraw = (() => {
+                    const det = d.results_detail?.find(r => r.prize_type === '2_digits');
+                    const aid = det?.animal_id;
+                    const twoDigit = det?.result_value;
+                    return (aid ? animals.find(a => a.animal_id == aid) : null)
+                      ?? (twoDigit ? animals.find(a => a.animal_numbers.split(',').map(n => n.trim()).includes(twoDigit)) : null);
+                  })();
+                  const isCurrentEdit = isEditing && d.draw_id === editDrawId;
+                  const rowNum = (safeHistoryPage - 1) * HISTORY_PAGE_SIZE + idx + 1;
+                  return (
+                    <div
+                      key={d.draw_id}
+                      className={`flex items-center gap-3 px-4 sm:px-6 py-4.5 transition-all duration-300 hover:bg-white/[0.02] hover:translate-x-0.5
+                        ${isCurrentEdit ? 'bg-amber-500/5 border-y border-amber-500/10' : ''}`}
+                    >
+                      {/* Badge / Index */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] font-black text-white/15 w-4 text-center hidden sm:block">{rowNum}</span>
+                        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-sm shrink-0 border font-mono
+                          ${isCurrentEdit 
+                            ? 'bg-gradient-to-br from-[#d97706] to-[#f59e0b] text-white border-amber-400/20' 
+                            : 'bg-white/[0.03] border-white/[0.06] text-white/80'}`}>
+                          {d.draw_number}
+                        </div>
+                      </div>
+
+                      {/* Date */}
+                      <div className="shrink-0 text-left">
+                        <p className="text-[11px] font-black text-white/80 leading-tight">
+                          <span className="hidden sm:inline">{formatLaoDate(d.draw_date, true)}</span>
+                          <span className="sm:hidden">{d.draw_date}</span>
+                        </p>
+                      </div>
+
+                      {/* Result Digits */}
+                      <div className="flex-1 min-w-0 flex items-center justify-center">
+                        <ResultDigits result={d.full_result} />
+                      </div>
+
+                      {/* Animal details */}
+                      {animalForDraw && (
+                        <div className="shrink-0 hidden md:flex items-center gap-1.5 select-none bg-emerald-500/5 border border-emerald-500/10 px-2.5 py-1 rounded-xl">
+                          {resolveAnimalImage(animalForDraw) ? (
+                            <img src={resolveAnimalImage(animalForDraw)} alt={animalForDraw.animal_name_lao} className="w-6 h-6 rounded-lg object-cover bg-black/35 border border-white/10" />
+                          ) : (
+                            <span className="material-symbols-outlined text-emerald-400 text-base">pets</span>
+                          )}
+                          <span className="text-[9.5px] text-emerald-400 font-black">{animalForDraw.animal_name_lao}</span>
+                        </div>
+                      )}
+
+                      {/* Action edit button */}
+                      <button
+                        onClick={() => handleEdit(d)}
+                        className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black transition-all duration-350 cursor-pointer border
+                          ${isCurrentEdit
+                            ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                            : 'bg-white/[0.03] hover:bg-[#d4af37]/15 hover:text-[#d4af37] border-white/[0.06] hover:border-[#d4af37]/25 text-white/60'
+                          }`}
+                      >
+                        <span className="material-symbols-outlined text-sm">{isCurrentEdit ? 'edit_square' : 'edit'}</span>
+                        <span className="hidden sm:inline">{isCurrentEdit ? 'ກຳລັງແກ້ໄຂ' : 'ແກ້ໄຂ'}</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pagination panel */}
+            {totalHistoryPages > 1 && (
+              <div className="flex items-center justify-center gap-1.5 px-5 py-4 border-t border-white/[0.05] bg-black/5 flex-wrap">
+                <button
+                  onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                  disabled={safeHistoryPage === 1}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/40 bg-white/[0.03] hover:bg-[#d4af37]/15 hover:text-[#d4af37] disabled:opacity-20 disabled:cursor-not-allowed border border-white/[0.05] transition-all cursor-pointer animate-none"
+                >
+                  <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                </button>
+                
+                {Array.from({ length: totalHistoryPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalHistoryPages || Math.abs(p - safeHistoryPage) <= 1)
+                  .reduce((acc, p, i, arr) => {
+                    if (i > 0 && p - arr[i - 1] > 1) acc.push('...');
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((item, i) =>
+                    item === '...' ? (
+                      <span key={`e${i}`} className="w-6 text-center text-xs text-white/20 select-none">…</span>
+                    ) : (
+                      <button
+                        key={item}
+                        onClick={() => setHistoryPage(item)}
+                        className={`w-8 h-8 rounded-xl text-xs font-black transition-all cursor-pointer border
+                          ${safeHistoryPage === item 
+                            ? 'bg-[#d4af37] border-transparent text-black shadow-md shadow-amber-500/10 scale-105' 
+                            : 'text-white/60 bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.06] hover:text-white'}`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
+                  
+                <button
+                  onClick={() => setHistoryPage(p => Math.min(totalHistoryPages, p + 1))}
+                  disabled={safeHistoryPage === totalHistoryPages}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-white/40 bg-white/[0.03] hover:bg-[#d4af37]/15 hover:text-[#d4af37] disabled:opacity-20 disabled:cursor-not-allowed border border-white/[0.05] transition-all cursor-pointer animate-none"
+                >
+                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+                <span className="text-[10px] text-white/25 ml-1 font-bold">{safeHistoryPage}/{totalHistoryPages}</span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      </div>{/* end col-2 history */}
+        </div>{/* end col-2 history */}
       </div>{/* end two-column grid */}
     </div>
   );

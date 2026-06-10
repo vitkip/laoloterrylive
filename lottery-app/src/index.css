@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -61,6 +62,8 @@
   --font-headline: 'Phetsarath', sans-serif;
   --font-body: 'Noto Sans Lao Looped', sans-serif;
   --font-label: 'Noto Sans Lao Looped', sans-serif;
+  --font-space: 'Space Grotesk', sans-serif;
+  --font-jakarta: 'Plus Jakarta Sans', sans-serif;
 }
 
 /* ─── shadcn/ui CSS variables — light mode ─── */
@@ -90,24 +93,24 @@
 
 /* ─── shadcn/ui CSS variables — dark mode ─── */
 .dark {
-  --background: #0c1a12;
+  --background: #07070e;
   --foreground: #eaf5ee;
-  --card: #122018;
+  --card: #0e0e1a;
   --card-foreground: #eaf5ee;
-  --popover: #122018;
+  --popover: #0e0e1a;
   --popover-foreground: #eaf5ee;
   --primary: #5daf82;
-  --primary-foreground: #0c1a12;
-  --secondary: #1a2e20;
+  --primary-foreground: #07070e;
+  --secondary: #141420;
   --secondary-foreground: #a8d5b7;
-  --muted: #1a2e20;
+  --muted: #141420;
   --muted-foreground: #7fb09a;
-  --accent: #1a2e20;
+  --accent: #141420;
   --accent-foreground: #a8d5b7;
   --destructive: #ff6b6b;
   --destructive-foreground: #ffffff;
-  --border: #28402e;
-  --input: #28402e;
+  --border: #1e1e30;
+  --input: #1e1e30;
   --ring: #5daf82;
 }
 
@@ -162,14 +165,183 @@ body {
 }
 
 .dark body {
-  background-color: #0c1a12;
+  background-color: #060410;
   color: #eaf5ee;
+}
+
+html.dark {
+  background: #060410;
 }
 
 #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+/* ─── Dimensional Background System ─── */
+
+/* All fixed bg layers share base properties */
+.bg-dim-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Layer 1 — base deep colour */
+.bg-dim-base {
+  background: #07070e;
+  z-index: -10;
+}
+
+/* Layer 2 — gold nebula top-left */
+.bg-dim-orb-gold {
+  z-index: -9;
+  background: radial-gradient(
+    ellipse 70vw 55vh at 12% 18%,
+    rgba(245, 158, 11, 0.11) 0%,
+    rgba(180, 100, 10, 0.06) 40%,
+    transparent 72%
+  );
+  animation: orb-gold 22s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+/* Layer 3 — amber ember bottom-right */
+.bg-dim-orb-amber {
+  z-index: -9;
+  background: radial-gradient(
+    ellipse 55vw 65vh at 88% 88%,
+    rgba(194, 100, 10, 0.08) 0%,
+    rgba(140, 70, 5, 0.04) 45%,
+    transparent 70%
+  );
+  animation: orb-amber 26s ease-in-out infinite alternate-reverse;
+  will-change: transform, opacity;
+}
+
+/* Layer 4 — cool indigo accent top-right (depth contrast) */
+.bg-dim-orb-cool {
+  z-index: -9;
+  background: radial-gradient(
+    ellipse 40vw 45vh at 82% 12%,
+    rgba(80, 60, 160, 0.055) 0%,
+    transparent 65%
+  );
+  animation: orb-cool 30s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+/* Layer 5 — subtle centre glow (focus depth) */
+.bg-dim-orb-centre {
+  z-index: -9;
+  background: radial-gradient(
+    ellipse 50vw 40vh at 50% 48%,
+    rgba(245, 158, 11, 0.025) 0%,
+    transparent 60%
+  );
+  animation: orb-centre 18s ease-in-out infinite alternate;
+  will-change: opacity;
+}
+
+/* Layer 6 — fine dot grid, edge-faded */
+.bg-dim-grid {
+  z-index: -8;
+  background-image: radial-gradient(
+    circle,
+    rgba(245, 158, 11, 0.22) 1px,
+    transparent 1px
+  );
+  background-size: 30px 30px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 85% 85% at 50% 50%,
+    rgba(0,0,0,0.55) 0%,
+    transparent 70%
+  );
+  mask-image: radial-gradient(
+    ellipse 85% 85% at 50% 50%,
+    rgba(0,0,0,0.55) 0%,
+    transparent 70%
+  );
+  animation: grid-breathe 14s ease-in-out infinite alternate;
+}
+
+/* Layer 7 — edge vignette */
+.bg-dim-vignette {
+  z-index: -7;
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+}
+
+/* Layer 8 — noise grain (SVG turbulence) */
+.bg-dim-grain {
+  z-index: -6;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23grain)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 192px 192px;
+  opacity: 1;
+  mix-blend-mode: overlay;
+}
+
+/* ── Orb keyframes ── */
+@keyframes orb-gold {
+  0%   { transform: translate(0,    0   ) scale(1);    opacity: 0.75; }
+  30%  { transform: translate(30px, -20px) scale(1.06); opacity: 1;    }
+  70%  { transform: translate(-15px, 25px) scale(0.97); opacity: 0.85; }
+  100% { transform: translate(20px,  15px) scale(1.03); opacity: 0.9;  }
+}
+
+@keyframes orb-amber {
+  0%   { transform: translate(0,    0   ) scale(1);    opacity: 0.65; }
+  40%  { transform: translate(-25px, 18px) scale(1.07); opacity: 0.9;  }
+  80%  { transform: translate(18px, -22px) scale(0.96); opacity: 0.75; }
+  100% { transform: translate(-10px,  8px) scale(1.02); opacity: 0.8;  }
+}
+
+@keyframes orb-cool {
+  0%   { transform: translate(0, 0) scale(1);    opacity: 0.6;  }
+  50%  { transform: translate(15px, 12px) scale(1.04); opacity: 0.85; }
+  100% { transform: translate(-8px, -6px) scale(0.98); opacity: 0.7;  }
+}
+
+@keyframes orb-centre {
+  0%   { opacity: 0.5; }
+  50%  { opacity: 0.9; }
+  100% { opacity: 0.6; }
+}
+
+@keyframes grid-breathe {
+  0%   { opacity: 0.7; }
+  60%  { opacity: 1;   }
+  100% { opacity: 0.8; }
+}
+
+/* Hide bg layers in light mode */
+.bg-dim-base,
+.bg-dim-orb-gold,
+.bg-dim-orb-amber,
+.bg-dim-orb-cool,
+.bg-dim-orb-centre,
+.bg-dim-grid,
+.bg-dim-vignette,
+.bg-dim-grain {
+  display: none;
+}
+
+.dark .bg-dim-base,
+.dark .bg-dim-orb-gold,
+.dark .bg-dim-orb-amber,
+.dark .bg-dim-orb-cool,
+.dark .bg-dim-orb-centre,
+.dark .bg-dim-grid,
+.dark .bg-dim-vignette,
+.dark .bg-dim-grain {
+  display: block;
 }
 
 /* ─── Referral banner marquee (left → right) ─── */
@@ -180,3 +352,23 @@ body {
 .animate-marquee-ltr {
   animation: marquee-ltr 35s linear infinite;
 }
+
+/* ─── Premium Glassmorphic / Cyberpunk Utilities ─── */
+.text-glow-gradient {
+  background: linear-gradient(135deg, #a78bfa 0%, #38bdf8 50%, #4ade80 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-primary {
+  background: linear-gradient(135deg, #ffffff 0%, #b5c4ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-grid-glow {
+  background-size: 28px 28px;
+  background-image: 
+    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+

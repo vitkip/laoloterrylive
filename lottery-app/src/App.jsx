@@ -32,6 +32,7 @@ const UserLogsPage        = lazy(() => import('./pages/UserLogsPage'))
 const ProfilePage         = lazy(() => import('./pages/ProfilePage'))
 const AdminLotteryTypes   = lazy(() => import('./pages/AdminLotteryTypes'))
 const AdminBanners        = lazy(() => import('./pages/AdminBanners'))
+const AdminContacts       = lazy(() => import('./pages/AdminContacts'))
 
 const TermsPage        = lazy(() => import('./pages/TermsPage'))
 const ContactPage      = lazy(() => import('./pages/ContactPage'))
@@ -59,13 +60,25 @@ function PageLoader() {
   )
 }
 
+// ── Dimensional background layers (dark mode only, hidden via CSS in light) ──
+function DimBackground() {
+  return (
+    <>
+      <div className="fixed inset-0 bg-[#060410] -z-20 pointer-events-none" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_15%_15%,#1c0e34_0%,transparent_55%)] -z-20 pointer-events-none" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_85%_85%,#1a0a08_0%,transparent_55%)] -z-20 pointer-events-none" />
+    </>
+  )
+}
+
 // ── Public layout (Navbar + Footer) ───────────────────────────────
 function PublicLayout() {
   useVisitorTrack();
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <div className="flex flex-col min-h-screen text-foreground" style={{ background: 'transparent' }}>
+      <DimBackground />
       <Navbar />
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-12">
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-12 relative">
         <Suspense fallback={<PageLoader />}>
           <Outlet />
         </Suspense>
@@ -140,6 +153,7 @@ export default function App() {
               <Route path="/admin/animals"  element={<AnimalImageManager />} />
               <Route path="/admin/users"    element={<AdminUsers />} />
               <Route path="/admin/banners"  element={<AdminBanners />} />
+              <Route path="/admin/contacts" element={<AdminContacts />} />
               <Route path="/admin/profile"  element={<ProfilePage />} />
 
               {/* Admin-only */}

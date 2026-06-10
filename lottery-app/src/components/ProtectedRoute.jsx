@@ -6,10 +6,10 @@ export default function ProtectedRoute({ allowedRoles, redirectTo }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-screen bg-[#060410]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-2 border-[#003fb1]/20 border-t-[#003fb1] animate-spin" />
-          <p className="text-sm text-[#737686] font-medium">ກຳລັງກວດສອບສິດ...</p>
+          <div className="w-10 h-10 rounded-full border-2 border-[#d4af37]/20 border-t-[#ffd700] animate-spin" />
+          <p className="text-sm text-white/60 font-medium font-sans animate-pulse">ກຳລັງກວດສອບສິດ...</p>
         </div>
       </div>
     );

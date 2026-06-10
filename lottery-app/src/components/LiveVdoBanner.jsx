@@ -93,14 +93,14 @@ export default function LiveVdoBanner() {
 
   return (
     <div ref={bannerRef} className="w-full mb-12">
-      <Card className="bg-[#121c2a] border-[#ba1a1a]/20 border-4 overflow-hidden rounded-3xl shadow-2xl">
+      <Card className="bg-[#0d0e1c]/80 backdrop-blur-md border border-[#d4af37]/25 overflow-hidden rounded-3xl shadow-[0_8px_32px_rgba(212,175,55,0.15)]">
         {/* Live header bar */}
-        <div className="bg-[#ba1a1a] text-white px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-black tracking-widest uppercase">
-            <Radio className="w-5 h-5 animate-pulse" />
+        <div className="bg-gradient-to-r from-[#ba1a1a] via-[#800000] to-[#0d0e1c] border-b border-[#d4af37]/20 text-white px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 font-black tracking-widest uppercase font-sans">
+            <Radio className="w-5 h-5 animate-pulse text-[#ffd700]" />
             ກຳລັງຖ່າຍທອດສົດ
           </div>
-          <Badge variant="live" className="bg-white/20 text-white border-0 text-xs font-bold px-3">
+          <Badge variant="live" className="bg-[#ba1a1a] text-white border border-[#ff6b6b]/30 shadow-[0_0_12px_rgba(186,26,26,0.5)] text-xs font-bold px-3 py-1 flex items-center gap-1.5 rounded-full">
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
             LIVE
           </Badge>
@@ -123,12 +123,12 @@ export default function LiveVdoBanner() {
                 /* Cannot embed — direct link fallback */
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
                   <Tv className="w-12 h-12 text-white/40" />
-                  <p className="text-white/60 text-sm">ບໍ່ສາມາດ embed ໄດ້</p>
+                  <p className="text-white/60 text-sm font-sans">ບໍ່ສາມາດ embed ໄດ້</p>
                   <a
                     href={rawUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-[#ba1a1a] hover:bg-[#d32f2f] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors"
+                    className="bg-[#d4af37] hover:bg-[#ffd700] text-[#0d0e1c] px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md font-sans"
                   >
                     <ExternalLink className="w-4 h-4" />
                     ເບິ່ງ Live ສົດ
@@ -153,10 +153,10 @@ export default function LiveVdoBanner() {
                   )}
                   <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-[#ba1a1a] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                      <Play className="w-8 h-8 text-white translate-x-0.5 fill-white" />
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#ffd700] via-[#e5c158] to-[#aa7c11] flex items-center justify-center shadow-[0_8px_24px_rgba(212,175,55,0.4)] group-hover:scale-110 transition-transform border border-[#ffd700]/30">
+                      <Play className="w-8 h-8 text-[#0d0e1c] translate-x-0.5 fill-[#0d0e1c]" />
                     </div>
-                    <p className="text-white font-bold text-sm bg-black/50 px-4 py-1 rounded-full">
+                    <p className="text-white font-bold text-sm bg-black/60 px-4 py-1 rounded-full border border-white/10 font-sans">
                       ກົດເພື່ອເບິ່ງ Live
                     </p>
                   </div>
@@ -166,35 +166,35 @@ export default function LiveVdoBanner() {
           </div>
 
           {/* Real-time results sidebar */}
-          <div className="bg-gradient-to-b from-[#1a2536] to-[#121c2a] p-6 lg:p-8 flex flex-col justify-center items-center text-center border-l border-white/5">
-            <p className="text-[#a5b4fc] font-bold tracking-widest text-sm mb-1 uppercase">ຜົນລາງວັນສົດ</p>
-            <h3 className="text-white font-black text-xl md:text-2xl mb-6 leading-relaxed">
+          <div className="bg-[#0a0b14]/90 p-6 lg:p-8 flex flex-col justify-center items-center text-center border-l border-white/[0.04]">
+            <p className="text-[#ffd700] font-black tracking-widest text-xs mb-1 uppercase font-mono">ຜົນລາງວັນສົດ</p>
+            <h3 className="text-white font-black text-xl md:text-2xl mb-6 leading-relaxed font-sans">
               {formatLaoDate(new Date().toISOString())}
             </h3>
 
             {latestDraw ? (
               <div className="space-y-6 w-full">
-                <div className="bg-black/40 p-6 rounded-2xl border border-white/10">
-                  <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-2">
-                    ເລກທີ່ອອກ (ລ່າສຸດ)
+                <div className="bg-[#0d0e1c] p-6 rounded-2xl border border-[#d4af37]/20 shadow-[0_4px_16px_rgba(212,175,55,0.08)]">
+                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-wider mb-2 font-sans">
+                    ...ເລກທີ່ອອກ (ລ່າສຸດ)...
                   </p>
-                  <div className="text-5xl md:text-6xl font-black text-[#6cf8bb] tracking-widest font-mono">
+                  <div className="text-3xl md:text-4xl font-black bg-gradient-to-r from-[#ffd700] via-[#e5c158] to-[#aa7c11] bg-clip-text text-transparent tracking-widest font-mono">
                     {latestDraw.full_result || '......'}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                    <p className="text-white/50 text-xs mb-1">ເລກ 3 ໂຕ</p>
-                    <p className="text-2xl font-black text-white font-mono">{threeDigits || '...'}</p>
+                  <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.04]">
+                    <p className="text-white/40 text-xs mb-1 font-sans">ເລກ 3 ໂຕ</p>
+                    <p className="text-2xl font-black text-[#ffd700] font-mono">{threeDigits || '...'}</p>
                   </div>
-                  <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                    <p className="text-white/50 text-xs mb-1">ເລກ 2 ໂຕ</p>
-                    <p className="text-2xl font-black text-white font-mono">{twoDigits || '..'}</p>
+                  <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.04]">
+                    <p className="text-white/40 text-xs mb-1 font-sans">ເລກ 2 ໂຕ</p>
+                    <p className="text-2xl font-black text-[#ffd700] font-mono">{twoDigits || '..'}</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-white/50 animate-pulse mt-4">
+              <div className="text-white/40 animate-pulse mt-4 font-sans">
                 ກຳລັງລໍຖ້າຜົນການອອກລາງວັນ...
               </div>
             )}

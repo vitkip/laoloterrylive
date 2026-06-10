@@ -7,15 +7,56 @@ import SEO from '../components/SEO';
 import { webPageSchema, faqSchema, breadcrumbSchema } from '../components/schemas';
 
 const TABS = [
-  { id: 'dream',   label: 'ຕຳລາແປຄວາມຝັນ',       icon: 'auto_awesome',    color: '#7c3aed' },
-  { id: 'number',  label: 'ຄົ້ນຫາຕາມເລກ',          icon: 'manage_search',   color: '#006c49' },
-  { id: 'monthly', label: 'ວິເຄາະຕາມເດືອນ',        icon: 'calendar_month',  color: '#d97706' },
+  {
+    id: 'dream',
+    label: 'ຝັນ',
+    labelFull: 'ຕຳລາແປຄວາມຝັນ',
+    icon: 'auto_awesome',
+    color: '#7c3aed',
+    accent: '#a855f7',
+    glow: 'rgba(124,58,237,0.38)',
+    glowLight: 'rgba(124,58,237,0.14)',
+    watermark: 'ຝັນ',
+  },
+  {
+    id: 'number',
+    label: 'ຄົ້ນຫາ',
+    labelFull: 'ຄົ້ນຫາຕາມເລກ',
+    icon: 'manage_search',
+    color: '#006c49',
+    accent: '#10b981',
+    glow: 'rgba(0,108,73,0.35)',
+    glowLight: 'rgba(0,108,73,0.12)',
+    watermark: 'ຄົ້ນ',
+  },
+  {
+    id: 'monthly',
+    label: 'ເດືອນ',
+    labelFull: 'ວິເຄາະຕາມເດືອນ',
+    icon: 'calendar_month',
+    color: '#b45309',
+    accent: '#f59e0b',
+    glow: 'rgba(180,83,9,0.35)',
+    glowLight: 'rgba(180,83,9,0.12)',
+    watermark: 'ເດືອນ',
+  },
+]
+
+const HERO_FEATURES = [
+  { icon: 'auto_awesome',   text: 'ຝັນ 40 ນາມສັດ',    color: '#c4b5fd' },
+  { icon: 'tag',            text: 'ຄົ້ນຫາ 00–99',     color: '#6ee7b7' },
+  { icon: 'history',        text: 'ປະຫວັດຍ້ອນຫຼັງ',  color: '#93c5fd' },
+  { icon: 'bar_chart',      text: 'ສະຖິຕິຄວາມຖີ່',   color: '#fde68a' },
+  { icon: 'calendar_month', text: 'ວິເຄາະຕາມເດືອນ',  color: '#fca5a5' },
 ]
 
 export default function SearchPage() {
   const [activeTab, setActiveTab] = useState('dream')
   const [selectedType, setSelectedType] = useState('all')
   const { draws, types } = useData()
+
+  const tab = TABS.find(t => t.id === activeTab)
+  const tabIdx = TABS.findIndex(t => t.id === activeTab)
 
   const searchFaqs = [
     { q: 'ຕຳລາຄວາມຝັນແມ່ນຫຍັງ?', a: 'ຕຳລາໂບຮານ 40 ນາມສັດ ແປຄວາມຝັນເປັນເລກຫວຍ' },
@@ -25,7 +66,7 @@ export default function SearchPage() {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       <SEO
         title="ຕຳລາແປຄວາມຝັນ & ຄົ້ນຫາຜົນຫວຍ | ทำนายฝัน ตรวจหวยออนไลน์ เลขเด็ดจากความฝัน"
         description="ຕຳລາໂບຮານ 40 ນາມສັດ ແປຄວາມຝັນເປັນເລກ, ຄົ້ນຫາຜົນຫວຍຕາມເລກ, ວິເຄາະຕາມເດືອນ | ทำนายฝัน 40 นามสัตว์ แปลความฝันเป็นเลขหวย ค้นหาผลหวยออนไลน์ วิเคราะห์ตามเดือน"
@@ -49,34 +90,98 @@ export default function SearchPage() {
         ]}
       />
 
-      {/* ─── Hero Header ─── */}
-      <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/[0.05]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#09090b] via-[#0e0e16] to-[#0d0d13]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.22),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,189,248,0.14),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.06),transparent_70%)]" />
-        <div className="absolute right-0 bottom-0 text-[8rem] sm:text-[12rem] font-black text-white/[0.03] leading-none select-none pointer-events-none pr-4 pb-1">
-          {activeTab === 'monthly' ? 'ເດືອນ' : 'ຝັນ'}
+      {/* ─── Cinematic Hero ─── */}
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/[0.06]">
+        {/* Base dark layer */}
+        <div className="absolute inset-0 bg-[#06060f]" />
+
+        {/* Dynamic radial glow — reacts to active tab */}
+        <div
+          className="absolute inset-0 transition-all duration-700"
+          style={{ background: `radial-gradient(ellipse 70% 80% at 90% 20%, ${tab.glow} 0%, transparent 65%)` }}
+        />
+        <div
+          className="absolute inset-0 transition-all duration-700"
+          style={{ background: `radial-gradient(ellipse 50% 60% at 15% 85%, ${tab.glowLight} 0%, transparent 60%)` }}
+        />
+
+        {/* Subtle grid lines */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+
+        {/* Floating orb — top-right bloom */}
+        <div
+          className="absolute -top-8 -right-8 w-64 h-64 rounded-full blur-[80px] opacity-25 transition-colors duration-700 pointer-events-none"
+          style={{ background: tab.color }}
+        />
+        {/* Smaller orb — bottom-left */}
+        <div
+          className="absolute -bottom-6 -left-6 w-40 h-40 rounded-full blur-[60px] opacity-15 transition-colors duration-700 pointer-events-none"
+          style={{ background: tab.accent }}
+        />
+
+        {/* Ghost watermark text */}
+        <div
+          className="absolute right-0 bottom-0 font-headline font-black select-none pointer-events-none leading-none pr-5 pb-1 transition-all duration-500"
+          style={{
+            fontSize: 'clamp(6rem, 18vw, 13rem)',
+            color: 'rgba(255,255,255,0.028)',
+            letterSpacing: '-0.02em',
+          }}
+        >
+          {tab.watermark}
         </div>
 
-        <div className="relative z-10 px-8 sm:px-12 py-9 sm:py-11">
-          <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl border border-white/[0.15] rounded-full px-3.5 py-1 mb-5 shadow-lg shadow-violet-500/10">
-            <span className="material-symbols-outlined text-violet-300 text-[14px]">auto_awesome</span>
-            <span className="text-white/90 text-[11px] font-bold uppercase tracking-widest">Dream · Search · Analytics</span>
+        {/* Content */}
+        <div className="relative z-10 px-7 sm:px-12 py-10 sm:py-12">
+
+          {/* Status badge */}
+          <div className="inline-flex items-center gap-2 bg-white/[0.06] border border-white/[0.1] backdrop-blur-sm rounded-full px-3.5 py-1.5 mb-6">
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ background: tab.accent }}
+            />
+            <span className="text-white/70 text-[10px] font-black uppercase tracking-[0.2em]">
+              Dream · Search · Analytics
+            </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight mb-3">
+
+          {/* Headline */}
+          <h1 className="text-4xl sm:text-5xl font-black text-white leading-[1.1] mb-3">
             ຄົ້ນຫາ
-            <span className="text-violet-300 ml-3">& ວິເຄາະ</span>
+            <span
+              className="ml-3 transition-all duration-500"
+              style={{
+                background: `linear-gradient(135deg, ${tab.accent} 0%, ${tab.color} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              & ວິເຄາະ
+            </span>
           </h1>
-          <p className="text-white/60 text-sm max-w-lg leading-relaxed">
-            ຕຳລາແປຄວາມຝັນ · ຄົ້ນຫາປະຫວັດຕົວເລກ · ວິເຄາະສະຖິຕິຕາມເດືອນ
+
+          <p className="text-white/45 text-sm max-w-md leading-relaxed mb-7">
+            ຕຳລາໂບຮານ 40 ນາມສັດ · ປະຫວັດຕົວເລກ · ວິເຄາະສະຖິຕິຕາມເດືອນ
           </p>
 
           {/* Feature pills */}
-          <div className="flex flex-wrap gap-2 mt-5">
-            {['ຝັນເຫັນ 40 ສັດ', 'ຄົ້ນຫາ 00–99', 'ປະຫວັດຍ້ອນຫຼັງ', 'ສະຖິຕິຄວາມຖີ່', 'ວິເຄາະຕາມເດືອນ'].map(f => (
-              <span key={f} className="text-[10px] font-bold text-white/70 bg-white/[0.05] border border-white/[0.09] backdrop-blur-sm px-2.5 py-1 rounded-full">
-                {f}
+          <div className="flex flex-wrap gap-1.5">
+            {HERO_FEATURES.map(f => (
+              <span
+                key={f.text}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.08] text-[10px] font-bold"
+                style={{ color: f.color }}
+              >
+                <span className="material-symbols-outlined text-[11px]">{f.icon}</span>
+                {f.text}
               </span>
             ))}
           </div>
@@ -85,19 +190,31 @@ export default function SearchPage() {
 
       {/* ─── Type Selector (hidden for dream tab) ─── */}
       {activeTab !== 'dream' && types && types.length > 1 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="w-1 h-5 rounded-full bg-gradient-to-b from-primary to-primary/40" />
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mr-1">ປະເພດຫວຍ</span>
+        <div
+          className="flex items-center gap-2 overflow-x-auto pb-0.5"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {/* Accent stripe */}
+          <div
+            className="w-0.5 h-5 rounded-full shrink-0 transition-colors duration-500"
+            style={{ background: `linear-gradient(to bottom, ${tab.color}, ${tab.color}40)` }}
+          />
+          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] shrink-0 mr-1">
+            ປະເພດ
+          </span>
+
           <button
             onClick={() => setSelectedType('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+            className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-bold border transition-all duration-200 ${
               selectedType === 'all'
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                 : 'bg-card/70 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
             }`}
           >
-            ທັງໝົດ ({draws?.length ?? 0})
+            ທັງໝົດ{' '}
+            <span className="opacity-60">({draws?.length ?? 0})</span>
           </button>
+
           {types.filter(t => t.is_active != 0).map(t => {
             const color = t.color || '#7c3aed'
             const active = selectedType === String(t.type_id)
@@ -106,38 +223,54 @@ export default function SearchPage() {
               <button
                 key={t.type_id}
                 onClick={() => setSelectedType(String(t.type_id))}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all"
-                style={active
-                  ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 2px 8px ${color}40` }
-                  : { background: 'transparent', color, borderColor: `${color}50` }
+                className="shrink-0 px-4 py-1.5 rounded-xl text-xs font-bold border transition-all duration-200"
+                style={
+                  active
+                    ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 2px 14px ${color}55` }
+                    : { background: 'transparent', color, borderColor: `${color}45` }
                 }
               >
-                {t.type_name} ({cnt})
+                {t.type_name}{' '}
+                <span style={{ opacity: 0.65 }}>({cnt})</span>
               </button>
             )
           })}
         </div>
       )}
 
-      {/* ─── Tab Switcher ─── */}
-      <div className="flex items-center gap-1 bg-card/60 backdrop-blur-md p-1.5 rounded-2xl border border-border/60 shadow-sm w-full">
-        {TABS.map(tab => (
+      {/* ─── Tab Switcher with animated sliding pill ─── */}
+      <div className="relative flex items-center bg-card/70 backdrop-blur-md p-1.5 rounded-2xl border border-border/60 shadow-sm">
+
+        {/* Sliding indicator — positioned behind buttons */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '6px',
+            bottom: '6px',
+            width: 'calc(33.3333% - 4px)',
+            left: `calc(${tabIdx * 33.3333}% + ${6 - tabIdx * 4}px)`,
+            borderRadius: '0.75rem',
+            background: 'var(--card)',
+            boxShadow: `0 2px 18px ${tab.glow}, 0 0 0 1px rgba(255,255,255,0.04)`,
+            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.5s ease',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+
+        {TABS.map(t => (
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-[12px] font-bold transition-all duration-200
-              ${activeTab === tab.id
-                ? 'bg-card/80 backdrop-blur-sm shadow-sm ring-1 ring-border/30'
-                : 'text-muted-foreground hover:text-foreground'
-              }`}
-            style={activeTab === tab.id ? { color: tab.color } : {}}
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            className="relative flex-1 flex items-center justify-center gap-1.5 px-2 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-[12px] font-bold transition-colors duration-200"
+            style={{
+              zIndex: 1,
+              color: activeTab === t.id ? t.color : 'var(--muted-foreground)',
+            }}
           >
-            <span className="material-symbols-outlined text-[15px]">{tab.icon}</span>
-            <span className="hidden sm:inline">{tab.label}</span>
-            <span className="sm:hidden text-[10px]">
-              {tab.id === 'dream'   ? 'ຝັນ'    :
-               tab.id === 'number' ? 'ຄົ້ນຫາ' : 'ເດືອນ'}
-            </span>
+            <span className="material-symbols-outlined text-[15px]">{t.icon}</span>
+            <span className="hidden sm:inline">{t.labelFull}</span>
+            <span className="sm:hidden">{t.label}</span>
           </button>
         ))}
       </div>

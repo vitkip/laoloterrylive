@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { API, resolveUploadUrl } from '../utils/api'
@@ -10,16 +10,105 @@ import { resolveAnimalImage } from '../utils/api'
 import SEO from '../components/SEO'
 import { websiteSchema, lotteryResultSchema, breadcrumbSchema } from '../components/schemas'
 
-// ── Logo renderer (matches AdminBanners logo types) ──────────────────────────
+/* ─── Lottery ball gradient helpers ──────────────────────────── */
+const HOT_BALL = [
+  { bg: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #f59e0b 42%, #b45309 78%, #78350f 100%)', glow: 'rgba(245,158,11,0.6)', txt: '#78350f' },
+  { bg: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #f59e0b 42%, #b45309 78%, #78350f 100%)', glow: 'rgba(245,158,11,0.5)', txt: '#78350f' },
+  { bg: 'radial-gradient(circle at 35% 30%, #fed7aa 0%, #ea580c 42%, #9a3412 78%, #7c2d12 100%)', glow: 'rgba(234,88,12,0.5)', txt: '#fff' },
+  { bg: 'radial-gradient(circle at 35% 30%, #fed7aa 0%, #ea580c 42%, #9a3412 78%, #7c2d12 100%)', glow: 'rgba(234,88,12,0.4)', txt: '#fff' },
+  { bg: 'radial-gradient(circle at 35% 30%, #fed7aa 0%, #ea580c 42%, #9a3412 78%, #7c2d12 100%)', glow: 'rgba(234,88,12,0.35)', txt: '#fff' },
+  { bg: 'radial-gradient(circle at 35% 30%, #fca5a5 0%, #dc2626 42%, #7f1d1d 78%, #450a0a 100%)', glow: 'rgba(220,38,38,0.5)', txt: '#fff' },
+  { bg: 'radial-gradient(circle at 35% 30%, #fca5a5 0%, #dc2626 42%, #7f1d1d 78%, #450a0a 100%)', glow: 'rgba(220,38,38,0.4)', txt: '#fff' },
+  { bg: 'radial-gradient(circle at 35% 30%, #fca5a5 0%, #dc2626 42%, #7f1d1d 78%, #450a0a 100%)', glow: 'rgba(220,38,38,0.3)', txt: '#fff' },
+];
+
+const PAGE_STYLE = `
+  /* Keyframes for premium animations */
+  @keyframes float-ball-1 {
+    0% { transform: translateY(0px) rotate(0deg) scale(1); }
+    50% { transform: translateY(-20px) rotate(180deg) scale(1.05); }
+    100% { transform: translateY(0px) rotate(360deg) scale(1); }
+  }
+  @keyframes float-ball-2 {
+    0% { transform: translateY(0px) rotate(0deg) scale(0.9); }
+    50% { transform: translateY(25px) rotate(-180deg) scale(1.02); }
+    100% { transform: translateY(0px) rotate(-360deg) scale(0.9); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 0.25; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(1.05); }
+  }
+
+  /* hot-ball specular */
+  .hp-ball-wrap { position: relative; }
+  .hp-ball { 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-weight: 900; 
+    position: relative; 
+    overflow: hidden; 
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .hp-ball::after { 
+    content: ''; 
+    position: absolute; 
+    top: 6%; 
+    left: 12%; 
+    width: 40%; 
+    height: 30%; 
+    background: radial-gradient(ellipse, rgba(255,255,255,0.7) 0%, transparent 80%); 
+    border-radius: 50%; 
+  }
+  .hp-ball:hover {
+    transform: scale(1.18) rotate(15deg);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45), 0 0 15px currentColor !important;
+  }
+
+  /* dark glass card base */
+  .hp-glass {
+    background: linear-gradient(158deg, rgba(9, 12, 33, 0.85) 0%, rgba(12, 16, 42, 0.95) 52%, rgba(7, 9, 23, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .hp-glass:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  /* section header accent line */
+  .hp-sec-line { width: 4px; height: 28px; border-radius: 9999px; flex-shrink: 0; }
+  .hp-sec-gold  { background: linear-gradient(to bottom, #f59e0b, rgba(245,158,11,0.30)); }
+  .hp-sec-green { background: linear-gradient(to bottom, #10b981, rgba(16,185,129,0.30)); }
+  .hp-sec-blue  { background: linear-gradient(to bottom, #3b82f6, rgba(59,130,246,0.30)); }
+  .hp-sec-vio   { background: linear-gradient(to bottom, #7c3aed, rgba(124,58,237,0.30)); }
+
+  /* feature card hover glow */
+  .hp-feat { transition: all 0.38s cubic-bezier(0.25, 0.8, 0.25, 1); }
+  .hp-feat:hover { 
+    transform: translateY(-8px); 
+    box-shadow: 0 16px 36px rgba(0,0,0,0.55), 0 0 24px var(--hover-glow, rgba(255,255,255,0.03));
+    border-color: var(--hover-border, rgba(255,255,255,0.15));
+  }
+
+  /* stat sparkline */
+  .hp-spark { display: flex; align-items: flex-end; gap: 2.5px; height: 24px; }
+  .hp-spark-bar { width: 4px; border-radius: 9999px; transition: opacity 0.3s; }
+`;
+
+// ── Logo renderer ────────────────────────────────────────────────────
 function BannerLogo({ type, logoUrl = null }) {
   if (type === 'lao_flag') {
     return (
       <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-sm ring-1 ring-white/20">
         <svg viewBox="0 0 36 36" className="w-full h-full">
-          <rect x="0" y="0"  width="36" height="9"  fill="#CE1126"/>
-          <rect x="0" y="9"  width="36" height="18" fill="#002868"/>
-          <rect x="0" y="27" width="36" height="9"  fill="#CE1126"/>
-          <circle cx="18" cy="18" r="6" fill="white"/>
+          <rect x="0" y="0" width="36" height="9" fill="#CE1126" />
+          <rect x="0" y="9" width="36" height="18" fill="#002868" />
+          <rect x="0" y="27" width="36" height="9" fill="#CE1126" />
+          <circle cx="18" cy="18" r="6" fill="white" />
         </svg>
       </div>
     )
@@ -39,57 +128,58 @@ function BannerLogo({ type, logoUrl = null }) {
   )
 }
 
-// ── Referral Scroll Banner ────────────────────────────────────────────────────
+// ── Referral Scroll Banner ────────────────────────────────────────────
 function ReferralScrollBanner() {
   const [banners, setBanners] = useState([])
+  const scrollRef = useRef(null)
 
   useEffect(() => {
     fetch(`${API}/index.php?action=get_banners`)
       .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setBanners(data.filter(b => Number(b.is_active)))
-        }
-      })
-      .catch(() => {})
+      .then(data => { if (Array.isArray(data)) setBanners(data.filter(b => Number(b.is_active))) })
+      .catch(() => { })
   }, [])
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current
+      scrollRef.current.scrollTo({ left: direction === 'left' ? scrollLeft - clientWidth / 2 : scrollLeft + clientWidth / 2, behavior: 'smooth' })
+    }
+  }
 
   if (banners.length === 0) return null
 
-  // Duplicate to fill the marquee track (at least 2 passes for seamless loop)
-  const repeated = banners.length < 5
-    ? [...banners, ...banners, ...banners, ...banners]
-    : [...banners, ...banners]
-
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-r from-[#020818] via-[#001040] to-[#020818] shadow-lg ring-1 ring-white/[0.04]">
-      {/* header label */}
-      <div className="flex items-center justify-center gap-2 border-b border-white/[0.06] px-4 py-2">
-        <span className="material-symbols-outlined text-[14px] text-[#6cf8bb]">volunteer_activism</span>
-        <p className="text-center text-[11px] font-medium tracking-wide text-white/50">
-          ໃຫ້ກຳລັງໃຈໂດຍ &nbsp;—&nbsp; ນຳລະຫັດແນະນຳໃສ່ໃນແອບຊື້ເລກຂອງທ່ານ
+    <div className="relative group/banner overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-r from-[#020617] via-[#05153f] to-[#020617] shadow-xl ring-1 ring-white/[0.05]">
+      <div className="flex items-center justify-center gap-2 border-b border-white/[0.05] px-4 py-2.5 bg-black/25">
+        <span className="material-symbols-outlined text-[13px] text-[#6cf8bb] animate-pulse">volunteer_activism</span>
+        <p className="text-center text-[10px] font-black uppercase tracking-widest text-[#a5f3fc]">
+          ໃຫ້ກຳລັງໃຈໂດຍທິມພັດທະນາ &nbsp;—&nbsp; ນຳລະຫັດແນະນຳໃສ່ໃນແອບຊື້ເລກຂອງທ່ານ
         </p>
-        <span className="material-symbols-outlined text-[14px] text-[#6cf8bb]">volunteer_activism</span>
+        <span className="material-symbols-outlined text-[13px] text-[#6cf8bb] animate-pulse">volunteer_activism</span>
       </div>
-      {/* fade edges */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#020818] to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#020818] to-transparent" />
-
-      <div className="flex w-max animate-marquee-ltr py-3">
-        {repeated.map((b, idx) => (
-          <div
-            key={`${b.banner_id}-${idx}`}
-            className="mx-4 flex items-center gap-3 rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-2 backdrop-blur-sm"
-          >
-            <BannerLogo type={b.logo_type} logoUrl={resolveUploadUrl(b.logo_url)} />
-            <span className="text-sm font-bold text-white/90 whitespace-nowrap">{b.label}</span>
-            <span className="text-white/20">|</span>
-            <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[13px] text-[#6cf8bb]">card_giftcard</span>
-              <span className="text-[11px] font-black tracking-widest text-[#6cf8bb] whitespace-nowrap">{b.ref_code}</span>
+      <div className="relative flex items-center min-h-[56px]">
+        <button onClick={() => scroll('left')} className="absolute left-2.5 z-20 w-8 h-8 rounded-full bg-black/75 hover:bg-[#d4af37] text-white hover:text-black flex items-center justify-center border border-white/10 hover:border-transparent opacity-0 group-hover/banner:opacity-100 transition-all duration-300" aria-label="Scroll left">
+          <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+        </button>
+        <button onClick={() => scroll('right')} className="absolute right-2.5 z-20 w-8 h-8 rounded-full bg-black/75 hover:bg-[#d4af37] text-white hover:text-black flex items-center justify-center border border-white/10 hover:border-transparent opacity-0 group-hover/banner:opacity-100 transition-all duration-300" aria-label="Scroll right">
+          <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+        </button>
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#020617] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#020617] to-transparent" />
+        <div ref={scrollRef} className="flex-1 flex gap-3.5 overflow-x-auto scrollbar-none py-3 px-10 scroll-smooth">
+          {banners.map((b) => (
+            <div key={b.banner_id} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.15] px-4 py-2 backdrop-blur-md shrink-0 transition-all duration-300">
+              <BannerLogo type={b.logo_type} logoUrl={resolveUploadUrl(b.logo_url)} />
+              <span className="text-xs font-extrabold text-white/95 whitespace-nowrap">{b.label}</span>
+              <span className="text-white/20 font-light">|</span>
+              <div className="flex items-center gap-1.5 bg-black/35 px-2.5 py-1 rounded-lg border border-[#6cf8bb]/15">
+                <span className="material-symbols-outlined text-[12px] text-[#6cf8bb]">card_giftcard</span>
+                <span className="text-[10px] font-black tracking-widest text-[#6cf8bb] whitespace-nowrap">{b.ref_code}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -109,203 +199,213 @@ function HomePageSkeleton() {
         </div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[0,1,2,3].map(i => (
-          <div key={i} className="bg-card rounded-2xl p-5 border border-border h-28 animate-pulse" />
-        ))}
+        {[0, 1, 2, 3].map(i => <div key={i} className="hp-glass rounded-2xl p-5 h-28 animate-pulse" />)}
       </div>
-      <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border min-h-[220px] animate-pulse" />
+      <div className="hp-glass rounded-2xl p-6 sm:p-8 min-h-[220px] animate-pulse" />
     </div>
   )
 }
 
-// ── Feature card ────────────────────────────────────────────────────
-function FeatureCard({ icon, title, desc, to, accent, bg, badge }) {
+// ── Feature card ─────────────────────────────────────────────────────
+function FeatureCard({ icon, title, desc, to, accent, badge }) {
   return (
     <Link
       to={to}
-      className="group relative bg-card/60 backdrop-blur-md border border-white/[0.08] dark:border-white/[0.06] rounded-2xl p-5 sm:p-6 flex flex-col gap-4 hover:shadow-xl hover:shadow-black/[0.06] hover:-translate-y-1 transition-all duration-200 overflow-hidden shadow-sm"
+      className="hp-feat group relative hp-glass rounded-3xl p-6 flex flex-col gap-4 overflow-hidden"
+      style={{ '--hover-glow': `${accent}22`, '--hover-border': `${accent}45` }}
     >
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ background: `radial-gradient(ellipse at 0% 0%, ${accent}08, transparent 60%)` }}
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `radial-gradient(circle at 10% 10%, ${accent}18, transparent 65%)` }}
       />
       <div className="relative z-10 flex items-start justify-between">
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center shadow-sm"
-          style={{ background: `${accent}15` }}
+          className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110 group-hover:rotate-6"
+          style={{ background: `${accent}16`, border: `1px solid ${accent}2e` }}
         >
-          <span className="material-symbols-outlined text-[22px]" style={{ color: accent, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+          <span className="material-symbols-outlined text-[24px]" style={{ color: accent, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
         </div>
         {badge && (
-          <span
-            className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
-            style={{ color: accent, background: `${accent}12`, borderColor: `${accent}30` }}
-          >
+          <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border shadow-sm"
+            style={{ color: accent, background: `${accent}14`, borderColor: `${accent}30` }}>
             {badge}
           </span>
         )}
       </div>
-      <div className="relative z-10">
-        <h3 className="font-extrabold text-foreground text-sm mb-1 group-hover:text-primary transition-colors">{title}</h3>
-        <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+      <div className="relative z-10 space-y-2 mt-1">
+        <h3 className="font-extrabold text-sm text-white group-hover:text-amber-300 transition-colors duration-300">{title}</h3>
+        <p className="text-xs leading-relaxed font-medium text-white/40 group-hover:text-white/60 transition-colors duration-300">{desc}</p>
       </div>
-      <div className="relative z-10 flex items-center gap-1 text-xs font-bold mt-auto" style={{ color: accent }}>
-        ເຂົ້າໄປເບິ່ງ
-        <span className="material-symbols-outlined text-[14px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      <div className="relative z-10 flex items-center gap-1.5 text-xs font-black mt-auto pt-4 group-hover:gap-2.5 transition-all duration-300" style={{ color: accent }}>
+        <span>ເຂົ້າໄປເບິ່ງ</span>
+        <span className="material-symbols-outlined text-[14px] group-hover:translate-x-1.5 transition-transform duration-300">arrow_forward</span>
       </div>
     </Link>
   )
 }
 
-// ── Stat card (redesigned) ─────────────────────────────────────────
+// ── Stat card ─────────────────────────────────────────────────────────
 function StatCard({ icon, label, value, image, accent = '#003fb1' }) {
   return (
-    <div className="group relative bg-card/70 backdrop-blur-sm rounded-2xl p-5 border border-border/60 hover:shadow-lg hover:shadow-black/[0.05] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
-      <div
-        className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-[0.06] -translate-y-8 translate-x-8"
-        style={{ background: accent }}
-      />
-      <div className="relative z-10">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-          style={{ background: `${accent}15` }}
-        >
-          {image
-            ? <img src={image} alt={label} className="w-7 h-7 object-contain rounded-lg" />
-            : <span className="material-symbols-outlined text-[20px]" style={{ color: accent, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
-          }
+    <div 
+      className="group relative hp-glass rounded-3xl p-5 overflow-hidden transition-all duration-300 hover:-translate-y-1"
+      style={{ '--hover-glow': `${accent}15`, '--hover-border': `${accent}40` }}
+    >
+      <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: `${accent}25` }} />
+      <div className="relative z-10 flex flex-col justify-between h-full gap-3">
+        <div className="flex items-center justify-between">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-105"
+            style={{ background: `${accent}18`, border: `1px solid ${accent}30` }}>
+            {image
+              ? <img src={image} alt={label} className="w-7 h-7 object-contain rounded-lg" />
+              : <span className="material-symbols-outlined text-[20px]" style={{ color: accent, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+            }
+          </div>
+          <div className="hp-spark">
+            {[30, 55, 80, 100].map((h, i) => (
+              <div 
+                key={i} 
+                className="hp-spark-bar" 
+                style={{ 
+                  height: `${h}%`, 
+                  background: `linear-gradient(to top, ${accent}, #fff)`, 
+                  opacity: 0.25 + i * 0.15 
+                }} 
+              />
+            ))}
+          </div>
         </div>
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
-        <p className="text-base font-extrabold text-foreground leading-tight">{value}</p>
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-white/30">{label}</p>
+          <p className="text-lg font-black leading-none tracking-wide text-white group-hover:text-amber-300 transition-colors duration-300">{value}</p>
+        </div>
       </div>
+      <div className="absolute bottom-0 inset-x-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: `linear-gradient(to right, transparent, ${accent}, transparent)` }} />
     </div>
   )
 }
 
-// ── Result ticker item ─────────────────────────────────────────────
+// ── Ticker item ───────────────────────────────────────────────────────
 function TickerItem({ draw, color }) {
   return (
-    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.07] backdrop-blur-sm border border-white/[0.12] shrink-0">
-      {color && <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />}
-      <span className="text-white/70 text-[10px] font-bold">ງວດ {draw.draw_number}</span>
-      <span className="text-white font-black text-xs tracking-widest" style={{ fontFamily: 'Inter, monospace' }}>{draw.full_result}</span>
+    <span
+      className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.06] hover:border-white/15 transition-all duration-300 shrink-0 shadow-sm"
+      style={{ boxShadow: `inset 0 0 12px ${color}08` }}
+    >
+      {color && <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-lg" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />}
+      <span className="text-white/40 text-[9px] font-black uppercase tracking-wider">ງວດ {draw.draw_number}</span>
+      <span className="text-white font-extrabold text-xs tracking-widest">{draw.full_result}</span>
     </span>
   )
 }
 
-// ── AI News Section ──────────────────────────────────────────────────────────
+// ── AI News Section ───────────────────────────────────────────────────
 function HomeNewsSection({ draws }) {
   const [copied, setCopied] = useState(false)
-
-  // Analyse last 50 draws (same default as Analytics page)
   const analytics = useMemo(() => computeAnalytics(draws, '50'), [draws])
-  const top10     = useMemo(() => computeCombinedTop10(analytics), [analytics])
+  const top10 = useMemo(() => computeCombinedTop10(analytics), [analytics])
   const latestDraw = draws?.[0] ?? null
-
-  const article = useMemo(
-    () => buildArticle(top10, analytics, latestDraw, analytics?.n ?? 0, null),
-    [top10, analytics, latestDraw]
-  )
+  const article = useMemo(() => buildArticle(top10, analytics, latestDraw, analytics?.n ?? 0, null), [top10, analytics, latestDraw])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(article).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+    navigator.clipboard.writeText(article).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
   }
 
   if (!top10.length) return null
 
   return (
-    <section>
-      {/* Section header */}
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+    <section className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-[#f97316]/15 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[#f97316] text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>newspaper</span>
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
+            <span className="material-symbols-outlined text-amber-500 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>newspaper</span>
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-foreground uppercase tracking-wider text-[11px]">AI ເລກເດັ່ນ</h2>
-            <p className="text-[11px] text-muted-foreground mt-0.5">ລວມ 4 ສັນຍານ · ວິເຄາະ {analytics?.n ?? 0} ງວດ</p>
+            <h2 className="text-sm font-black uppercase tracking-wider text-white">AI Predictive Hub</h2>
+            <p className="text-[10px] mt-0.5 font-bold text-white/30">ວິເຄາະສະຖິຕິ {analytics?.n ?? 0} ງວດຫຼ້າສຸດ</p>
           </div>
         </div>
-        <Link
-          to="/analytics"
-          className="inline-flex items-center gap-1.5 text-[#f97316] text-xs font-bold hover:gap-2.5 transition-all duration-200 group"
-        >
-          ວິເຄາະເຕັມ
+        <Link to="/analytics" className="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-xs font-black hover:gap-2.5 transition-all duration-300 group">
+          ວິເຄາະເຕັມຮູບແບບ
           <span className="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
         </Link>
       </div>
 
-      {/* Top 10 number pills */}
-      <div className="bg-zinc-950/90 backdrop-blur-xl rounded-2xl p-5 border border-white/[0.08] shadow-xl mb-4">
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">TOP 10</span>
+      {/* Top 10 */}
+      <div className="hp-glass rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-1/4 w-40 h-40 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(99,102,241,0.08)' }} />
+        <div className="flex items-center gap-3 mb-6 flex-wrap justify-between">
+          <span className="text-[9px] font-black tracking-widest text-white/30">TOP 10 NUMBERS (ຄາດການ)</span>
           <div className="flex gap-1.5 flex-wrap">
             {COMBINED_SIGNALS.map(({ label, color }) => (
-              <span key={label} className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                style={{ background: color + '20', color, border: `1px solid ${color}40` }}>
-                {label}
-              </span>
+              <span key={label} className="text-[8px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm"
+                style={{ background: color + '15', color, border: `1px solid ${color}25` }}>{label}</span>
             ))}
           </div>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-3">
           {top10.map((s, i) => (
-            <div key={s.num} className={`relative flex flex-col items-center px-3 py-2.5 rounded-xl min-w-[52px] transition-all
-              ${i === 0 ? 'bg-[#fbbf24]/20 border border-[#fbbf24]/40' : i < 3 ? 'bg-[#818cf8]/15 border border-[#818cf8]/30' : 'bg-white/[0.05] border border-white/[0.08]'}`}>
+            <div key={s.num}
+              className="relative flex flex-col items-center px-3 py-4.5 rounded-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 border"
+              style={i === 0
+                ? { background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.35)', boxShadow: '0 4px 16px rgba(245,158,11,0.08)' }
+                : i < 3
+                  ? { background: 'rgba(99,102,241,0.05)', borderColor: 'rgba(99,102,241,0.25)' }
+                  : { background: 'rgba(255,255,255,0.01)', borderColor: 'rgba(255,255,255,0.06)' }
+              }
+            >
               {i < 3 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black shadow-sm"
-                  style={{ background: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : '#b45309', color: '#000' }}>
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shadow-md border border-white/10"
+                  style={{ background: i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : '#b45309', color: i === 0 ? '#78350f' : '#fff' }}>
                   {i + 1}
                 </span>
               )}
-              <span className={`font-black font-mono text-xl leading-none
-                ${i === 0 ? 'text-[#fbbf24]' : i < 3 ? 'text-[#818cf8]' : 'text-white/80'}`}>
+              <span className="font-black text-2xl leading-none tracking-tight font-mono"
+                style={{ color: i === 0 ? '#fbbf24' : i < 3 ? '#a5b4fc' : 'rgba(255,255,255,0.85)' }}>
                 {s.num}
               </span>
-              <span className="text-[8px] mt-1 font-bold text-white/40">{s.probability}%</span>
-              {/* mini score bars */}
-              <div className="flex gap-0.5 mt-1.5">
+              <span className="text-[9px] mt-1.5 font-black text-white/40">{s.probability}%</span>
+              <div className="flex gap-0.5 mt-3 w-full justify-center">
                 {COMBINED_SIGNALS.map(({ key, color }) => (
-                  <div key={key} className="w-5 h-1 bg-white/[0.08] rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${(s[key] / 25) * 100}%`, background: color }} />
+                  <div key={key} className="w-2.5 h-1 rounded-full overflow-hidden bg-white/5" title={key}>
+                    <div className="h-full rounded-full shadow-[0_0_4px_currentColor]" style={{ width: `${(s[key] / 25) * 100}%`, background: color, color }} />
                   </div>
                 ))}
               </div>
             </div>
           ))}
         </div>
-
-        {/* Disclaimer */}
-        <p className="text-[10px] text-white/25 mt-4 flex items-start gap-1">
-          <span className="material-symbols-outlined text-[11px] shrink-0 mt-0.5">warning</span>
-          ຂໍ້ມູນນີ້ເປັນການວິເຄາະສະຖິຕິ ບໍ່ຮັບປະກັນຜົນລາງວັນ
+        <p className="text-[10px] mt-5 flex items-center gap-1.5 font-bold text-white/30">
+          <span className="material-symbols-outlined text-[14px] text-amber-500/80 shrink-0">warning</span>
+          ຂໍ້ມູນນີ້ເປັນການວິເຄາະສະຖິຕິເທົ່ານັ້ນ ບໍ່ຮັບປະກັນຜົນລາງວັນໃນອະນາຄົດ
         </p>
       </div>
 
-      {/* Article preview + copy */}
-      <div className="bg-zinc-950/90 backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.07]">
+      {/* Article preview */}
+      <div className="hp-glass rounded-3xl shadow-2xl overflow-hidden border border-white/[0.06]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06] bg-white/[0.01]">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px] text-[#fbbf24]">article</span>
-            <span className="font-black text-white/80 text-xs">ບົດຄວາມຂ່າວ — ອັດຕະໂນມັດ</span>
+            <span className="material-symbols-outlined text-[16px] text-indigo-400" style={{ fontVariationSettings: "'FILL' 1" }}>article</span>
+            <span className="font-extrabold text-[10px] tracking-widest text-white/40">AI AUTOMATED REPORT</span>
           </div>
-          <button
-            onClick={handleCopy}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all
-              ${copied ? 'bg-[#6cf8bb] text-black' : 'bg-white/[0.07] text-white/60 hover:bg-white/[0.14] hover:text-white'}`}
+          <button onClick={handleCopy}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer"
+            style={copied
+              ? { background: '#10b981', color: '#fff', boxShadow: '0 0 12px rgba(16,185,129,0.3)' }
+              : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.70)', border: '1px solid rgba(255,255,255,0.08)' }
+            }
           >
             <span className="material-symbols-outlined text-[13px]">{copied ? 'check' : 'content_copy'}</span>
-            {copied ? 'ຄັດລອກແລ້ວ!' : 'ຄັດລອກ'}
+            {copied ? 'Copied!' : 'Copy report'}
           </button>
         </div>
-        <pre className="px-5 py-4 text-[11px] leading-relaxed text-white/60 font-mono whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
+        <pre className="px-5 py-4.5 text-[10.5px] leading-relaxed font-mono whitespace-pre-wrap break-words max-h-64 overflow-y-auto bg-black/10 text-white/55">
           {article}
         </pre>
-        <div className="px-5 py-3 border-t border-white/[0.07] flex justify-end">
-          <Link to="/analytics" className="text-[11px] font-bold text-[#818cf8] hover:text-[#a78bfa] flex items-center gap-1 transition-colors">
+        <div className="px-5 py-3 flex justify-end border-t border-white/[0.06] bg-black/5">
+          <Link to="/analytics" className="text-[10px] font-black uppercase tracking-wider text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 transition-colors">
             ເຂົ້າໄປ Analytics ລາຍລະອຽດ
             <span className="material-symbols-outlined text-[13px]">open_in_new</span>
           </Link>
@@ -315,6 +415,7 @@ function HomeNewsSection({ draws }) {
   )
 }
 
+// ── Main Page ──────────────────────────────────────────────────────────
 export default function HomePage() {
   const { draws, types, animals } = useData();
   const { stats } = useStatistics();
@@ -326,81 +427,27 @@ export default function HomePage() {
     ? draws
     : draws.filter(d => String(d.type_id) === String(selectedType))
 
-  const latest = filteredDraws.find(d => d.status === 'published') || filteredDraws[0]
+  const latest      = filteredDraws.find(d => d.status === 'published') || filteredDraws[0]
   const recentDraws = latest ? filteredDraws.filter(d => d.draw_id !== latest.draw_id).slice(0, 4) : []
-
-  // Ticker: last 8 published draws (all types) for the scroll strip
   const tickerDraws = draws.filter(d => d.status === 'published').slice(0, 8)
 
   const statItems = [
-    {
-      icon: 'dataset',
-      label: 'ງວດທັງໝົດ',
-      value: `${draws.length} ງວດ`,
-      accent: '#003fb1',
-    },
-    {
-      icon: 'pets',
-      label: 'ນາມສັດຮ້ອນ',
-      value: stats?.animalStats?.[0]
-        ? `${stats.animalStats[0].name} (${stats.animalStats[0].frequencyPercent}%)`
-        : '-',
-      image: stats?.animalStats?.[0]?.image_url || null,
-      accent: '#006c49',
-    },
-    {
-      icon: 'local_fire_department',
-      label: 'ເລກ Hot ສູງສຸດ',
-      value: stats?.hotNumbers?.[0]?.number || '-',
-      accent: '#c2410c',
-    },
-    {
-      icon: 'ac_unit',
-      label: 'ບໍ່ອອກດົນສຸດ',
-      value: stats?.coldNumbers?.[0]
-        ? `${stats.coldNumbers[0].number} (${stats.coldNumbers[0].missedRounds} ງວດ)`
-        : '-',
-      accent: '#0369a1',
-    },
+    { icon: 'dataset',              label: 'ງວດທັງໝົດ',  value: `${draws.length} ງວດ`,                                                                                  accent: '#3b82f6' },
+    { icon: 'pets',                 label: 'ນາມສັດຮ້ອນ', value: stats?.animalStats?.[0] ? `${stats.animalStats[0].name} (${stats.animalStats[0].frequencyPercent}%)` : '-', image: stats?.animalStats?.[0]?.image_url || null, accent: '#10b981' },
+    { icon: 'local_fire_department',label: 'ເລກ Hot ສູງສຸດ',value: stats?.hotNumbers?.[0]?.number || '-',                                                                 accent: '#f97316' },
+    { icon: 'ac_unit',              label: 'ບໍ່ອອກດົນສຸດ', value: stats?.coldNumbers?.[0] ? `${stats.coldNumbers[0].number} (${stats.coldNumbers[0].missedRounds} ງວດ)` : '-', accent: '#38bdf8' },
   ]
 
   const features = [
-    {
-      icon: 'analytics',
-      title: 'ສະຖິຕິ & ການວິເຄາະ',
-      desc: 'ສະຖິຕິລາຍລະອຽດ, ເລກ Hot/Cold, ການແຈກຢາຍຕົວເລກ ແລະ trend ສຸດທ້ອງ',
-      to: '/statistics',
-      accent: '#003fb1',
-      badge: 'Dashboard',
-    },
-    {
-      icon: 'auto_awesome',
-      title: 'ຕຳລາຄວາມຝັນ',
-      desc: 'ແປຄວາມຝັນ 40 ນາມສັດ ແລະ ຊອກເລກທີ່ກ່ຽວຂ້ອງ ຕາມຕຳລາໂບຮານ',
-      to: '/search',
-      accent: '#7c3aed',
-      badge: 'ໃໝ່',
-    },
-    {
-      icon: 'manage_search',
-      title: 'ຄົ້ນຫາຕາມເລກ',
-      desc: 'ກວດສອບປະຫວັດຂອງຕົວເລກ 00–99 ວ່າອອກເວລາໃດ ແລະ ຄວາມຖີ່ສໍ່ານ',
-      to: '/search',
-      accent: '#006c49',
-    },
-    {
-      icon: 'trending_up',
-      title: 'AI Analytics',
-      desc: 'ວິເຄາະ pattern, momentum, gap analysis ດ້ວຍ algorithm ທີ່ທັນສະໄໝ',
-      to: '/analytics',
-      accent: '#d97706',
-      badge: 'AI',
-    },
+    { icon: 'analytics',     title: 'ສະຖິຕິ & ການວິເຄາະ', desc: 'ສະຖິຕິລາຍລະອຽດ, ເລກ Hot/Cold, ການແຈກຢາຍຕົວເລກ ແລະ trend ສຸດທ້ອງ', to: '/statistics', accent: '#3b82f6',  badge: 'Dashboard' },
+    { icon: 'auto_awesome',  title: 'ຕຳລາຄວາມຝັນ',        desc: 'ແປຄວາມຝັນ 40 ນາມສັດ ແລະ ຊອກເລກທີ່ກ່ຽວຂ້ອງ ຕາມຕຳລາໂບຮານ',             to: '/search',     accent: '#7c3aed',  badge: 'ໃໝ່' },
+    { icon: 'manage_search', title: 'ຄົ້ນຫາຕາມເລກ',        desc: 'ກວດສອບປະຫວັດຂອງຕົວເລກ 00–99 ວ່າອອກເວລາໃດ ແລະ ຄວາມຖີ່ສໍ່ານ',           to: '/search',     accent: '#10b981' },
+    { icon: 'trending_up',   title: 'AI Analytics',         desc: 'ວິເຄາະ pattern, momentum, gap analysis ດ້ວຍ algorithm ທີ່ທັນສະໄໝ',            to: '/analytics',  accent: '#f59e0b',  badge: 'AI' },
   ]
 
-  const latestDraw = draws.filter(d => d.status === 'published')[0]
-  const latestDateStr = latestDraw?.draw_date ?? ''
-  const latestNumber = latestDraw?.result_number ?? ''
+  const latestDraw     = draws.filter(d => d.status === 'published')[0]
+  const latestDateStr  = latestDraw?.draw_date ?? ''
+  const latestNumber   = latestDraw?.result_number ?? ''
   const latestTypeName = latestDraw?.type_name ?? 'ພັດທະນາ'
 
   const seoTitle = latestNumber
@@ -411,119 +458,135 @@ export default function HomePage() {
     : 'ສູນລວມຜົນຫວຍພັດທະນາ ຖ່າຍທອດສົດຫວຍລາວ ວິເຄາະຫວຍ | ศูนย์รวมผลหวยลาว ถ่ายทอดสด วิเคราะห์หวย'
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 select-none">
+      <style>{PAGE_STYLE}</style>
       <SEO
         title={seoTitle}
         description={seoDesc}
-        keywords={[
-          latestNumber, latestDateStr, latestTypeName,
-          `ຜົນຫວຍ ${latestDateStr}`, `เลข ${latestNumber}`, `หวยงวด ${latestDateStr}`,
-          'ຫວຍຫຼ້າສຸດ', 'หวยล่าสุด', 'ผลหวยวันนี้',
-        ].filter(Boolean)}
+        keywords={[latestNumber, latestDateStr, latestTypeName, `ຜົນຫວຍ ${latestDateStr}`, `เลข ${latestNumber}`, `หวยงวด ${latestDateStr}`, 'ຫວຍຫຼ້າສຸດ', 'หวยล่าสุด', 'ผลหวยวันนี้'].filter(Boolean)}
         url="/"
-        jsonLd={[
-          websiteSchema(),
-          breadcrumbSchema([{ name: 'ໜ້າຫຼັກ', url: 'https://laolots.com/' }]),
-          ...(latestDraw ? [lotteryResultSchema(latestDraw)] : []),
-        ]}
+        jsonLd={[websiteSchema(), breadcrumbSchema([{ name: 'ໜ້າຫຼັກ', url: 'https://laolots.com/' }]), ...(latestDraw ? [lotteryResultSchema(latestDraw)] : [])]}
       />
       <LiveVdoBanner />
 
-      {/* ─── Hero ─── */}
-      <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/[0.05]">
-        {/* Layered background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#09090b] via-[#0e0e16] to-[#0d0d13]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.20),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,189,248,0.14),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.07),transparent_70%)]" />
-
-        {/* Grid pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+      {/* ─── Hero Section ─── */}
+      <div className="relative rounded-[2rem] overflow-hidden bg-zinc-950 border border-white/[0.08] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85)]">
+        {/* Graphic grid layout and radial highlights */}
+        <div className="absolute inset-0 bg-grid-glow bg-repeat opacity-[0.25]" />
+        
+        {/* Pulsating backdrop highlights */}
+        <div className="absolute -top-[30%] -right-[20%] w-[80%] h-[80%] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.18) 0%, transparent 70%)', animation: 'pulse-soft 10s ease-in-out infinite' }} />
+        <div className="absolute -bottom-[20%] -left-[10%] w-[60%] h-[60%] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)' }} />
+        
+        {/* Floating background decorative lottery balls */}
+        <div className="absolute top-[15%] right-[32%] w-14 h-14 rounded-full opacity-[0.18] pointer-events-none blur-[1px]"
+          style={{ 
+            background: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #f59e0b 50%, #78350f 100%)',
+            animation: 'float-ball-1 12s ease-in-out infinite' 
+          }} 
+        />
+        <div className="absolute bottom-[20%] right-[8%] w-10 h-10 rounded-full opacity-[0.12] pointer-events-none blur-[2px]"
+          style={{ 
+            background: 'radial-gradient(circle at 35% 30%, #fed7aa 0%, #ea580c 50%, #7c2d12 100%)',
+            animation: 'float-ball-2 15s ease-in-out infinite' 
+          }} 
         />
 
-        {/* Watermark */}
-        <div className="absolute right-0 bottom-0 text-[10rem] sm:text-[15rem] font-black text-white/[0.035] leading-none select-none pointer-events-none pr-2 pb-0">
-          ຫວຍ
-        </div>
-
-        <div className="relative z-10 px-8 sm:px-12 pt-10 sm:pt-14 pb-6">
-          {/* Badge row */}
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl border border-white/[0.15] rounded-full px-4 py-1.5 shadow-lg shadow-violet-500/10">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-300 animate-pulse" />
-              <span className="text-white/90 text-[11px] font-bold uppercase tracking-widest">ຄັງຂໍ້ມູນຫວຍ — ລາວ</span>
+        <div className="relative z-10 px-8 sm:px-16 pt-14 sm:pt-18 pb-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-8 space-y-6">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="inline-flex items-center gap-2 bg-white/[0.04] backdrop-blur-xl border border-white/[0.1] rounded-full px-4 py-1.5 shadow-md">
+                <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
+                <span className="text-white/95 text-[9px] font-black uppercase tracking-widest">ຄັງຂໍ້ມູນຫວຍ — ລາວ</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 bg-[#10b981]/[0.08] border border-[#10b981]/25 rounded-full px-3.5 py-1.5 shadow-sm">
+                <span className="material-symbols-outlined text-[#10b981] text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>database</span>
+                <span className="text-[#10b981] text-[9px] font-black">{draws.length}+ ງວດ</span>
+              </div>
             </div>
-            <div className="inline-flex items-center gap-1.5 bg-sky-400/[0.12] border border-sky-400/25 rounded-full px-3 py-1.5">
-              <span className="material-symbols-outlined text-sky-300 text-[12px]">database</span>
-              <span className="text-sky-300 text-[10px] font-bold">{draws.length}+ ງວດ</span>
+            <h1 className="text-4xl sm:text-6.5xl font-black text-white leading-none tracking-tight">
+              ຜົນຫວຍ
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] via-yellow-200 to-emerald-400 sm:ml-4 block sm:inline">
+                ລ່າສຸດ
+              </span>
+            </h1>
+            <p className="text-white/60 text-sm sm:text-base max-w-xl leading-relaxed font-medium">
+              ກວດສອບຜົນຫວຍ, ສະຖິຕິ, ນາມສັດ ແລະ ວິເຄາະຕົວເລກ ຈາກຖານຂໍ້ມູນທີ່ຄົບຖ້ວນ ແລະ ທັນສະໄໝ ດ້ວຍລະບົບ AI Analytics.
+            </p>
+            <div className="flex flex-wrap gap-3.5 pt-2">
+              <Link to="/statistics" className="inline-flex items-center gap-2 bg-[#d4af37] hover:bg-[#b8860b] text-black px-7 py-3.5 rounded-full font-black text-xs uppercase tracking-wider shadow-lg shadow-[#d4af37]/10 hover:-translate-y-0.5 transition-all duration-300">
+                <span className="material-symbols-outlined text-[16px]">bar_chart</span>
+                ເບິ່ງສະຖິຕິ
+              </Link>
+              <Link to="/search" className="inline-flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-white px-7 py-3.5 rounded-full font-black text-xs uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5">
+                <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                ຕຳລາຄວາມຝັນ
+              </Link>
+              <Link to="/history" className="inline-flex items-center gap-2 border border-white/[0.12] bg-white/[0.03] backdrop-blur-sm text-white/80 px-7 py-3.5 rounded-full font-black text-xs uppercase tracking-wider hover:bg-white/[0.08] hover:text-white transition-all duration-300 hover:-translate-y-0.5">
+                <span className="material-symbols-outlined text-[16px]">history</span>
+                ປະຫວັດຫວຍ
+              </Link>
             </div>
           </div>
 
-          {/* Title */}
-          <h1 className="text-4xl sm:text-6xl font-black text-white leading-tight mb-4">
-            ຜົນຫວຍ
-            <span className="text-violet-300 sm:ml-3 block sm:inline">ລ່າສຸດ</span>
-          </h1>
-          <p className="text-white/65 text-sm sm:text-base max-w-xl mb-8 leading-relaxed">
-            ກວດສອບຜົນຫວຍ, ສະຖິຕິ, ນາມສັດ ແລະ ວິເຄາະຕົວເລກ ຈາກຖານຂໍ້ມູນທີ່ຄົບຖ້ວນ ແລະ ທັນສະໄໝ
-          </p>
-
-          {/* CTA buttons */}
-          <div className="flex flex-wrap gap-3 mb-10">
-            <Link
-              to="/statistics"
-              className="inline-flex items-center gap-2 bg-white/95 text-zinc-900 px-6 py-2.5 rounded-full font-bold text-sm shadow-lg hover:shadow-xl hover:bg-white hover:-translate-y-0.5 transition-all duration-200"
-            >
-              <span className="material-symbols-outlined text-[16px]">bar_chart</span>
-              ເບິ່ງສະຖິຕິ
-            </Link>
-            <Link
-              to="/search"
-              className="inline-flex items-center gap-2 bg-sky-400/[0.15] border border-sky-400/30 text-sky-300 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-sky-400/[0.25] transition-all duration-200"
-            >
-              <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
-              ຕຳລາຄວາມຝັນ
-            </Link>
-            <Link
-              to="/history"
-              className="inline-flex items-center gap-2 border border-white/[0.18] bg-white/[0.07] backdrop-blur-sm text-white/80 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white/[0.14] hover:text-white transition-all duration-200"
-            >
-              <span className="material-symbols-outlined text-[16px]">history</span>
-              ປະຫວັດ
-            </Link>
-          </div>
-
-          {/* ── Ticker strip ── */}
-          {tickerDraws.length > 0 && (
-            <div className="border-t border-white/[0.07] pt-5 pb-1 overflow-hidden">
-              <div className="flex items-center gap-3 mb-2.5">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest shrink-0">ຜົນຫຼ້າສຸດ</span>
-                <div className="flex-1 h-px bg-white/10" />
+          {/* Right hologram card */}
+          <div className="lg:col-span-4 hidden lg:block relative justify-self-end w-full max-w-[290px]">
+            <div className="absolute inset-0 rounded-[2rem] opacity-20 blur-2xl animate-pulse duration-[6000ms]"
+              style={{ background: 'linear-gradient(to right, #d4af37, #b8860b)' }} />
+            <div className="relative bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-[2.2rem] p-6 shadow-2xl space-y-6">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black tracking-widest text-white/30">LIVE RESULT PREVIEW</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#d4af37] animate-ping" />
               </div>
-              <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2 [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
-                {tickerDraws.map(d => {
-                  const typeColor = types?.find(t => t.type_id === d.type_id)?.color || '#6cf8bb'
-                  return <TickerItem key={d.draw_id} draw={d} color={typeColor} />
-                })}
+              <div className="space-y-2">
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/40">ລາງວັນທີ 1</p>
+                <div className="text-4xl font-black text-white tracking-[0.2em] font-mono leading-none">{latestNumber || '888888'}</div>
+              </div>
+              <div className="h-px bg-gradient-to-r from-white/10 to-transparent" />
+              <div className="flex justify-between items-center text-xs">
+                <div>
+                  <p className="text-[8px] font-black uppercase text-white/30">ງວດວັນທີ</p>
+                  <p className="font-extrabold text-white/85 mt-0.5">{latestDateStr || '09.06.2026'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[8px] font-black uppercase text-white/30">ນາມສັດ</p>
+                  <p className="text-[#d4af37] font-black mt-0.5">{latestTypeName}</p>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
+
+        {/* Ticker strip */}
+        {tickerDraws.length > 0 && (
+          <div className="border-t border-white/[0.08] mx-8 sm:mx-16 pt-5 pb-5 overflow-hidden">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-[9px] font-black uppercase tracking-widest shrink-0 text-white/30">ຜົນຫຼ້າສຸດ</span>
+              <div className="flex-1 h-px bg-white/[0.06]" />
+            </div>
+            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2 hp-marquee-mask">
+              {tickerDraws.map(d => {
+                const typeColor = types?.find(t => t.type_id === d.type_id)?.color || '#d4af37'
+                return <TickerItem key={d.draw_id} draw={d} color={typeColor} />
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ─── Feature Showcase ─── */}
       <section>
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-8 h-8 rounded-xl bg-primary/10 backdrop-blur-sm ring-1 ring-primary/15 flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>apps</span>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/[0.04] border border-white/[0.1] shadow-sm">
+            <span className="material-symbols-outlined text-[#d4af37] text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>apps</span>
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-foreground uppercase tracking-wider text-[11px]">ຄຸນສົມບັດ</h2>
-            <p className="text-[11px] text-muted-foreground mt-0.5">ທຸກສ່ວນທີ່ທ່ານຕ້ອງການ ຢູ່ໃນທີ່ດຽວ</p>
+            <h2 className="text-sm font-black uppercase tracking-wider text-white">ຄຸນສົມບັດຫຼັກ</h2>
+            <p className="text-[10px] mt-0.5 text-white/30 font-bold">ທຸກສ່ວນທີ່ທ່ານຕ້ອງການ ຢູ່ໃນທີ່ດຽວ</p>
           </div>
-          <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent" />
+          <div className="flex-1 h-px bg-gradient-to-r from-white/[0.08] to-transparent" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map(f => <FeatureCard key={f.title} {...f} />)}
@@ -533,29 +596,27 @@ export default function HomePage() {
       {/* ─── Type Filter Tabs ─── */}
       {types && types.length > 1 && (
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1">ປະເພດ:</span>
+          <span className="text-[10px] font-black uppercase tracking-widest mr-1.5 text-white/30">ປະເພດຫວຍ:</span>
           <button
             onClick={() => setSelectedType('all')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all ${
-              selectedType === 'all'
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
-                : 'bg-card/70 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
-            }`}
+            className="px-4 py-2 rounded-full text-xs font-black border transition-all cursor-pointer"
+            style={selectedType === 'all'
+              ? { background: '#d4af37', color: '#000', borderColor: '#d4af37', boxShadow: '0 4px 14px rgba(212,175,55,0.25)' }
+              : { background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.45)', borderColor: 'rgba(255,255,255,0.08)' }
+            }
           >
             ທັງໝົດ ({draws.length})
           </button>
           {types.filter(t => t.is_active != 0).map(t => {
-            const color = t.color || '#003fb1'
+            const color = t.color || '#d4af37'
             const active = String(selectedType) === String(t.type_id)
             const cnt = draws.filter(d => String(d.type_id) === String(t.type_id)).length
             return (
-              <button
-                key={t.type_id}
-                onClick={() => setSelectedType(String(t.type_id))}
-                className="px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all"
+              <button key={t.type_id} onClick={() => setSelectedType(String(t.type_id))}
+                className="px-4 py-2 rounded-full text-xs font-black border transition-all cursor-pointer"
                 style={active
-                  ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 2px 8px ${color}40` }
-                  : { background: 'transparent', color, borderColor: `${color}50` }
+                  ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 4px 14px ${color}35` }
+                  : { background: 'transparent', color, borderColor: `${color}40` }
                 }
               >
                 {t.type_name} ({cnt})
@@ -567,21 +628,21 @@ export default function HomePage() {
 
       {/* ─── Latest Result ─── */}
       {latest ? (
-        <section>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-1 h-7 rounded-full bg-gradient-to-b from-primary to-primary/40" />
-            <h2 className="text-xl sm:text-2xl font-extrabold text-foreground">ຜົນລ່າສຸດ</h2>
-            <span className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/50">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+        <section className="space-y-5">
+          <div className="flex items-center gap-3">
+            <div className="hp-sec-line hp-sec-gold" />
+            <h2 className="text-xl font-black text-white">ຜົນລ່າສຸດ</h2>
+            <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/25">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Live
             </span>
           </div>
           <ResultCard draw={latest} />
         </section>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 bg-card rounded-2xl border border-border">
-          <span className="material-symbols-outlined text-4xl text-muted-foreground">inbox</span>
-          <p className="text-sm text-muted-foreground">ຍັງບໍ່ມີງວດຫວຍໃນປະເພດນີ້</p>
+        <div className="flex flex-col items-center justify-center py-16 gap-3 hp-glass rounded-3xl border border-white/[0.06]">
+          <span className="material-symbols-outlined text-4xl text-white/10">inbox</span>
+          <p className="text-xs font-bold text-white/30">ຍັງບໍ່ມີງວດຫວຍໃນປະເພດນີ້</p>
         </div>
       )}
 
@@ -590,41 +651,38 @@ export default function HomePage() {
         <section>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#ff6b35]/15 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#ff6b35] text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)' }}>
+                <span className="material-symbols-outlined text-orange-400 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
               </div>
               <div>
-                <h2 className="text-base font-extrabold text-foreground uppercase tracking-wider text-[11px]">ເລກ Hot</h2>
-                <p className="text-[11px] text-muted-foreground mt-0.5">ອອກຫຼາຍທີ່ສຸດໃນຖານຂໍ້ມູນ</p>
+                <h2 className="text-sm font-black uppercase tracking-wider text-white">ເລກ Hot ສູງສຸດ</h2>
+                <p className="text-[10px] mt-0.5 text-white/30 font-bold">ອອກຫຼາຍທີ່ສຸດໃນຖານຂໍ້ມູນ</p>
               </div>
             </div>
-            <Link
-              to="/statistics"
-              className="inline-flex items-center gap-1.5 text-[#c2410c] text-xs font-bold hover:gap-2.5 transition-all duration-200 group"
-            >
+            <Link to="/statistics" className="inline-flex items-center gap-1.5 text-orange-400 hover:text-orange-350 text-xs font-black hover:gap-2.5 transition-all duration-200 group">
               ວິເຄາະເລີ່ມ
               <span className="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
             </Link>
           </div>
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
             {stats.hotNumbers.slice(0, 8).map(({ number, count }, i) => {
-              const intensity = i < 2 ? 'from-[#ff6b35] to-[#f7931e]' : i < 5 ? 'from-[#c2410c] to-[#ea580c]' : 'from-[#9a3412] to-[#c2410c]'
+              const rb = HOT_BALL[i] || HOT_BALL[7];
               return (
-                <div
-                  key={number}
-                  className="relative bg-card/70 backdrop-blur-sm border border-border/60 rounded-2xl p-3 flex flex-col items-center gap-1.5 hover:shadow-lg hover:shadow-black/[0.06] hover:-translate-y-0.5 transition-all duration-200"
-                >
+                <div key={number} className="relative hp-ball-wrap flex flex-col items-center gap-2.5 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 hp-glass"
+                  style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
                   {i < 3 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gradient-to-br from-[#ff6b35] to-[#f7931e] rounded-full flex items-center justify-center shadow-sm">
-                      <span className="text-white text-[8px] font-black">{i + 1}</span>
+                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center shadow-md z-10 border border-white/10"
+                      style={{ background: i === 0 ? '#d4af37' : i === 1 ? '#94a3b8' : '#b45309', color: i === 0 ? '#000' : '#fff', fontSize: 9, fontWeight: 900 }}>
+                      {i + 1}
                     </span>
                   )}
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${intensity} flex items-center justify-center shadow-sm`}>
-                    <span className="text-lg font-black text-white">{number}</span>
+                  <div className="hp-ball shadow-md cursor-pointer" style={{ width: 50, height: 50, background: rb.bg, color: rb.txt, fontSize: 18, boxShadow: `0 4px 14px ${rb.glow}, inset 0 -3px 6px rgba(0,0,0,0.25)` }}>
+                    <span style={{ position: 'relative', zIndex: 1 }}>{number}</span>
                   </div>
-                  <p className="text-[10px] font-bold text-muted-foreground">{count}x</p>
+                  <p className="text-[10.5px] font-black text-white/30">{count}x</p>
                 </div>
-              )
+              );
             })}
           </div>
         </section>
@@ -632,38 +690,31 @@ export default function HomePage() {
 
       {/* ─── Recent Draws ─── */}
       {recentDraws.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-5">
+        <section className="space-y-5">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-1 h-7 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-400/40" />
-              <h2 className="text-xl font-extrabold text-foreground">ງວດຜ່ານມາ</h2>
+              <div className="hp-sec-line hp-sec-green" />
+              <h2 className="text-lg font-black text-white">ງວດຜ່ານມາ</h2>
             </div>
-            <Link
-              to="/history"
-              className="inline-flex items-center gap-1.5 text-primary text-sm font-bold hover:gap-2.5 transition-all duration-200 group"
-            >
+            <Link to="/history" className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 text-xs font-black hover:gap-2.5 transition-all duration-200 group">
               ທັງໝົດ
               <span className="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {recentDraws.map(d => (
-              <ResultCard key={d.draw_id} draw={d} compact />
-            ))}
+            {recentDraws.map(d => <ResultCard key={d.draw_id} draw={d} compact />)}
           </div>
         </section>
       )}
 
       {/* ─── Quick Stats ─── */}
-      <section>
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-1 h-7 rounded-full bg-gradient-to-b from-violet-500 to-violet-400/40" />
-          <h2 className="text-xl font-extrabold text-foreground">ສະຫຼຸບຂໍ້ມູນ</h2>
+      <section className="space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="hp-sec-line hp-sec-vio" />
+          <h2 className="text-lg font-black text-white">ສະຫຼຸບຂໍ້ມູນສະຖິຕິ</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {statItems.map(item => (
-            <StatCard key={item.label} {...item} />
-          ))}
+          {statItems.map(item => <StatCard key={item.label} {...item} />)}
         </div>
       </section>
 
@@ -671,33 +722,26 @@ export default function HomePage() {
       <HomeNewsSection draws={filteredDraws} />
 
       {/* ─── CTA Banner ─── */}
-      <section className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/[0.05]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#09090b] via-[#0e0e16] to-[#0d0d13]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(139,92,246,0.22),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(56,189,248,0.15),transparent_55%)]" />
-        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[7rem] font-black text-white/[0.03] leading-none select-none pointer-events-none">
-          STATS
-        </div>
-        <div className="relative z-10 px-8 sm:px-12 py-8 sm:py-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+      <section className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/[0.06] bg-gradient-to-br from-[#060814] via-[#0b0f24] to-[#05070e]">
+        <div className="absolute inset-0 bg-grid-glow bg-repeat opacity-[0.15]" />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at top left, rgba(139,92,246,0.18), transparent 55%)' }} />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at bottom right, rgba(212,175,55,0.12), transparent 55%)' }} />
+        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[7rem] font-black text-white/[0.02] leading-none select-none pointer-events-none tracking-wider">LOTTERY</div>
+        <div className="relative z-10 px-8 sm:px-12 py-9 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
-            <p className="text-white/70 text-[11px] font-bold uppercase tracking-widest mb-2">ສໍາລັບນັກວິເຄາະ</p>
-            <h3 className="text-2xl sm:text-3xl font-black text-white mb-2">ວິເຄາະໃນລະດັບ Pro</h3>
-            <p className="text-white/60 text-sm max-w-md leading-relaxed">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#d4af37] mb-2">ສໍາລັບນັກວິເຄາະ</p>
+            <h3 className="text-2xl sm:text-3.5xl font-black text-white leading-none">ວິເຄາະໃນລະດັບ Pro</h3>
+            <p className="text-xs max-w-md leading-relaxed text-white/50 mt-2">
               Gap analysis, trend momentum, pairing stats, repeat patterns ແລະ ອີກຫຼາຍຢ່າງ
             </p>
           </div>
           <div className="flex flex-wrap gap-3 shrink-0">
-            <Link
-              to="/statistics"
-              className="inline-flex items-center gap-2 bg-white/95 text-zinc-900 px-6 py-2.5 rounded-full font-bold text-sm shadow-lg hover:shadow-xl hover:bg-white hover:-translate-y-0.5 transition-all duration-200"
-            >
+            <Link to="/statistics" className="inline-flex items-center gap-2 bg-white text-black px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-wider shadow-lg hover:bg-zinc-100 hover:-translate-y-0.5 transition-all duration-300">
               <span className="material-symbols-outlined text-[16px]">analytics</span>
               ເຂົ້າ Dashboard
             </Link>
-            <Link
-              to="/analytics"
-              className="inline-flex items-center gap-2 border border-white/[0.18] bg-white/[0.07] backdrop-blur-sm text-white/80 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-white/[0.14] hover:text-white transition-all duration-200"
-            >
+            <Link to="/analytics" className="inline-flex items-center gap-2 border text-white/95 px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-wider hover:bg-white/[0.1] transition-all duration-300 hover:-translate-y-0.5"
+              style={{ borderColor: 'rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)' }}>
               <span className="material-symbols-outlined text-[16px]">trending_up</span>
               AI Analytics
             </Link>

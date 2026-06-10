@@ -3,11 +3,302 @@ import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { API, resolveAnimalImage } from '../utils/api';
 
+const STYLE = `
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao+Looped:wght@300;400;500;600;700;900&display=swap');
+
+  .aim-root {
+    font-family: 'Noto Sans Lao Looped', sans-serif;
+  }
+
+  /* ── Section wrapper ── */
+  .aim-section {
+    background: linear-gradient(160deg, #0F1424 0%, #0C1020 60%, #080C18 100%);
+    border: 1px solid rgba(212,175,55,0.14);
+    border-radius: 20px;
+    padding: 28px 24px 24px;
+    margin-top: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .aim-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.55), transparent);
+  }
+  .aim-section-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 5% 0%, rgba(212,175,55,0.05) 0%, transparent 45%),
+      radial-gradient(ellipse at 95% 100%, rgba(212,175,55,0.04) 0%, transparent 45%);
+    pointer-events: none;
+  }
+
+  /* ── Header ── */
+  .aim-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+    position: relative;
+  }
+  .aim-header-icon {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%);
+    border: 1px solid rgba(212,175,55,0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .aim-header-icon .mat-icon {
+    font-size: 20px !important;
+    color: #D4AF37;
+  }
+  .aim-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #E8E6F0;
+    letter-spacing: 0.01em;
+  }
+  .aim-subtitle {
+    font-size: 11px;
+    color: rgba(212,175,55,0.5);
+    font-weight: 500;
+    margin-top: 2px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── Toast notification ── */
+  .aim-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    animation: aim-toast-in 0.2s ease;
+    position: relative;
+  }
+  @keyframes aim-toast-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .aim-toast.success {
+    background: rgba(52,211,153,0.1);
+    border: 1px solid rgba(52,211,153,0.25);
+    color: #6ee7b7;
+  }
+  .aim-toast.error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    color: #fca5a5;
+  }
+  .aim-toast-icon { font-size: 18px !important; flex-shrink: 0; }
+
+  /* ── Grid ── */
+  .aim-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+  }
+
+  /* ── Animal item card ── */
+  .aim-item {
+    background: linear-gradient(160deg, #141828 0%, #0E1220 100%);
+    border: 1px solid rgba(212,175,55,0.1);
+    border-radius: 16px;
+    padding: 18px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .aim-item:hover {
+    border-color: rgba(212,175,55,0.25);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 0 20px rgba(212,175,55,0.05);
+    transform: translateY(-2px);
+  }
+  .aim-item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .aim-item:hover::before { opacity: 1; }
+
+  /* ── Medallion ── */
+  .aim-medallion {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  .aim-ring {
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      #D4AF37 0deg, #FFD54F 60deg, #B8860B 120deg,
+      #D4AF37 180deg, #FFD54F 240deg, #B8860B 300deg, #D4AF37 360deg
+    );
+    opacity: 0.5;
+    transition: opacity 0.2s, animation-duration 0.2s;
+    animation: aim-spin 10s linear infinite;
+  }
+  .aim-item:hover .aim-ring {
+    opacity: 0.9;
+    animation-duration: 4s;
+  }
+  @keyframes aim-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .aim-medallion-bg {
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    background: #0C1020;
+    z-index: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .aim-animal-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: relative;
+    z-index: 2;
+  }
+  .aim-animal-icon {
+    position: absolute;
+    font-size: 26px !important;
+    color: rgba(212,175,55,0.4);
+    z-index: 1;
+  }
+
+  /* Uploading overlay */
+  .aim-uploading-overlay {
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    background: rgba(6,8,18,0.75);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .aim-spinner {
+    width: 22px; height: 22px;
+    border: 2px solid rgba(212,175,55,0.2);
+    border-top-color: #D4AF37;
+    border-radius: 50%;
+    animation: aim-rotate 0.7s linear infinite;
+  }
+  @keyframes aim-rotate {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── Animal name + numbers ── */
+  .aim-animal-name {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #E8E6F0;
+    margin-bottom: 5px;
+    line-height: 1.3;
+  }
+  .aim-numbers-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 12px;
+    min-height: 24px;
+  }
+  .aim-ball {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #D4AF37 0%, #B8860B 60%, #8B6914 100%);
+    box-shadow: 0 1px 6px rgba(212,175,55,0.25), inset 0 1px 1px rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #0C1020;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .aim-ball::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 4px;
+    width: 5px; height: 3px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 50%;
+    transform: rotate(-20deg);
+  }
+
+  /* ── Upload button ── */
+  .aim-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    font-family: 'Noto Sans Lao Looped', sans-serif;
+    cursor: pointer;
+    transition: all 0.18s;
+    border: 1px solid rgba(212,175,55,0.25);
+    background: rgba(212,175,55,0.07);
+    color: #D4AF37;
+    white-space: nowrap;
+  }
+  .aim-upload-btn:hover {
+    background: rgba(212,175,55,0.15);
+    border-color: rgba(212,175,55,0.4);
+    box-shadow: 0 0 12px rgba(212,175,55,0.15);
+  }
+  .aim-upload-btn.uploading {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .aim-upload-btn .mat-icon {
+    font-size: 14px !important;
+  }
+`;
+
+function parseNumbers(numbers) {
+  if (!numbers) return [];
+  return String(numbers).split(/[,\s\/]+/).map(n => n.trim()).filter(Boolean);
+}
+
 export default function AnimalImageManager() {
   const { animals, refreshData } = useData();
-  const { authFetch } = useAuth();
+  const { authFetch }            = useAuth();
   const [uploadingId, setUploadingId] = useState(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage]         = useState('');
+  const [isSuccess, setIsSuccess]     = useState(true);
 
   const handleImageUpload = async (e, animalId) => {
     const file = e.target.files[0];
@@ -16,7 +307,6 @@ export default function AnimalImageManager() {
     setUploadingId(animalId);
     setMessage('');
 
-    // Client-side Resize/Crop to 300x300
     const img = new Image();
     img.src = URL.createObjectURL(file);
     await new Promise(resolve => { img.onload = resolve; });
@@ -25,16 +315,13 @@ export default function AnimalImageManager() {
     const size = 300;
     canvas.width = size;
     canvas.height = size;
-    
     const ctx = canvas.getContext('2d');
-    // Calculate aspect ratio crop (cover)
     const scale = Math.max(size / img.width, size / img.height);
     const w = img.width * scale;
     const h = img.height * scale;
     const x = (size - w) / 2;
     const y = (size - h) / 2;
-
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#0C1020';
     ctx.fillRect(0, 0, size, size);
     ctx.drawImage(img, x, y, w, h);
 
@@ -46,68 +333,108 @@ export default function AnimalImageManager() {
       try {
         const { ok, data } = await authFetch(`${API}/index.php?action=upload_animal_image`, {
           method: 'POST',
-          body: formData
+          body: formData,
         });
-
         if (ok) {
+          setIsSuccess(true);
           setMessage('ອັບໂຫຼດຮູບພາບສຳເລັດ!');
           if (refreshData) refreshData();
         } else {
+          setIsSuccess(false);
           setMessage(data.error || 'ເກີດຂໍ້ຜິດພາດໃນການອັບໂຫຼດ');
         }
-      } catch (err) {
+      } catch {
+        setIsSuccess(false);
         setMessage('ບໍ່ສາມາດເຊື່ອມຕໍ່ກັບເຊີບເວີໄດ້');
       }
-      
+
       setUploadingId(null);
-      e.target.value = ''; // Reset file input
+      e.target.value = '';
     }, 'image/png');
   };
 
   return (
-    <div className="bg-card p-8 rounded-2xl shadow-sm border border-border mt-10">
-      <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-        <span className="material-symbols-outlined text-[#006c49]">image</span>
-        ຈັດການຮູບນາມສັດ
-      </h2>
+    <div className="aim-root aim-section">
+      <style>{STYLE}</style>
+      <div className="aim-section-bg" />
 
+      {/* Header */}
+      <div className="aim-header">
+        <div className="aim-header-icon">
+          <span className="material-symbols-outlined mat-icon"
+            style={{ fontVariationSettings: "'FILL' 1" }}>image</span>
+        </div>
+        <div>
+          <div className="aim-title">ຈັດການຮູບນາມສັດ</div>
+          <div className="aim-subtitle">Animal Image Manager</div>
+        </div>
+      </div>
+
+      {/* Toast */}
       {message && (
-        <div className={`p-4 mb-6 rounded-lg text-sm font-bold ${message.includes('ສຳເລັດ') ? 'bg-[#6cf8bb]/30 text-[#00714d]' : 'bg-[#ffdad6]/30 text-[#ba1a1a]'}`}>
+        <div className={`aim-toast ${isSuccess ? 'success' : 'error'}`}>
+          <span className="material-symbols-outlined aim-toast-icon"
+            style={{ fontVariationSettings: "'FILL' 1" }}>
+            {isSuccess ? 'check_circle' : 'error'}
+          </span>
           {message}
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {/* Grid */}
+      <div className="aim-grid">
         {animals.map((animal) => {
           const displayUrl = resolveAnimalImage(animal);
+          const isUploading = uploadingId === animal.animal_id;
+          const nums = parseNumbers(animal.animal_numbers);
 
           return (
-            <div key={animal.animal_id} className="bg-background border border-border rounded-xl p-4 flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-secondary rounded-full overflow-hidden mb-3 relative flex items-center justify-center">
-                <img 
-                  src={displayUrl} 
-                  alt={animal.animal_name_lao}
-                  className="w-full h-full object-cover bg-card z-10"
-                  onError={(e) => {
-                    e.target.style.opacity = '0';
-                  }}
-                />
-                <span className="material-symbols-outlined text-3xl text-[#003fb1] absolute z-0">
-                  {animal.image_url ? '' : 'pets'}
-                </span>
+            <div key={animal.animal_id} className="aim-item">
+              {/* Medallion */}
+              <div className="aim-medallion">
+                <div className="aim-ring" />
+                <div className="aim-medallion-bg">
+                  <img
+                    src={displayUrl}
+                    alt={animal.animal_name_lao}
+                    className="aim-animal-img"
+                    onError={e => { e.target.style.opacity = '0'; }}
+                  />
+                  <span className="material-symbols-outlined aim-animal-icon"
+                    style={{ fontVariationSettings: "'FILL' 1" }}>
+                    {animal.image_url ? '' : 'pets'}
+                  </span>
+                  {isUploading && (
+                    <div className="aim-uploading-overlay">
+                      <div className="aim-spinner" />
+                    </div>
+                  )}
+                </div>
               </div>
-              
-              <h4 className="font-bold text-foreground text-sm mb-1">{animal.animal_name_lao}</h4>
-              <p className="text-xs text-muted-foreground mb-3">ເລກ: {animal.animal_numbers}</p>
-              
-              <label className="cursor-pointer bg-secondary hover:bg-border text-[#003fb1] px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
-                {uploadingId === animal.animal_id ? 'ອັບໂຫຼດ...' : 'ປ່ຽນຮູບພາບ'}
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={(e) => handleImageUpload(e, animal.animal_id)}
-                  disabled={uploadingId === animal.animal_id}
+
+              {/* Name */}
+              <div className="aim-animal-name">{animal.animal_name_lao}</div>
+
+              {/* Number balls */}
+              <div className="aim-numbers-row">
+                {nums.length > 0
+                  ? nums.map(n => <div key={n} className="aim-ball">{n}</div>)
+                  : <div className="aim-ball">{animal.animal_numbers}</div>
+                }
+              </div>
+
+              {/* Upload */}
+              <label className={`aim-upload-btn${isUploading ? ' uploading' : ''}`}>
+                <span className="material-symbols-outlined mat-icon">
+                  {isUploading ? 'hourglass_top' : 'upload'}
+                </span>
+                {isUploading ? 'ກຳລັງອັບ...' : 'ປ່ຽນຮູບ'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={e => handleImageUpload(e, animal.animal_id)}
+                  disabled={isUploading}
                 />
               </label>
             </div>
