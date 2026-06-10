@@ -785,7 +785,7 @@ export default function RegisterPage() {
                   <div className="ll-div-line" />
                 </div>
 
-                <Link to="/" className="ll-back">← ກັບໄປໜ້າຫຼັກ</Link>
+                <Link to="/home" className="ll-back">← ກັບໄປໜ້າຫຼັກ</Link>
               </div>
 
             </div>

@@ -7,6 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { useVisitorTrack } from './hooks/useVisitorTrack'
 
 // ── Pages ────────────────────────────────────────────────────────
+const IncenseLotteryPage = lazy(() => import('./pages/IncenseLottery'))
 const HomePage        = lazy(() => import('./pages/HomePage'))
 const HistoryPage     = lazy(() => import('./pages/HistoryPage'))
 const LoginPage       = lazy(() => import('./pages/LoginPage'))
@@ -117,7 +118,7 @@ export default function App() {
           {/* ══ TIER 1: Open to everyone ════════════════════════════
               Guest users can ONLY access these pages.              */}
           <Route element={<PublicLayout />}>
-            <Route path="/"            element={<HomePage />} />
+            <Route path="/home"        element={<HomePage />} />
             <Route path="/history"     element={<HistoryPage />} />
             <Route path="/login"       element={<LoginPage />} />
             <Route path="/statistics"  element={<DashboardPage />} />
@@ -126,7 +127,8 @@ export default function App() {
             <Route path="/contact"     element={<ContactPage />} />
           </Route>
 
-          {/* ══ TIER 1b: Auth / Registration (full-screen, no Navbar) */}
+          {/* ══ TIER 1b: Full-screen standalone pages (no Navbar/Footer) */}
+          <Route path="/"                 element={<IncenseLotteryPage />} />
           <Route path="/register"         element={<RegisterPage />} />
           <Route path="/verify-otp"       element={<VerifyOTPPage />} />
           <Route path="/verify-email"     element={<VerifyEmailPage />} />

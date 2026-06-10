@@ -441,7 +441,7 @@ export default function VerifyEmailPage() {
       desc:  message || 'ລິ້ງນີ້ໃຊ້ງານບໍ່ໄດ້',
       actions: (
         <Link
-          to="/"
+          to="/home"
           className="ll-register"
         >
           <span className="material-symbols-outlined text-[16px]">home</span>

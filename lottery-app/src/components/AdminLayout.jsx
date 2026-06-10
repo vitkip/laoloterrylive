@@ -716,7 +716,7 @@ export default function AdminLayout() {
           gap: 8,
         }}>
           {!collapsed && (
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, textDecoration: 'none', minWidth: 0 }}>
+            <Link to="/home" style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, textDecoration: 'none', minWidth: 0 }}>
               <AdminLogoBall />
               <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <span className="al-logo-text">laolots<span>.com</span></span>
@@ -725,7 +725,7 @@ export default function AdminLayout() {
             </Link>
           )}
           {collapsed && (
-            <Link to="/" title="laolots.com" style={{ textDecoration: 'none' }}>
+            <Link to="/home" title="laolots.com" style={{ textDecoration: 'none' }}>
               <AdminLogoBall />
             </Link>
           )}
@@ -759,7 +759,7 @@ export default function AdminLayout() {
           <aside className="al-mobile-sidebar" onClick={e => e.stopPropagation()}>
             {/* Mobile header */}
             <div className="al-logo-zone" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px', height: 64 }}>
-              <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+              <Link to="/home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
                 <AdminLogoBall />
                 <div>
                   <span className="al-logo-text">laolots<span>.com</span></span>
@@ -801,7 +801,7 @@ export default function AdminLayout() {
           <div style={{ flex: 1 }} />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Link to="/" target="_blank" className="al-hdr-btn" title="ເບິ່ງໜ້າເວັບ" style={{ textDecoration: 'none' }}>
+            <Link to="/home" target="_blank" className="al-hdr-btn" title="ເບິ່ງໜ້າເວັບ" style={{ textDecoration: 'none' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 17 }}>open_in_new</span>
             </Link>
             <Link to="/admin/profile" className="al-hdr-btn" title="Profile" style={{ textDecoration: 'none' }}>

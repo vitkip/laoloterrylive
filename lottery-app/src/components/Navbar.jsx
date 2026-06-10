@@ -461,7 +461,7 @@ export default function Navbar() {
         <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', height: 62 }}>
 
           {/* ── Logo ── */}
-          <Link to="/" className="nb-logo" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
+          <Link to="/home" className="nb-logo" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
             <LotteryBall />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span className="nb-logo-name">laolots<span>.com</span></span>

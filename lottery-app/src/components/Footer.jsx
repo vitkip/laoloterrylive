@@ -172,7 +172,7 @@ export default function Footer() {
           <div className="ft-main">
 
             {/* Brand */}
-            <Link to="/" className="ft-brand">
+            <Link to="/home" className="ft-brand">
               <div className="ft-flag">
                 <svg viewBox="0 0 38 38" style={{ width: '100%', height: '100%', display: 'block', zIndex: 1 }}>
                   <defs>
