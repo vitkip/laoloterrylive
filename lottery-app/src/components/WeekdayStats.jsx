@@ -271,15 +271,15 @@ const ShareCaptureCard = forwardRef(function ShareCaptureCard(
   const accent = spotlightConf.accent;
 
   return (
-    <div ref={ref} style={{ width:'800px', backgroundColor:'#060410', backgroundImage:'radial-gradient(circle at 15% 15%, #1c0e34 0%, transparent 55%), radial-gradient(circle at 85% 85%, #1a0a08 0%, transparent 55%)', fontFamily:"'Noto Sans Lao','Phetsarath OT',sans-serif", display:'flex', flexDirection:'column', boxSizing:'border-box', overflow:'hidden', position:'relative' }}>
+    <div ref={ref} style={{ width:'1200px', backgroundColor:'#060410', backgroundImage:'radial-gradient(circle at 15% 15%, #1c0e34 0%, transparent 55%), radial-gradient(circle at 85% 85%, #1a0a08 0%, transparent 55%)', fontFamily:"'Noto Sans Lao Looped','Phetsarath',sans-serif", display:'flex', flexDirection:'column', boxSizing:'border-box', overflow:'hidden', position:'relative' }}>
       {/* Top golden stripe */}
-      <div style={{ height:'4px', background:'linear-gradient(90deg, #d4af37, #FFF5C0, #B8860B, #8B6914, #d4af37)' }} />
+      <div style={{ height:'6px', background:'linear-gradient(90deg, #d4af37, #FFF5C0, #B8860B, #8B6914, #d4af37)' }} />
 
       {/* Header Area */}
-      <div style={{ background:'#0d0e1c', borderBottom:'1px solid rgba(212,175,55,0.2)', padding:'28px 40px', textAlign:'center', color:'#fff', position:'relative' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'12px', marginBottom:'12px' }}>
+      <div style={{ background:'#0d0e1c', borderBottom:'1px solid rgba(212,175,55,0.2)', padding:'43px 64px', textAlign:'center', color:'#fff', position:'relative' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'18px', marginBottom:'18px' }}>
           {/* Logo SVG matching Navbar/Footer flag */}
-          <div style={{ width:'42px', height:'42px', borderRadius:'50%', background:'linear-gradient(90deg, #d4af37, #FFF5C0, #B8860B)', padding:'2px', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 14px rgba(0,0,0,0.4)' }}>
+          <div style={{ width:'66px', height:'66px', borderRadius:'50%', background:'linear-gradient(90deg, #d4af37, #FFF5C0, #B8860B)', padding:'2px', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 14px rgba(0,0,0,0.4)' }}>
             <div style={{ width:'100%', height:'100%', borderRadius:'50%', background:'#0d0e1c', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
               {/* Glass shine */}
               <div style={{ position:'absolute', top:2, left:4, width:6, height:4, background:'rgba(255,255,255,0.4)', borderRadius:'50%', transform:'rotate(-28deg)' }} />
@@ -313,60 +313,60 @@ const ShareCaptureCard = forwardRef(function ShareCaptureCard(
               </svg>
             </div>
           </div>
-          <span style={{ fontSize:'32px', fontWeight:900, fontFamily:"'Inter',sans-serif", letterSpacing:'-0.02em', background:'linear-gradient(90deg, #D4AF37, #FFD54F)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>LAOLOTS.COM</span>
+          <span style={{ fontSize:'54px', fontWeight:900, fontFamily:"'Inter',sans-serif", letterSpacing:'-0.02em', background:'linear-gradient(90deg, #D4AF37, #FFD54F)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>LAOLOTS.COM</span>
         </div>
-        <div style={{ display:'inline-block', background:'rgba(212,175,55,0.15)', padding:'8px 24px', borderRadius:'999px', fontSize:'18px', fontWeight:900, border:'1px solid rgba(212,175,55,0.35)', color:'#ffd700' }}>
+        <div style={{ display:'inline-block', background:'rgba(212,175,55,0.15)', padding:'13px 37px', borderRadius:'999px', fontSize:'29px', fontWeight:900, border:'1px solid rgba(212,175,55,0.35)', color:'#ffd700' }}>
           ສະຖິຕິຕາມມື້ອອກຫວຍ · {typeName}
         </div>
       </div>
 
       {/* Info Bar */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'20px 40px', background:'#0d0e1c', borderBottom:'1px solid rgba(212,175,55,0.15)' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'32px 64px', background:'#0d0e1c', borderBottom:'1px solid rgba(212,175,55,0.15)' }}>
         <div>
-          <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.45)', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px' }}>ຊ່ວງເວລາວິເຄາະ</div>
-          <div style={{ fontSize:'20px', fontWeight:900, color:'#ffd700' }}>{tfLabel}</div>
+          <div style={{ fontSize:'20px', color:'rgba(255,255,255,0.45)', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'7px' }}>ຊ່ວງເວລາວິເຄາະ</div>
+          <div style={{ fontSize:'35px', fontWeight:900, color:'#ffd700' }}>{tfLabel}</div>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:'10px', background:`${accent}20`, padding:'8px 18px', borderRadius:'14px', border:`1px solid ${accent}40` }}>
-          <span style={{ width:'10px', height:'10px', borderRadius:'50%', backgroundColor:accent, display:'inline-block', boxShadow:`0 0 8px ${accent}` }} />
-          <span style={{ fontSize:'18px', fontWeight:900, color:accent }}>{spotlightConf.label}</span>
+        <div style={{ display:'flex', alignItems:'center', gap:'14px', background:`${accent}20`, padding:'12px 28px', borderRadius:'20px', border:`1px solid ${accent}40` }}>
+          <span style={{ width:'16px', height:'16px', borderRadius:'50%', backgroundColor:accent, display:'inline-block', boxShadow:`0 0 12px ${accent}` }} />
+          <span style={{ fontSize:'29px', fontWeight:900, color:accent }}>{spotlightConf.label}</span>
         </div>
         <div style={{ textAlign:'right' }}>
-          <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.45)', fontWeight:800, marginBottom:'4px' }}>ວັນທີແຊຣ໌</div>
-          <div style={{ fontSize:'20px', fontWeight:900, color:'white' }}>{dateStr}</div>
+          <div style={{ fontSize:'20px', color:'rgba(255,255,255,0.45)', fontWeight:800, marginBottom:'7px' }}>ວັນທີແຊຣ໌</div>
+          <div style={{ fontSize:'35px', fontWeight:900, color:'white' }}>{dateStr}</div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div style={{ padding:'32px 40px', display:'flex', flexDirection:'column', gap:'24px', flex:1 }}>
-        <div style={{ background:'rgba(13,14,28,0.8)', borderRadius:'20px', padding:'20px 28px', border:'1px solid rgba(212,175,55,0.2)', display:'flex', alignItems:'center', justifyContent:'space-between', boxShadow:'0 8px 32px rgba(0,0,0,0.3)' }}>
-          <span style={{ fontSize:'18px', fontWeight:800, color:'white' }}>ຈຳນວນງວດທີ່ອອກຫວຍໃນ {spotlightConf.label}</span>
-          <span style={{ fontSize:'22px', fontWeight:950, color:accent, background:`${accent}20`, border:`1px solid ${accent}30`, padding:'6px 18px', borderRadius:'12px' }}>{spotlight.totalDraws} ງວດ</span>
+      <div style={{ padding:'48px 64px', display:'flex', flexDirection:'column', gap:'37px', flex:1 }}>
+        <div style={{ background:'rgba(13,14,28,0.8)', borderRadius:'24px', padding:'29px 43px', border:'1px solid rgba(212,175,55,0.2)', display:'flex', alignItems:'center', justifyContent:'space-between', boxShadow:'0 8px 32px rgba(0,0,0,0.3)' }}>
+          <span style={{ fontSize:'29px', fontWeight:800, color:'white' }}>ຈຳນວນງວດທີ່ອອກຫວຍໃນ {spotlightConf.label}</span>
+          <span style={{ fontSize:'35px', fontWeight:950, color:accent, background:`${accent}20`, border:`1px solid ${accent}30`, padding:'11px 29px', borderRadius:'16px' }}>{spotlight.totalDraws} ງວດ</span>
         </div>
 
         {/* Top Numbers Card */}
-        <div style={{ background:'rgba(13,14,28,0.8)', borderRadius:'24px', padding:'24px', border:'1px solid rgba(212,175,55,0.2)', boxShadow:'0 8px 32px rgba(0,0,0,0.3)' }}>
-          <div style={{ fontSize:'18px', fontWeight:900, color:'white', marginBottom:'20px', display:'flex', alignItems:'center', gap:'10px', borderBottom:'1px solid rgba(212,175,55,0.1)', paddingBottom:'12px' }}>
-            <span style={{ fontSize:'22px' }}>🎯</span>ເລກ 2 ຕົວທ້າຍ ທີ່ມັກອອກຫຼາຍທີ່ສຸດ
+        <div style={{ background:'rgba(13,14,28,0.8)', borderRadius:'28px', padding:'37px', border:'1px solid rgba(212,175,55,0.2)', boxShadow:'0 8px 32px rgba(0,0,0,0.3)' }}>
+          <div style={{ fontSize:'29px', fontWeight:900, color:'white', marginBottom:'29px', display:'flex', alignItems:'center', gap:'16px', borderBottom:'1px solid rgba(212,175,55,0.1)', paddingBottom:'19px' }}>
+            <span style={{ fontSize:'35px' }}>🎯</span>ເລກ 2 ຕົວທ້າຍ ທີ່ມັກອອກຫຼາຍທີ່ສຸດ
           </div>
-          <div style={{ display:'flex', gap:'12px', marginBottom:'24px', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', gap:'19px', marginBottom:'37px', justifyContent:'space-between' }}>
             {spotlight.topNums.length > 0 ? spotlight.topNums.map(([num, count], i) => (
-              <div key={num} style={{ display:'flex', flexDirection:'column', alignItems:'center', borderRadius:'20px', padding:'16px 12px', width:'18%', border:`1px solid ${i===0?accent:'rgba(212,175,55,0.15)'}`, background:i===0?`linear-gradient(135deg,${accent}25 0%,${accent}05 100%)`:'rgba(255,255,255,0.02)', boxShadow:i===0?`0 8px 24px ${accent}20`:'none' }}>
-                <span style={{ fontSize:'38px', fontWeight:950, fontFamily:"'Inter',monospace", color:i===0?accent:'#ffd700', lineHeight:1.1 }}>{num}</span>
-                <span style={{ fontSize:'13px', color:i===0?accent:'rgba(255,255,255,0.65)', fontWeight:800, marginTop:'8px', background:i===0?`${accent}30`:'rgba(255,255,255,0.08)', padding:'3px 10px', borderRadius:'8px', border:i===0?'none':'1px solid rgba(255,255,255,0.05)' }}>{count} ຄັ້ງ</span>
+              <div key={num} style={{ display:'flex', flexDirection:'column', alignItems:'center', borderRadius:'22px', padding:'24px 19px', width:'18%', border:`1px solid ${i===0?accent:'rgba(212,175,55,0.15)'}`, background:i===0?`linear-gradient(135deg,${accent}25 0%,${accent}05 100%)`:'rgba(255,255,255,0.02)', boxShadow:i===0?`0 8px 24px ${accent}20`:'none' }}>
+                <span style={{ fontSize:'64px', fontWeight:950, fontFamily:"'Inter',monospace", color:i===0?accent:'#ffd700', lineHeight:1.1 }}>{num}</span>
+                <span style={{ fontSize:'21px', color:i===0?accent:'rgba(255,255,255,0.65)', fontWeight:800, marginTop:'13px', background:i===0?`${accent}30`:'rgba(255,255,255,0.08)', padding:'5px 16px', borderRadius:'10px', border:i===0?'none':'1px solid rgba(255,255,255,0.05)' }}>{count} ຄັ້ງ</span>
               </div>
-            )) : <span style={{ fontSize:'16px', color:'rgba(255,255,255,0.3)', width:'100%', textAlign:'center', padding:'16px 0' }}>ບໍ່ມີຂໍ້ມູນ</span>}
+            )) : <span style={{ fontSize:'24px', color:'rgba(255,255,255,0.3)', width:'100%', textAlign:'center', padding:'16px 0' }}>ບໍ່ມີຂໍ້ມູນ</span>}
           </div>
           {spotlight.topNums.length > 0 && (
-            <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:'21px' }}>
               {spotlight.topNums.map(([num, count], i) => {
                 const pct = Math.round((count / spotlight.maxCount) * 100);
                 return (
-                  <div key={num} style={{ display:'flex', alignItems:'center', gap:'16px' }}>
-                    <span style={{ fontSize:'16px', fontWeight:900, color:i===0?accent:'rgba(255,255,255,0.6)', width:'28px', fontFamily:"'Inter',monospace", textAlign:'right' }}>{num}</span>
-                    <div style={{ flex:1, height:'12px', background:'rgba(255,255,255,0.05)', borderRadius:'6px', overflow:'hidden' }}>
-                      <div style={{ height:'100%', borderRadius:'6px', width:`${pct}%`, backgroundColor:i===0?accent:`${accent}bb` }} />
+                  <div key={num} style={{ display:'flex', alignItems:'center', gap:'22px' }}>
+                    <span style={{ fontSize:'27px', fontWeight:900, color:i===0?accent:'rgba(255,255,255,0.6)', width:'45px', fontFamily:"'Inter',monospace", textAlign:'right' }}>{num}</span>
+                    <div style={{ flex:1, height:'19px', background:'rgba(255,255,255,0.05)', borderRadius:'10px', overflow:'hidden' }}>
+                      <div style={{ height:'100%', borderRadius:'10px', width:`${pct}%`, backgroundColor:i===0?accent:`${accent}bb` }} />
                     </div>
-                    <span style={{ fontSize:'14px', fontWeight:800, color:i===0?accent:'rgba(255,255,255,0.7)', width:'55px', textAlign:'right' }}>{count} ຄັ້ງ</span>
+                    <span style={{ fontSize:'24px', fontWeight:800, color:i===0?accent:'rgba(255,255,255,0.7)', width:'93px', textAlign:'right' }}>{count} ຄັ້ງ</span>
                   </div>
                 );
               })}
@@ -376,21 +376,21 @@ const ShareCaptureCard = forwardRef(function ShareCaptureCard(
 
         {/* Top Animals Card */}
         {spotlight.topAnimals.length > 0 && (
-          <div style={{ background:'rgba(13,14,28,0.8)', borderRadius:'24px', padding:'24px', border:'1px solid rgba(212,175,55,0.2)', boxShadow:'0 8px 32px rgba(0,0,0,0.3)' }}>
-            <div style={{ fontSize:'18px', fontWeight:900, color:'white', marginBottom:'20px', display:'flex', alignItems:'center', gap:'10px', borderBottom:'1px solid rgba(212,175,55,0.1)', paddingBottom:'12px' }}>
-              <span style={{ fontSize:'22px' }}>🐾</span>ນາມສັດຍອດນິຍົມ
+          <div style={{ background:'rgba(13,14,28,0.8)', borderRadius:'28px', padding:'37px', border:'1px solid rgba(212,175,55,0.2)', boxShadow:'0 8px 32px rgba(0,0,0,0.3)' }}>
+            <div style={{ fontSize:'29px', fontWeight:900, color:'white', marginBottom:'29px', display:'flex', alignItems:'center', gap:'16px', borderBottom:'1px solid rgba(212,175,55,0.1)', paddingBottom:'19px' }}>
+              <span style={{ fontSize:'35px' }}>🐾</span>ນາມສັດຍອດນິຍົມ
             </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:'19px' }}>
               {spotlight.topAnimals.map((item, i) => (
-                <div key={item.animal?.animal_id ?? i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 18px', borderRadius:'16px', border:`1px solid ${i===0?`${accent}40`:'rgba(212,175,55,0.1)'}`, background:i===0?`${accent}15`:'rgba(255,255,255,0.02)' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:'14px' }}>
-                    <span style={{ fontSize:'30px', lineHeight:1 }}>{item.animal?.icon}</span>
+                <div key={item.animal?.animal_id ?? i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'21px 29px', borderRadius:'22px', border:`1px solid ${i===0?`${accent}40`:'rgba(212,175,55,0.1)'}`, background:i===0?`${accent}15`:'rgba(255,255,255,0.02)' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:'21px' }}>
+                    <span style={{ fontSize:'48px', lineHeight:1 }}>{item.animal?.icon}</span>
                     <div>
-                      <div style={{ fontSize:'16px', fontWeight:900, color:'white' }}>{item.animal?.animal_name_lao}</div>
-                      <div style={{ fontSize:'13px', color:'rgba(255,255,255,0.5)', fontFamily:"'Inter',monospace", fontWeight:700, marginTop:'2px' }}>{item.animal?.numbers?.join(', ')}</div>
+                      <div style={{ fontSize:'27px', fontWeight:900, color:'white' }}>{item.animal?.animal_name_lao}</div>
+                      <div style={{ fontSize:'21px', color:'rgba(255,255,255,0.5)', fontFamily:"'Inter',monospace", fontWeight:700, marginTop:'4px' }}>{item.animal?.numbers?.join(', ')}</div>
                     </div>
                   </div>
-                  <span style={{ fontSize:'14px', fontWeight:900, color:i===0?accent:'#ffd700', background:i===0?`${accent}25`:'rgba(212,175,55,0.15)', padding:'5px 12px', borderRadius:'10px', border:i===0?'none':'1px solid rgba(212,175,55,0.1)' }}>{item.count} ຄັ້ງ</span>
+                  <span style={{ fontSize:'23px', fontWeight:900, color:i===0?accent:'#ffd700', background:i===0?`${accent}25`:'rgba(212,175,55,0.15)', padding:'9px 21px', borderRadius:'14px', border:i===0?'none':'1px solid rgba(212,175,55,0.1)' }}>{item.count} ຄັ້ງ</span>
                 </div>
               ))}
             </div>
@@ -399,7 +399,7 @@ const ShareCaptureCard = forwardRef(function ShareCaptureCard(
       </div>
 
       {/* Footer Area */}
-      <div style={{ background:'#0a0b14', textAlign:'center', padding:'20px', color:'rgba(212,175,55,0.7)', fontSize:'14px', fontWeight:800, letterSpacing:'0.05em', borderTop:'1px solid rgba(212,175,55,0.35)' }}>
+      <div style={{ background:'#0a0b14', textAlign:'center', padding:'29px', color:'rgba(212,175,55,0.7)', fontSize:'24px', fontWeight:800, letterSpacing:'0.05em', borderTop:'1px solid rgba(212,175,55,0.35)' }}>
         laolots.com — ສູນລວມຜົນຫວຍ ແລະ ສະຖິຕິຫວຍລາວອອນລາຍ
       </div>
     </div>
