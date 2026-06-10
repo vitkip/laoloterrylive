@@ -776,6 +776,48 @@ function PredictionEnginePanel({ prediction, backtest, epTrials, setEpTrials }) 
                   </tr>
                 </thead>
                 <tbody>
+                  {/* ── Upcoming draw prediction row (before result is known) ── */}
+                  <tr className="border-b border-[#6366f1]/30 bg-gradient-to-r from-[#6366f1]/12 via-[#6366f1]/06 to-transparent">
+                    <td className="py-3 px-2">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-black bg-[#6366f1]/25 text-[#818cf8] px-2 py-0.5 rounded-full border border-[#6366f1]/40">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#818cf8] shrink-0 ap-dot-pulse inline-block" />
+                        ຖັດໄປ
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 text-white/45 text-[11px]">
+                      {nextDate
+                        ? `${nextDate.getDate()}/${nextDate.getMonth() + 1}/${nextDate.getFullYear()}`
+                        : '—'}
+                    </td>
+                    <td className="py-3 px-2">
+                      <span className="font-bold text-white/25 text-base">?</span>
+                    </td>
+                    <td className="py-3 px-2">
+                      <span className="font-black font-mono text-base text-[#818cf8]">
+                        {top10[0]?.num ?? '—'}
+                      </span>
+                      <span className="material-symbols-outlined text-[11px] ml-0.5 align-middle text-[#6366f1]">auto_awesome</span>
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="flex gap-0.5 flex-wrap">
+                        {top10.slice(0, 5).map(s => (
+                          <span key={s.num} className="font-mono font-black text-[10px] px-1.5 py-0.5 rounded bg-[#6cf8bb]/15 text-[#6cf8bb] border border-[#6cf8bb]/25">
+                            {s.num}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="flex gap-0.5 flex-wrap">
+                        {top10.slice(0, 10).map(s => (
+                          <span key={s.num} className="font-mono font-black text-[10px] px-1.5 py-0.5 rounded bg-[#818cf8]/12 text-[#818cf8] border border-[#818cf8]/20">
+                            {s.num}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 text-center text-white/20">—</td>
+                  </tr>
                   {backtest.results.map((r, i) => (
                     <tr key={i} className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]
                       ${r.hit1 ? 'bg-[#fbbf24]/5' : r.hit5 ? 'bg-[#6cf8bb]/5' : r.hit10 ? 'bg-[#818cf8]/5' : ''}`}>
