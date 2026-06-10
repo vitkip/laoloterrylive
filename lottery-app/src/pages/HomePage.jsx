@@ -466,8 +466,8 @@ export default function HomePage() {
 
   const latestDraw     = draws.filter(d => d.status === 'published')[0]
   const latestDateStr  = latestDraw?.draw_date ?? ''
-  const latestNumber   = latestDraw?.result_number ?? ''
-  const latestTypeName = latestDraw?.type_name ?? 'ພັດທະນາ'
+  const latestNumber   = latestDraw?.full_result ?? ''
+  const latestTypeName = types?.find(t => t.type_id === latestDraw?.type_id)?.type_name ?? 'ພັດທະນາ'
 
   const seoTitle = latestNumber
     ? `ຜົນຫວຍ${latestTypeName} ${latestDateStr} ເລກ ${latestNumber} | ผลหวย${latestTypeName} ${latestDateStr}`
