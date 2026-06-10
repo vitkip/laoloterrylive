@@ -64,13 +64,13 @@ export default function IncenseStick({ state }) {
           <rect x="14" y="40" width="4" height="120" rx="1.5" fill="rgba(255,80,60,0.3)" />
 
           {/* Vertical text on stick */}
-          <text x="16" y="70"  textAnchor="middle" fontSize="6" fontWeight="700" fill="rgba(255,220,180,0.75)" fontFamily="serif">ໂ</text>
-          <text x="16" y="82"  textAnchor="middle" fontSize="6" fontWeight="700" fill="rgba(255,220,180,0.75)" fontFamily="serif">ຊ</text>
-          <text x="16" y="94"  textAnchor="middle" fontSize="6" fontWeight="700" fill="rgba(255,220,180,0.75)" fontFamily="serif">ກ</text>
-          <text x="16" y="108" textAnchor="middle" fontSize="5" fill="rgba(255,200,150,0.5)" fontFamily="serif">ດີ</text>
-          <text x="16" y="120" textAnchor="middle" fontSize="5" fill="rgba(255,200,150,0.5)" fontFamily="serif">มี</text>
-          <text x="16" y="132" textAnchor="middle" fontSize="5" fill="rgba(255,200,150,0.5)" fontFamily="serif">โ</text>
-          <text x="16" y="143" textAnchor="middle" fontSize="5" fill="rgba(255,200,150,0.5)" fontFamily="serif">ชค</text>
+          <text x="16" y="70"  textAnchor="middle" fontSize="6" fontWeight="700" fill="rgba(255,220,180,0.75)" fontFamily="Noto Sans Lao Looped, sans-serif">ໂ</text>
+          <text x="16" y="82"  textAnchor="middle" fontSize="6" fontWeight="700" fill="rgba(255,220,180,0.75)" fontFamily="Noto Sans Lao Looped, sans-serif">ຊ</text>
+          <text x="16" y="94"  textAnchor="middle" fontSize="6" fontWeight="700" fill="rgba(255,220,180,0.75)" fontFamily="Noto Sans Lao Looped, sans-serif">ກ</text>
+          <text x="16" y="108" textAnchor="middle" fontSize="5" fill="rgba(255,200,150,0.5)" fontFamily="Noto Sans Lao Looped, sans-serif">ດີ</text>
+          <text x="16" y="120" textAnchor="middle" fontSize="5" fill="rgba(255,200,150,0.5)" fontFamily="Noto Sans Lao Looped, sans-serif">มี</text>
+          <text x="16" y="132" textAnchor="middle" fontSize="5" fill="rgba(255,200,150,0.5)" fontFamily="Noto Sans Lao Looped, sans-serif">โ</text>
+          <text x="16" y="143" textAnchor="middle" fontSize="5" fill="rgba(255,200,150,0.5)" fontFamily="Noto Sans Lao Looped, sans-serif">ชค</text>
 
           {/* Burning tip */}
           {isBurning && (

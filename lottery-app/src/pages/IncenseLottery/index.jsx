@@ -69,7 +69,7 @@ export default function IncenseLotteryPage() {
       background: 'radial-gradient(ellipse at 50% 0%, #1c0428 0%, #0d000f 45%, #040008 100%)',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      overflow: 'hidden', fontFamily: 'Georgia, "Times New Roman", serif',
+      overflow: 'hidden', fontFamily: 'var(--font-body)',
     }}>
 
       {/* Grain texture */}
@@ -105,7 +105,7 @@ export default function IncenseLotteryPage() {
         {/* Site brand — top */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
           <div style={{ fontSize: 10, letterSpacing: 8, color: 'rgba(212,175,55,0.4)', marginBottom: 6 }}>
-            LAOLOTS · ດວງຊາດາ
+            LAOLOTS · ດວງຊາຕາ
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
             <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(212,175,55,0.3))' }} />
@@ -125,7 +125,7 @@ export default function IncenseLotteryPage() {
                 fontSize: 22, fontWeight: 900, color: '#fff', margin: '0 0 6px',
                 textShadow: '0 0 28px rgba(212,175,55,0.35)', letterSpacing: '0.04em'
               }}>
-                ຈູດທູບ ກ່ອນເຂົ້າສູ່ດວງຊາດາ
+                ຈູດທູບ ກ່ອນເຂົ້າສູ່ດວງຊາຕາ
               </h1>
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)', letterSpacing: 2, margin: 0 }}>
                 Light the incense to receive your lucky numbers
@@ -177,7 +177,7 @@ export default function IncenseLotteryPage() {
               <rect x="6" y="8" width="148" height="18" rx="5" fill="url(#ag)" />
               <rect x="0" y="22" width="160" height="14" rx="3" fill="url(#ab)" />
               {[32, 80, 128].map(cx => <circle key={cx} cx={cx} cy="17" r="2" fill="rgba(212,175,55,0.45)" />)}
-              <text x="80" y="18.5" textAnchor="middle" fontSize="7.5" fill="rgba(212,175,55,0.6)" fontFamily="serif" letterSpacing="3">✦ ໂຊກດີ ✦</text>
+              <text x="80" y="18.5" textAnchor="middle" fontSize="7.5" fill="rgba(212,175,55,0.6)" fontFamily="Noto Sans Lao Looped, sans-serif" letterSpacing="3">✦ ໂຊກດີ ✦</text>
               <defs>
                 <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#3d1a1a" /><stop offset="100%" stopColor="#2a0f0f" />
@@ -236,11 +236,12 @@ export default function IncenseLotteryPage() {
                       <div style={{
                         fontSize: num.length === 1 ? 52 : 40, fontWeight: 900,
                         color: '#fff', lineHeight: 1, letterSpacing: '-0.02em',
+                        fontFamily: 'var(--font-jakarta)',
                         textShadow: '0 0 16px rgba(212,175,55,1), 0 0 32px rgba(212,175,55,0.55), 0 0 56px rgba(212,175,55,0.2)',
                       }}>
                         {num}
                       </div>
-                      <div style={{ fontSize: 9, marginTop: 5, color: 'rgba(212,175,55,0.5)', letterSpacing: 2 }}>
+                      <div style={{ fontSize: 9, marginTop: 5, color: 'rgba(212,175,55,0.5)', letterSpacing: 2, fontFamily: 'var(--font-body)' }}>
                         {LABEL[i]}
                       </div>
                     </div>
@@ -267,7 +268,7 @@ export default function IncenseLotteryPage() {
                   border: '1px solid rgba(212,175,55,0.45)',
                   borderRadius: 50, padding: '18px 52px',
                   color: '#fff', fontSize: 19, fontWeight: 700,
-                  fontFamily: 'Georgia, serif', letterSpacing: '0.07em',
+                  fontFamily: 'var(--font-headline)', letterSpacing: '0.07em',
                   cursor: 'pointer',
                   boxShadow: '0 0 28px rgba(192,57,43,0.4), 0 4px 18px rgba(0,0,0,0.5)',
                   textShadow: '0 1px 4px rgba(0,0,0,0.6)',
@@ -281,7 +282,7 @@ export default function IncenseLotteryPage() {
                   style={{
                     marginTop: 20, background: 'none', border: 'none', cursor: 'pointer',
                     fontSize: 11, color: 'rgba(255,255,255,0.18)', letterSpacing: 3,
-                    fontFamily: 'serif', textDecoration: 'underline', textUnderlineOffset: 3
+                    fontFamily: 'var(--font-body)', textDecoration: 'underline', textUnderlineOffset: 3
                   }}
                 >
                   ຂ້າມໄປໜ້າຫຼັກ
@@ -324,7 +325,7 @@ export default function IncenseLotteryPage() {
                   border: '1.5px solid rgba(212,175,55,0.65)',
                   borderRadius: 50, padding: '18px 52px',
                   color: '#f5e090', fontSize: 19, fontWeight: 700,
-                  fontFamily: 'Georgia, serif', letterSpacing: '0.08em',
+                  fontFamily: 'var(--font-headline)', letterSpacing: '0.08em',
                   cursor: 'pointer',
                   boxShadow: '0 0 28px rgba(212,175,55,0.25), 0 4px 18px rgba(0,0,0,0.5)',
                   textShadow: '0 0 12px rgba(212,175,55,0.8)',
@@ -339,7 +340,7 @@ export default function IncenseLotteryPage() {
                 style={{
                   marginTop: 16, background: 'none', border: 'none', cursor: 'pointer',
                   fontSize: 12, color: 'rgba(212,175,55,0.4)', letterSpacing: 2,
-                  fontFamily: 'serif', textDecoration: 'underline', textUnderlineOffset: 3
+                  fontFamily: 'var(--font-body)', textDecoration: 'underline', textUnderlineOffset: 3
                 }}
               >
                 🔄 ຈູດທູບໃໝ່
@@ -370,7 +371,7 @@ export default function IncenseLotteryPage() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: [0, 1, 1, 0], scale: [0.8, 1, 1, 0.95] }}
               transition={{ duration: 0.85, times: [0, 0.3, 0.7, 1] }}
-              style={{ fontSize: 14, letterSpacing: 8, color: 'rgba(212,175,55,0.7)', fontFamily: 'serif' }}
+              style={{ fontSize: 14, letterSpacing: 8, color: 'rgba(212,175,55,0.7)', fontFamily: 'var(--font-headline)' }}
             >
               ✦ ຍິນດີຕ້ອນຮັບ ✦
             </motion.div>
