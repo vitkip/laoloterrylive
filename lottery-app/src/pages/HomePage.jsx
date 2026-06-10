@@ -131,6 +131,7 @@ function BannerLogo({ type, logoUrl = null }) {
 // ── Referral Scroll Banner ────────────────────────────────────────────
 function ReferralScrollBanner() {
   const [banners, setBanners] = useState([])
+  const [copiedId, setCopiedId] = useState(null)
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -145,6 +146,13 @@ function ReferralScrollBanner() {
       const { scrollLeft, clientWidth } = scrollRef.current
       scrollRef.current.scrollTo({ left: direction === 'left' ? scrollLeft - clientWidth / 2 : scrollLeft + clientWidth / 2, behavior: 'smooth' })
     }
+  }
+
+  const copyCode = (id, code) => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 2000)
+    }).catch(() => { })
   }
 
   if (banners.length === 0) return null
@@ -168,17 +176,28 @@ function ReferralScrollBanner() {
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#020617] to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#020617] to-transparent" />
         <div ref={scrollRef} className="flex-1 flex gap-3.5 overflow-x-auto scrollbar-none py-3 px-10 scroll-smooth">
-          {banners.map((b) => (
-            <div key={b.banner_id} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.15] px-4 py-2 backdrop-blur-md shrink-0 transition-all duration-300">
-              <BannerLogo type={b.logo_type} logoUrl={resolveUploadUrl(b.logo_url)} />
-              <span className="text-xs font-extrabold text-white/95 whitespace-nowrap">{b.label}</span>
-              <span className="text-white/20 font-light">|</span>
-              <div className="flex items-center gap-1.5 bg-black/35 px-2.5 py-1 rounded-lg border border-[#6cf8bb]/15">
-                <span className="material-symbols-outlined text-[12px] text-[#6cf8bb]">card_giftcard</span>
-                <span className="text-[10px] font-black tracking-widest text-[#6cf8bb] whitespace-nowrap">{b.ref_code}</span>
+          {banners.map((b) => {
+            const copied = copiedId === b.banner_id
+            return (
+              <div key={b.banner_id} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.15] px-4 py-2 backdrop-blur-md shrink-0 transition-all duration-300">
+                <BannerLogo type={b.logo_type} logoUrl={resolveUploadUrl(b.logo_url)} />
+                <span className="text-xs font-extrabold text-white/95 whitespace-nowrap">{b.label}</span>
+                <span className="text-white/20 font-light">|</span>
+                <button
+                  onClick={() => copyCode(b.banner_id, b.ref_code)}
+                  title="ຄັດລອກລະຫັດ"
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-all duration-200 cursor-pointer select-none ${copied ? 'bg-[#6cf8bb]/20 border-[#6cf8bb]/50' : 'bg-black/35 border-[#6cf8bb]/15 hover:bg-[#6cf8bb]/10 hover:border-[#6cf8bb]/35'}`}
+                >
+                  <span className="material-symbols-outlined text-[12px] text-[#6cf8bb]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    {copied ? 'check_circle' : 'content_copy'}
+                  </span>
+                  <span className={`text-[10px] font-black tracking-widest whitespace-nowrap transition-colors duration-200 ${copied ? 'text-[#6cf8bb]' : 'text-[#6cf8bb]'}`}>
+                    {copied ? 'ຄັດລອກແລ້ວ!' : b.ref_code}
+                  </span>
+                </button>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>
