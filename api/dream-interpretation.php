@@ -171,9 +171,12 @@ if (!empty($matchedDreams)) {
 // PATH B — ບໍ່ມີໃນ DB: ໂທ AI ຕີຄວາມໄດ້ເສລີ ແຕ່ຕ້ອງສອດຄ່ອງ
 // ════════════════════════════════════════════════════════════════════
 $systemPrompt = "ທ່ານແມ່ນ ຜູ້ຊ່ຽວຊານຕໍາລາຄວາມຝັນ ສຳລັບສະຫຼາກລາວ."
-    . "\nໜ້າທີ່: ຕີຄວາມໝາຍຄວາມຝັນ ແລະ ແນະນຳ 3-5 ເລກໂຊກດີ (00-99)."
+    . "\nໜ້າທີ່: ຕີຄວາມໝາຍຄວາມຝັນ ແລະ ແນະນຳ 3-5 ເລກໂຊກດີ (0-99)."
     . "\nໃຊ້ຄວາມຮູ້ຕໍາລາຄວາມຝັນລາວ/ໄທ ໃນການວິເຄາະ ເລກຕ້ອງສອດຄ່ອງກັບຄວາມໝາຍ."
-    . "\n\nຕອບເປັນ JSON (ບໍ່ຕ້ອງມີ markdown):"
+    . "\n\n⚠️ JSON rules:"
+    . "\n- ໃຊ້ integer ລ້ວນ ຫ້າມ leading zero (ຂຽນ 8 ບໍ່ແມ່ນ 08, ຂຽນ 5 ບໍ່ແມ່ນ 05)"
+    . "\n- ຕອບ JSON ດຽວເທົ່ານັ້ນ ບໍ່ຕ້ອງມີ markdown ຫຼື ຂໍ້ຄວາມໃດໆນອກ JSON"
+    . "\n\nຮູບແບບ JSON:"
     . "\n{\"meaning\": \"ຄວາມໝາຍ...\", \"numbers\": [12, 34, 56], \"explanation\": \"ເຫດຜົນ...\"}"
     . "\nຕອບເປັນພາສາລາວ ສະເໝີ.";
 
@@ -234,16 +237,26 @@ foreach ($data['content'] as $block) {
 // Strip markdown fences if present
 $text = preg_replace('/^```(?:json)?\s*/m', '', $text);
 $text = preg_replace('/\s*```$/m', '', $text);
-$parsed = json_decode(trim($text), true);
+$text = trim($text);
+
+// Fix leading-zero numbers inside "numbers" array (e.g. 08 → 8) — invalid JSON
+$text = preg_replace_callback('/"numbers"\s*:\s*\[([^\]]+)\]/', function ($m) {
+    $fixed = preg_replace('/\b0+(\d)/', '$1', $m[1]);
+    return '"numbers": [' . $fixed . ']';
+}, $text);
+
+$parsed = json_decode($text, true);
 
 if (!$parsed || !isset($parsed['numbers'])) {
-    echo json_encode(['meaning' => $text, 'numbers' => [], 'explanation' => '']);
+    http_response_code(500);
+    echo json_encode(['error' => 'AI ສົ່ງຂໍ້ມູນຮູບແບບຜິດ ກະລຸນາລອງໃໝ່']);
     exit();
 }
 
 echo json_encode([
-    'meaning' => $parsed['meaning'] ?? '',
-    'numbers' => array_slice((array) ($parsed['numbers'] ?? []), 0, 5),
+    'meaning'     => $parsed['meaning']     ?? '',
+    'numbers'     => array_slice((array) ($parsed['numbers'] ?? []), 0, 5),
     'explanation' => $parsed['explanation'] ?? '',
-    'from_db' => count($matchedDreams), // debug: ຈຳນວນ entry ທີ່ match
+    'from_db'     => 0,
+    'source'      => 'ai',
 ]);
