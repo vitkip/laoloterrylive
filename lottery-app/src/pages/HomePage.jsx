@@ -320,6 +320,133 @@ function TickerItem({ draw, color }) {
   )
 }
 
+// ── Ending Digits Section ─────────────────────────────────────────────
+function EndingDigitsSection({ draws }) {
+  const { endingStats, totalValid } = useMemo(() => {
+    if (!draws?.length) return { endingStats: [], totalValid: 0 }
+
+    // Count frequency of last single digit (0–9) from the 2-digit prize result
+    const freq = { '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0 }
+    let totalValid = 0
+
+    draws.forEach(d => {
+      const twoDigit = d.results_detail?.find(r => r.prize_type === '2_digits')
+      const val = twoDigit?.result_value
+      if (val && val.length >= 1) {
+        const lastDigit = val.slice(-1)
+        if (freq[lastDigit] !== undefined) {
+          freq[lastDigit]++
+          totalValid++
+        }
+      }
+    })
+
+    const endingStats = Object.entries(freq)
+      .map(([digit, count]) => ({ digit, count }))
+      .sort((a, b) => b.count - a.count)
+
+    return { endingStats, totalValid }
+  }, [draws])
+
+  if (!endingStats.length || totalValid === 0) return null
+
+  const maxCount = endingStats[0]?.count || 1
+
+  const RANK_COLORS = [
+    { ball: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #f59e0b 45%, #b45309 80%)', glow: 'rgba(245,158,11,0.55)', txt: '#78350f', bar: '#f59e0b', badge: '#d4af37' },
+    { ball: 'radial-gradient(circle at 35% 30%, #e2e8f0 0%, #94a3b8 45%, #475569 80%)', glow: 'rgba(148,163,184,0.45)', txt: '#fff', bar: '#94a3b8', badge: '#94a3b8' },
+    { ball: 'radial-gradient(circle at 35% 30%, #fed7aa 0%, #ea580c 45%, #9a3412 80%)', glow: 'rgba(234,88,12,0.45)', txt: '#fff', bar: '#ea580c', badge: '#b45309' },
+  ]
+
+  return (
+    <section className="space-y-5">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.28)' }}>
+            <span className="material-symbols-outlined text-indigo-400 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>pin</span>
+          </div>
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-wider text-white">ເລກທ້າຍທີ່ອອກຫຼາຍສຸດ</h2>
+            <p className="text-[10px] mt-0.5 text-white/30 font-bold">1 ຕົວທ້າຍ ຈາກ {totalValid} ງວດ (ຫວຍ 2 ຕົວ)</p>
+          </div>
+        </div>
+        <Link to="/statistics" className="inline-flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 text-xs font-black hover:gap-2.5 transition-all duration-200 group">
+          ເບິ່ງທັງໝົດ
+          <span className="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+        </Link>
+      </div>
+
+      <div className="hp-glass rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-48 h-48 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(99,102,241,0.07)' }} />
+
+        {/* Top 3 podium */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {endingStats.slice(0, 3).map((item, i) => {
+            const rc = RANK_COLORS[i]
+            const pct = ((item.count / totalValid) * 100).toFixed(1)
+            return (
+              <div key={item.digit}
+                className="relative flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 hover:scale-[1.03]"
+                style={{ background: `${rc.badge}10`, borderColor: `${rc.badge}30`, boxShadow: `0 4px 18px ${rc.glow}` }}
+              >
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black border border-white/10 shadow"
+                  style={{ background: rc.badge, color: i === 0 ? '#78350f' : '#fff' }}>
+                  {i + 1}
+                </span>
+                <div className="hp-ball shadow-lg" style={{ width: 52, height: 52, background: rc.ball, color: rc.txt, fontSize: 24, fontWeight: 900, boxShadow: `0 4px 16px ${rc.glow}, inset 0 -3px 6px rgba(0,0,0,0.25)` }}>
+                  <span style={{ position: 'relative', zIndex: 1 }}>{item.digit}</span>
+                </div>
+                <div className="text-center">
+                  <p className="font-black text-white text-sm leading-none">{item.count}x</p>
+                  <p className="text-[10px] font-bold text-white/40 mt-0.5">{pct}%</p>
+                </div>
+                <div className="w-full h-1 rounded-full bg-white/5 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${(item.count / maxCount) * 100}%`, background: rc.bar }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Rank 4–10 list */}
+        <div className="space-y-2">
+          {endingStats.slice(3).map((item, i) => {
+            const rank = i + 4
+            const pct = ((item.count / totalValid) * 100).toFixed(1)
+            const barW = Math.round((item.count / maxCount) * 100)
+            return (
+              <div key={item.digit} className="flex items-center gap-3 group">
+                <span className="w-5 text-[10px] font-black text-white/20 text-center shrink-0">{rank}</span>
+                <div className="hp-ball shrink-0"
+                  style={{ width: 36, height: 36, background: 'radial-gradient(circle at 35% 30%, #a5b4fc 0%, #6366f1 45%, #3730a3 80%)', color: '#fff', fontSize: 15, fontWeight: 900, boxShadow: '0 3px 10px rgba(99,102,241,0.35), inset 0 -2px 4px rgba(0,0,0,0.2)' }}>
+                  <span style={{ position: 'relative', zIndex: 1 }}>{item.digit}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-black text-white/70 group-hover:text-white transition-colors">{item.count}x</span>
+                    <span className="text-[9px] font-bold text-white/30">{pct}%</span>
+                  </div>
+                  <div className="h-1 w-full rounded-full bg-white/[0.05] overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${barW}%`, background: 'linear-gradient(to right, #6366f1, #818cf8)' }} />
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <p className="text-[10px] mt-4 flex items-center gap-1.5 font-bold text-white/25">
+          <span className="material-symbols-outlined text-[13px] text-indigo-400/70 shrink-0">info</span>
+          ນັບຈາກ 1 ຕົວທ້າຍ ຂອງເລກ 2 ຕົວ (ຫວຍ 2 ຕົວ) ທຸກງວດ
+        </p>
+      </div>
+    </section>
+  )
+}
+
 // ── AI News Section ───────────────────────────────────────────────────
 function HomeNewsSection({ draws }) {
   const [copied, setCopied] = useState(false)
@@ -706,6 +833,9 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ─── Ending Digits Section ─── */}
+      <EndingDigitsSection draws={draws} />
 
       {/* ─── Recent Draws ─── */}
       {recentDraws.length > 0 && (
