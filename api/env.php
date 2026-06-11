@@ -95,5 +95,8 @@ define('APP_URL', env('APP_URL', 'http://localhost:5173'));
 $_rawOrigins = env('ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost');
 define('ALLOWED_ORIGINS', array_map('trim', explode(',', $_rawOrigins)));
 
+// ── Anthropic Claude API ───────────────────────────────────────────
+define('ANTHROPIC_API_KEY', env('ANTHROPIC_API_KEY', ''));
+
 // ── Cleanup ─────────────────────────────────────────────────────────
 unset($_isLocal, $_envProduction, $_rawOrigins, $envPath);

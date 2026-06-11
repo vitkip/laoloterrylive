@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { animals } from '../data/animals';
 import { dreamDictionary } from '../data/dreams';
+import { API } from '../utils/api';
 
 const QUICK_HINTS = ['ງູ', 'ປາ', 'ຊ້າງ', 'ແມວ', 'ໝາ', 'ນ້ຳ', 'ໄຟ', 'ເງິນ'];
 
@@ -287,11 +288,180 @@ const STYLE = `
   .dd-meaning-txt {
     font-size: 11px; line-height: 1.75; color: rgba(196,181,253,0.65); margin: 0;
   }
+
+  /* ── Mode toggle ── */
+  .dd-mode-wrap {
+    display: flex; gap: 6px; padding: 4px;
+    background: rgba(13,10,30,0.70);
+    border: 1px solid rgba(124,58,237,0.16);
+    border-radius: 14px;
+  }
+  .dd-mode-btn {
+    flex: 1; padding: 9px 8px; border-radius: 10px; border: none; cursor: pointer;
+    font-size: 12px; font-weight: 900; letter-spacing: 0.03em;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .dd-mode-btn.active {
+    background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%);
+    color: #fff;
+    box-shadow: 0 0 18px rgba(124,58,237,0.38);
+  }
+  .dd-mode-btn.inactive {
+    background: transparent; color: rgba(167,139,250,0.50);
+  }
+  .dd-mode-btn.inactive:hover {
+    background: rgba(124,58,237,0.10); color: rgba(196,181,253,0.80);
+  }
+
+  /* ── AI textarea ── */
+  .dd-ai-textarea {
+    width: 100%;
+    background: rgba(13,10,30,0.90);
+    border: 1.5px solid rgba(124,58,237,0.24);
+    border-radius: 14px;
+    padding: 13px 16px;
+    font-size: 14px; font-weight: 500; color: #e9d5ff;
+    outline: none; resize: none; backdrop-filter: blur(12px);
+    line-height: 1.7;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+  }
+  .dd-ai-textarea::placeholder { color: rgba(139,92,246,0.40); font-size: 13px; }
+  .dd-ai-textarea:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+  }
+
+  /* ── AI submit button ── */
+  .dd-ai-btn {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%);
+    border: none; border-radius: 14px; cursor: pointer;
+    font-size: 14px; font-weight: 900; color: #fff; letter-spacing: 0.03em;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 18px rgba(124,58,237,0.35);
+  }
+  .dd-ai-btn:hover:not(:disabled) {
+    transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,58,237,0.50);
+  }
+  .dd-ai-btn:disabled {
+    opacity: 0.60; cursor: not-allowed; transform: none;
+  }
+
+  /* ── AI result card ── */
+  .dd-ai-result {
+    background: linear-gradient(148deg, #0d0a1e 0%, #160d2e 100%);
+    border: 1px solid rgba(124,58,237,0.25);
+    border-radius: 18px; overflow: hidden;
+    animation: dd-card-rise 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .dd-ai-result-header {
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid rgba(124,58,237,0.12);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .dd-ai-badge {
+    font-size: 9px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 20px;
+    background: rgba(124,58,237,0.16); border: 1px solid rgba(124,58,237,0.30);
+    color: #c4b5fd;
+  }
+  .dd-ai-meaning-box {
+    padding: 14px 18px 0;
+    font-size: 13px; line-height: 1.75; color: rgba(196,181,253,0.80);
+  }
+  .dd-ai-expl-box {
+    padding: 10px 18px 16px;
+    font-size: 12px; line-height: 1.70; color: rgba(167,139,250,0.55);
+  }
+  .dd-ai-balls-wrap {
+    padding: 14px 18px;
+    border-top: 1px solid rgba(124,58,237,0.10);
+  }
+  .dd-ai-balls-label {
+    font-size: 10px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(251,191,36,0.60); margin-bottom: 10px;
+  }
+  .dd-ai-ball {
+    position: relative;
+    width: 50px; height: 50px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+    background: radial-gradient(circle at 35% 30%, #ffd060 0%, #f59e0b 42%, #b45309 78%, #78350f 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 18px rgba(251,191,36,0.50), inset 0 -3px 6px rgba(0,0,0,0.28);
+    animation: dd-ball-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .dd-ai-ball::after {
+    content: '';
+    position: absolute; top: 8%; left: 12%; width: 42%; height: 34%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.56) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .dd-ai-ball-n {
+    position: relative; z-index: 1;
+    font-size: 16px; font-weight: 900; color: #78350f; letter-spacing: -0.02em;
+  }
+  @keyframes dd-ball-pop {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* ── AI loading spinner ── */
+  .dd-ai-loading {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 50px 20px; gap: 16px;
+  }
+  .dd-ai-spinner {
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 3px solid rgba(124,58,237,0.15);
+    border-top-color: #8b5cf6;
+    animation: dd-spin-cw 0.9s linear infinite;
+  }
+  .dd-ai-loading-txt {
+    font-size: 13px; font-weight: 700; color: rgba(167,139,250,0.60);
+  }
+
+  /* ── AI error ── */
+  .dd-ai-error {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.22);
+    border-radius: 14px; padding: 14px 16px;
+    font-size: 12px; color: #f87171; line-height: 1.65;
+  }
 `;
 
 /* ─────────────────────────────────────────────────────────────── */
 export default function DreamDictionary() {
+  const [mode, setMode] = useState('dict'); // 'dict' | 'ai'
   const [searchTerm, setSearchTerm] = useState('');
+
+  // AI mode state
+  const [aiInput, setAiInput]   = useState('');
+  const [aiResult, setAiResult] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError]   = useState('');
+
+  const handleAiSubmit = async () => {
+    if (!aiInput.trim() || aiLoading) return;
+    setAiLoading(true);
+    setAiError('');
+    setAiResult(null);
+    try {
+      const res = await fetch(`${API}/dream-interpretation.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dream: aiInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'ຜິດພາດ');
+      setAiResult(data);
+    } catch (err) {
+      setAiError(err.message || 'ບໍ່ສາມາດເຊື່ອມຕໍ່ AI ໄດ້');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const results = useMemo(() => {
     if (!searchTerm.trim()) return [];
@@ -344,51 +514,113 @@ export default function DreamDictionary() {
             <p className="dd-hdr-sub">Dream Oracle · ຄົ້ນຫາໂຊກດີຈາກຄວາມຝັນ</p>
           </div>
 
-          {/* Search input */}
-          <div className="dd-search-wrap">
-            <span className="material-symbols-outlined dd-search-icon">search</span>
-            <input
-              type="text"
-              placeholder="ຝັນເຫັນຫຍັງ? ເຊັ່ນ: ງູ, ນ້ຳ, ໄຟ..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="dd-search-input"
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm('')} className="dd-clear-btn">
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
-              </button>
-            )}
+          {/* Mode toggle */}
+          <div className="dd-mode-wrap">
+            <button
+              className={`dd-mode-btn ${mode === 'dict' ? 'active' : 'inactive'}`}
+              onClick={() => setMode('dict')}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>
+                menu_book
+              </span>
+              ຕຳລາ
+            </button>
+            <button
+              className={`dd-mode-btn ${mode === 'ai' ? 'active' : 'inactive'}`}
+              onClick={() => setMode('ai')}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>
+                smart_toy
+              </span>
+              AI ຕີຄວາມ
+            </button>
           </div>
 
-          {/* Quick hint rune chips */}
-          {!searchTerm && (
-            <div>
-              <p className="dd-hints-label">✦ ຄຳຄົ້ນຫາທີ່ນິຍົມ</p>
-              <div className="flex flex-wrap gap-2">
-                {QUICK_HINTS.map(hint => (
-                  <button key={hint} onClick={() => setSearchTerm(hint)} className="dd-rune">
-                    {hint}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Result count */}
-          {searchTerm && (
-            <div>
-              {results.length > 0 ? (
-                <span className="dd-badge-found">
-                  <span className="dd-badge-dot" />
-                  ພົບ {results.length} ຄຳທຳນາຍ
-                </span>
-              ) : (
-                <span className="dd-badge-empty">
-                  <span className="dd-badge-dot" />
-                  ບໍ່ພົບໃນຕຳລາ
-                </span>
+          {/* ── Dict mode ── */}
+          {mode === 'dict' && (<>
+            {/* Search input */}
+            <div className="dd-search-wrap">
+              <span className="material-symbols-outlined dd-search-icon">search</span>
+              <input
+                type="text"
+                placeholder="ຝັນເຫັນຫຍັງ? ເຊັ່ນ: ງູ, ນ້ຳ, ໄຟ..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="dd-search-input"
+              />
+              {searchTerm && (
+                <button onClick={() => setSearchTerm('')} className="dd-clear-btn">
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                </button>
               )}
+            </div>
+
+            {/* Quick hint rune chips */}
+            {!searchTerm && (
+              <div>
+                <p className="dd-hints-label">✦ ຄຳຄົ້ນຫາທີ່ນິຍົມ</p>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_HINTS.map(hint => (
+                    <button key={hint} onClick={() => setSearchTerm(hint)} className="dd-rune">
+                      {hint}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Result count */}
+            {searchTerm && (
+              <div>
+                {results.length > 0 ? (
+                  <span className="dd-badge-found">
+                    <span className="dd-badge-dot" />
+                    ພົບ {results.length} ຄຳທຳນາຍ
+                  </span>
+                ) : (
+                  <span className="dd-badge-empty">
+                    <span className="dd-badge-dot" />
+                    ບໍ່ພົບໃນຕຳລາ
+                  </span>
+                )}
+              </div>
+            )}
+          </>)}
+
+          {/* ── AI mode ── */}
+          {mode === 'ai' && (
+            <div className="flex flex-col gap-3">
+              <p className="dd-hints-label">✦ ເລົ່າຄວາມຝັນຂອງທ່ານ ແລ້ວ AI ຈະຕີຄວາມ</p>
+              <textarea
+                className="dd-ai-textarea"
+                rows={4}
+                placeholder="ເຊັ່ນ: ຂ້ອຍຝັນເຫັນງູໃຫຍ່ສີຂາວ ລອຍຢູ່ໃນອາກາດ ຈາກນັ້ນກໍມີຝົນຕົກ..."
+                value={aiInput}
+                onChange={e => setAiInput(e.target.value)}
+                maxLength={1000}
+              />
+              <div style={{ textAlign: 'right', fontSize: 11, color: 'rgba(139,92,246,0.40)' }}>
+                {aiInput.length}/1000
+              </div>
+              <button
+                className="dd-ai-btn"
+                onClick={handleAiSubmit}
+                disabled={!aiInput.trim() || aiLoading}
+              >
+                {aiLoading ? (
+                  <>
+                    <div className="dd-ai-spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+                    AI ກຳລັງວິເຄາະ...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>
+                      auto_awesome
+                    </span>
+                    ຕີຄວາມຄວາມຝັນ
+                  </>
+                )}
+              </button>
             </div>
           )}
         </div>
@@ -397,8 +629,91 @@ export default function DreamDictionary() {
         <div className="lg:col-span-3 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[65vh] lg:max-h-none">
 
+            {/* ── AI mode results ── */}
+            {mode === 'ai' && (<>
+              {aiLoading && (
+                <div className="dd-ai-loading">
+                  <div className="dd-ai-spinner" />
+                  <p className="dd-ai-loading-txt">AI ກຳລັງວິເຄາະຄວາມຝັນ...</p>
+                </div>
+              )}
+
+              {aiError && !aiLoading && (
+                <div className="dd-ai-error">
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, flexShrink: 0, color: '#f87171' }}>
+                    error
+                  </span>
+                  {aiError}
+                </div>
+              )}
+
+              {aiResult && !aiLoading && (
+                <div className="dd-ai-result">
+                  <div className="dd-ai-result-header">
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: 22, color: '#a78bfa', fontVariationSettings: "'FILL' 1" }}
+                    >
+                      smart_toy
+                    </span>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: '#c4b5fd' }}>
+                        ຜົນການວິເຄາະ
+                      </div>
+                      <div style={{ fontSize: 10, color: 'rgba(167,139,250,0.45)', marginTop: 1 }}>
+                        Claude AI · ຕໍາລາຄວາມຝັນ
+                      </div>
+                    </div>
+                    <span className="dd-ai-badge" style={{ marginLeft: 'auto' }}>AI</span>
+                  </div>
+
+                  {aiResult.meaning && (
+                    <div className="dd-ai-meaning-box">{aiResult.meaning}</div>
+                  )}
+                  {aiResult.explanation && (
+                    <div className="dd-ai-expl-box">{aiResult.explanation}</div>
+                  )}
+
+                  {aiResult.numbers && aiResult.numbers.length > 0 && (
+                    <div className="dd-ai-balls-wrap">
+                      <p className="dd-ai-balls-label">✦ ເລກໂຊກດີຈາກ AI</p>
+                      <div className="flex flex-wrap gap-3">
+                        {aiResult.numbers.map((n, i) => (
+                          <div
+                            key={i}
+                            className="dd-ai-ball"
+                            style={{ animationDelay: `${i * 0.1}s` }}
+                          >
+                            <span className="dd-ai-ball-n">{String(n).padStart(2, '0')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!aiLoading && !aiResult && !aiError && (
+                <div className="dd-idle-wrap">
+                  <div className="dd-orb">
+                    <span
+                      className="material-symbols-outlined dd-orb-icon"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      smart_toy
+                    </span>
+                    <div className="dd-orb-ring dd-orb-ring-1" />
+                    <div className="dd-orb-ring dd-orb-ring-2" />
+                  </div>
+                  <p className="dd-idle-title">AI ພ້ອມແລ້ວ</p>
+                  <p className="dd-idle-sub">ເລົ່າຄວາມຝັນຂອງທ່ານ ແລ້ວ AI ຈະຕີຄວາມ ແລະ ແນະນຳເລກ</p>
+                </div>
+              )}
+            </>)}
+
+            {/* ── Dict mode results ── */}
             {/* Idle state */}
-            {!searchTerm && (
+            {mode === 'dict' && !searchTerm && (
               <div className="dd-idle-wrap">
                 <div className="dd-orb">
                   <span
@@ -416,7 +731,7 @@ export default function DreamDictionary() {
             )}
 
             {/* No results */}
-            {searchTerm && results.length === 0 && (
+            {mode === 'dict' && searchTerm && results.length === 0 && (
               <div className="dd-idle-wrap">
                 <div className="dd-orb dd-orb-red">
                   <span
@@ -434,7 +749,7 @@ export default function DreamDictionary() {
             )}
 
             {/* Result cards */}
-            {results.map((res, idx) => {
+            {mode === 'dict' && results.map((res, idx) => {
               const numbers = res.type === 'animal'
                 ? res.data.animal_numbers.split(',')
                 : res.numbers.split(',');
