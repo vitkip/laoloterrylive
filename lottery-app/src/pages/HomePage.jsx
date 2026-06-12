@@ -266,7 +266,7 @@ function FeatureCard({ icon, title, desc, to, accent, badge }) {
 // ── Stat card ─────────────────────────────────────────────────────────
 function StatCard({ icon, label, value, image, accent = '#003fb1' }) {
   return (
-    <div 
+    <div
       className="group relative hp-glass rounded-3xl p-5 overflow-hidden transition-all duration-300 hover:-translate-y-1"
       style={{ '--hover-glow': `${accent}15`, '--hover-border': `${accent}40` }}
     >
@@ -283,14 +283,14 @@ function StatCard({ icon, label, value, image, accent = '#003fb1' }) {
           </div>
           <div className="hp-spark">
             {[30, 55, 80, 100].map((h, i) => (
-              <div 
-                key={i} 
-                className="hp-spark-bar" 
-                style={{ 
-                  height: `${h}%`, 
-                  background: `linear-gradient(to top, ${accent}, #fff)`, 
-                  opacity: 0.25 + i * 0.15 
-                }} 
+              <div
+                key={i}
+                className="hp-spark-bar"
+                style={{
+                  height: `${h}%`,
+                  background: `linear-gradient(to top, ${accent}, #fff)`,
+                  opacity: 0.25 + i * 0.15
+                }}
               />
             ))}
           </div>
@@ -561,6 +561,176 @@ function HomeNewsSection({ draws }) {
   )
 }
 
+// ── Happy 545 Strip ───────────────────────────────────────────────────
+const H545_MEDAL = [
+  { bg: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #d4af37 42%, #92400e 78%, #78350f 100%)', glow: 'rgba(212,175,55,0.55)', txt: '#78350f', border: '#d4af37' },
+  { bg: 'radial-gradient(circle at 35% 30%, #e2e8f0 0%, #94a3b8 42%, #475569 78%, #1e293b 100%)', glow: 'rgba(148,163,184,0.40)', txt: '#fff', border: '#94a3b8' },
+  { bg: 'radial-gradient(circle at 35% 30%, #fed7aa 0%, #cd7f32 42%, #78350f 78%, #451a03 100%)', glow: 'rgba(205,127,50,0.40)', txt: '#fff', border: '#cd7f32' },
+]
+
+function Happy545Strip() {
+  const [draws545, setDraws545] = useState([])
+  const [stats545, setStats545] = useState([])
+  const [loading545, setLoading545] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`${API}/happy545.php?r=draws`),
+      fetch(`${API}/happy545.php?r=stats/last-digit`),
+    ])
+      .then(([rD, rS]) => Promise.all([rD.ok ? rD.json() : [], rS.ok ? rS.json() : []]))
+      .then(([d, s]) => { setDraws545(d); setStats545(s) })
+      .catch(() => { })
+      .finally(() => setLoading545(false))
+  }, [])
+
+  if (loading545) {
+    return (
+      <section className="space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-white/[0.04] animate-pulse" />
+          <div className="space-y-1.5">
+            <div className="w-32 h-3 rounded bg-white/[0.06] animate-pulse" />
+            <div className="w-48 h-2.5 rounded bg-white/[0.04] animate-pulse" />
+          </div>
+        </div>
+        <div className="hp-glass rounded-3xl p-6 h-44 animate-pulse" />
+      </section>
+    )
+  }
+
+  if (!draws545.length) return null
+
+  const latest = draws545[0]
+  const top3 = stats545.slice(0, 3)
+
+  const pBallBlue = {
+    background: 'radial-gradient(circle at 35% 30%, #bfdbfe 0%, #3b82f6 45%, #1e3a8a 80%)',
+    boxShadow: '0 3px 10px rgba(59,130,246,0.35), inset 0 -2px 4px rgba(0,0,0,0.2)',
+    color: '#fff',
+  }
+  const p5Ball = {
+    background: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #d4af37 42%, #92400e 78%, #78350f 100%)',
+    boxShadow: '0 4px 20px rgba(212,175,55,0.65), 0 0 0 2px rgba(212,175,55,0.18), inset 0 -3px 6px rgba(0,0,0,0.25)',
+    color: '#78350f',
+  }
+
+  return (
+    <section className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.28)' }}>
+            <span style={{ fontSize: 18, lineHeight: 1 }}>🎲</span>
+          </div>
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
+              Happy 545
+              <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(212,175,55,0.14)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.28)' }}>
+                NEW
+              </span>
+            </h2>
+            <p className="text-[10px] mt-0.5 text-white/30 font-bold">ສະຖິຕິເລກທ້າຍ (pos5) · ທຸກ 45 ຄ່າ</p>
+          </div>
+        </div>
+        <Link to="/happy545"
+          className="inline-flex items-center gap-1.5 text-[#d4af37] hover:text-[#f59e0b] text-xs font-black hover:gap-2.5 transition-all duration-200 group">
+          ເບິ່ງທັງໝົດ
+          <span className="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+        </Link>
+      </div>
+
+      {/* Card */}
+      <div className="hp-glass rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+        {/* Ambient glow */}
+        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl pointer-events-none"
+          style={{ background: 'rgba(212,175,55,0.07)' }} />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start gap-5 sm:gap-6">
+
+          {/* ── Latest draw ── */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-3.5">
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/30">ງວດຫຼ້າສຸດ</span>
+              <span className="text-[10px] font-extrabold tabular-nums"
+                style={{ color: 'rgba(255,255,255,0.45)' }}>{latest.draw_date}</span>
+            </div>
+
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {[latest.pos1, latest.pos2, latest.pos3, latest.pos4].map((p, i) => (
+                <div key={i} className="hp-ball" style={{ width: 44, height: 44, fontSize: 16, fontWeight: 900, ...pBallBlue }}>
+                  <span style={{ position: 'relative', zIndex: 1 }}>{String(p).padStart(2, '0')}</span>
+                </div>
+              ))}
+
+              {/* P5 separator + gold ball */}
+              <div className="flex items-center gap-1.5 ml-1">
+                <div className="w-px h-8 rounded-full bg-white/[0.1]" />
+                <span className="text-[9px] font-black uppercase tracking-wider"
+                  style={{ color: 'rgba(212,175,55,0.7)' }}>P5</span>
+                <div className="hp-ball" style={{ width: 50, height: 50, fontSize: 19, fontWeight: 900, ...p5Ball }}>
+                  <span style={{ position: 'relative', zIndex: 1 }}>{String(latest.pos5).padStart(2, '0')}</span>
+                </div>
+                <span style={{ color: '#d4af37', fontSize: 14, lineHeight: 1 }}>★</span>
+              </div>
+            </div>
+
+            {stats545.length > 0 && (
+              <p className="mt-3 text-[10px] font-bold text-white/25">
+                ທັງໝົດ <span className="text-white/45">{draws545.length}</span> ງວດ
+                · ອອກຫຼາຍສຸດ: <span style={{ color: '#d4af37' }}>{stats545[0]?.label}</span> ({stats545[0]?.count} ຄັ້ງ)
+              </p>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="hidden sm:block w-px bg-white/[0.06] self-stretch" />
+          <div className="sm:hidden h-px bg-white/[0.06]" />
+
+          {/* ── Top 3 most frequent pos5 ── */}
+          {top3.length > 0 && (
+            <div className="sm:w-[220px] shrink-0">
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-3">
+                ເລກທ້າຍຫຼາຍສຸດ (pos5)
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {top3.map((row, i) => {
+                  const m = H545_MEDAL[i]
+                  return (
+                    <div key={row.number}
+                      className="relative flex flex-col items-center gap-1.5 py-3.5 px-1.5 rounded-2xl border transition-all duration-300 hover:scale-[1.04] hover:-translate-y-0.5"
+                      style={{
+                        background: `${m.border}0e`,
+                        borderColor: `${m.border}30`,
+                        boxShadow: `0 4px 16px ${m.glow}`,
+                      }}
+                    >
+                      <span
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black border border-white/10 shadow"
+                        style={{ background: m.border, color: i === 0 ? '#78350f' : '#fff' }}
+                      >{i + 1}</span>
+
+                      <div className="hp-ball shadow-md"
+                        style={{ width: 40, height: 40, background: m.bg, color: m.txt, fontSize: 16, fontWeight: 900, boxShadow: `0 3px 12px ${m.glow}, inset 0 -2px 4px rgba(0,0,0,0.2)` }}>
+                        <span style={{ position: 'relative', zIndex: 1 }}>{row.label}</span>
+                      </div>
+
+                      <p className="font-black text-white text-xs leading-none">{row.count}×</p>
+                      <p className="text-[9px] font-bold text-white/35 leading-none">{row.percentage}%</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────
 export default function HomePage() {
   const { draws, types, animals } = useData();
@@ -573,27 +743,27 @@ export default function HomePage() {
     ? draws
     : draws.filter(d => String(d.type_id) === String(selectedType))
 
-  const latest      = filteredDraws.find(d => d.status === 'published') || filteredDraws[0]
+  const latest = filteredDraws.find(d => d.status === 'published') || filteredDraws[0]
   const recentDraws = latest ? filteredDraws.filter(d => d.draw_id !== latest.draw_id).slice(0, 4) : []
   const tickerDraws = draws.filter(d => d.status === 'published').slice(0, 8)
 
   const statItems = [
-    { icon: 'dataset',              label: 'ງວດທັງໝົດ',  value: `${draws.length} ງວດ`,                                                                                  accent: '#3b82f6' },
-    { icon: 'pets',                 label: 'ນາມສັດຮ້ອນ', value: stats?.animalStats?.[0] ? `${stats.animalStats[0].name} (${stats.animalStats[0].frequencyPercent}%)` : '-', image: stats?.animalStats?.[0]?.image_url || null, accent: '#10b981' },
-    { icon: 'local_fire_department',label: 'ເລກ Hot ສູງສຸດ',value: stats?.hotNumbers?.[0]?.number || '-',                                                                 accent: '#f97316' },
-    { icon: 'ac_unit',              label: 'ບໍ່ອອກດົນສຸດ', value: stats?.coldNumbers?.[0] ? `${stats.coldNumbers[0].number} (${stats.coldNumbers[0].missedRounds} ງວດ)` : '-', accent: '#38bdf8' },
+    { icon: 'dataset', label: 'ງວດທັງໝົດ', value: `${draws.length} ງວດ`, accent: '#3b82f6' },
+    { icon: 'pets', label: 'ນາມສັດຮ້ອນ', value: stats?.animalStats?.[0] ? `${stats.animalStats[0].name} (${stats.animalStats[0].frequencyPercent}%)` : '-', image: stats?.animalStats?.[0]?.image_url || null, accent: '#10b981' },
+    { icon: 'local_fire_department', label: 'ເລກ Hot ສູງສຸດ', value: stats?.hotNumbers?.[0]?.number || '-', accent: '#f97316' },
+    { icon: 'ac_unit', label: 'ບໍ່ອອກດົນສຸດ', value: stats?.coldNumbers?.[0] ? `${stats.coldNumbers[0].number} (${stats.coldNumbers[0].missedRounds} ງວດ)` : '-', accent: '#38bdf8' },
   ]
 
   const features = [
-    { icon: 'analytics',     title: 'ສະຖິຕິ & ການວິເຄາະ', desc: 'ສະຖິຕິລາຍລະອຽດ, ເລກ Hot/Cold, ການແຈກຢາຍຕົວເລກ ແລະ trend ສຸດທ້ອງ', to: '/statistics', accent: '#3b82f6',  badge: 'Dashboard' },
-    { icon: 'auto_awesome',  title: 'ຕຳລາຄວາມຝັນ',        desc: 'ແປຄວາມຝັນ 40 ນາມສັດ ແລະ ຊອກເລກທີ່ກ່ຽວຂ້ອງ ຕາມຕຳລາໂບຮານ',             to: '/search',     accent: '#7c3aed',  badge: 'ໃໝ່' },
-    { icon: 'manage_search', title: 'ຄົ້ນຫາຕາມເລກ',        desc: 'ກວດສອບປະຫວັດຂອງຕົວເລກ 00–99 ວ່າອອກເວລາໃດ ແລະ ຄວາມຖີ່ສໍ່ານ',           to: '/search',     accent: '#10b981' },
-    { icon: 'trending_up',   title: 'AI Analytics',         desc: 'ວິເຄາະ pattern, momentum, gap analysis ດ້ວຍ algorithm ທີ່ທັນສະໄໝ',            to: '/analytics',  accent: '#f59e0b',  badge: 'AI' },
+    { icon: 'analytics', title: 'ສະຖິຕິ & ການວິເຄາະ', desc: 'ສະຖິຕິລາຍລະອຽດ, ເລກ Hot/Cold, ການແຈກຢາຍຕົວເລກ ແລະ trend ສຸດທ້ອງ', to: '/statistics', accent: '#3b82f6', badge: 'Dashboard' },
+    { icon: 'auto_awesome', title: 'ຕຳລາຄວາມຝັນ', desc: 'ແປຄວາມຝັນ 40 ນາມສັດ ແລະ ຊອກເລກທີ່ກ່ຽວຂ້ອງ ຕາມຕຳລາໂບຮານ', to: '/search', accent: '#7c3aed', badge: 'ໃໝ່' },
+    { icon: 'manage_search', title: 'ຄົ້ນຫາຕາມເລກ', desc: 'ກວດສອບປະຫວັດຂອງຕົວເລກ 00–99 ວ່າອອກເວລາໃດ ແລະ ຄວາມຖີ່ສໍ່ານ', to: '/search', accent: '#10b981' },
+    { icon: 'trending_up', title: 'AI Analytics', desc: 'ວິເຄາະ pattern, momentum, gap analysis ດ້ວຍ algorithm ທີ່ທັນສະໄໝ', to: '/analytics', accent: '#f59e0b', badge: 'AI' },
   ]
 
-  const latestDraw     = draws.filter(d => d.status === 'published')[0]
-  const latestDateStr  = latestDraw?.draw_date ?? ''
-  const latestNumber   = latestDraw?.full_result ?? ''
+  const latestDraw = draws.filter(d => d.status === 'published')[0]
+  const latestDateStr = latestDraw?.draw_date ?? ''
+  const latestNumber = latestDraw?.full_result ?? ''
   const latestTypeName = types?.find(t => t.type_id === latestDraw?.type_id)?.type_name ?? 'ພັດທະນາ'
 
   const seoTitle = latestNumber
@@ -619,25 +789,25 @@ export default function HomePage() {
       <div className="relative rounded-[2rem] overflow-hidden bg-zinc-950 border border-white/[0.08] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85)]">
         {/* Graphic grid layout and radial highlights */}
         <div className="absolute inset-0 bg-grid-glow bg-repeat opacity-[0.25]" />
-        
+
         {/* Pulsating backdrop highlights */}
         <div className="absolute -top-[30%] -right-[20%] w-[80%] h-[80%] rounded-full blur-3xl"
           style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.18) 0%, transparent 70%)', animation: 'pulse-soft 10s ease-in-out infinite' }} />
         <div className="absolute -bottom-[20%] -left-[10%] w-[60%] h-[60%] rounded-full blur-3xl"
           style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)' }} />
-        
+
         {/* Floating background decorative lottery balls */}
         <div className="absolute top-[15%] right-[32%] w-14 h-14 rounded-full opacity-[0.18] pointer-events-none blur-[1px]"
-          style={{ 
+          style={{
             background: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #f59e0b 50%, #78350f 100%)',
-            animation: 'float-ball-1 12s ease-in-out infinite' 
-          }} 
+            animation: 'float-ball-1 12s ease-in-out infinite'
+          }}
         />
         <div className="absolute bottom-[20%] right-[8%] w-10 h-10 rounded-full opacity-[0.12] pointer-events-none blur-[2px]"
-          style={{ 
+          style={{
             background: 'radial-gradient(circle at 35% 30%, #fed7aa 0%, #ea580c 50%, #7c2d12 100%)',
-            animation: 'float-ball-2 15s ease-in-out infinite' 
-          }} 
+            animation: 'float-ball-2 15s ease-in-out infinite'
+          }}
         />
 
         <div className="relative z-10 px-8 sm:px-16 pt-14 sm:pt-18 pb-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -791,6 +961,9 @@ export default function HomePage() {
           <p className="text-xs font-bold text-white/30">ຍັງບໍ່ມີງວດຫວຍໃນປະເພດນີ້</p>
         </div>
       )}
+
+      {/* ─── Happy 545 Strip ─── */}
+      <Happy545Strip />
 
       {/* ─── Hot Numbers Strip ─── */}
       {stats?.hotNumbers?.length > 0 && (
