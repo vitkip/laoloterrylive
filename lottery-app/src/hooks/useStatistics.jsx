@@ -231,6 +231,23 @@ export const useStatistics = (timeframe = 'all', typeId = 'all') => {
       totalTwoDigitCount,
     };
 
+    // ─── Hot Three-Digit Endings (last 3 of 6-digit full_result) ───
+    const threeDigitCount = {};
+    chronologicalDraws.forEach(d => {
+      const fr = d.full_result;
+      if (fr && fr.length >= 6) {
+        const tail = fr.slice(-3);
+        if (/^\d{3}$/.test(tail)) {
+          threeDigitCount[tail] = (threeDigitCount[tail] || 0) + 1;
+        }
+      }
+    });
+
+    const hotThreeDigits = Object.entries(threeDigitCount)
+      .map(([number, count]) => ({ number, count }))
+      .sort((a, b) => b.count - a.count || a.number.localeCompare(b.number))
+      .slice(0, 5);
+
     return {
       hotNumbers,
       coldNumbers,
@@ -241,6 +258,7 @@ export const useStatistics = (timeframe = 'all', typeId = 'all') => {
       trendMomentum,
       gapAnalysis,
       repeatPatterns,
+      hotThreeDigits,
     };
   }, [draws, animals, timeframe, typeId]);
 

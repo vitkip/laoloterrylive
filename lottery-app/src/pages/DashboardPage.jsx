@@ -15,6 +15,7 @@ import ConsecutivePairs from '../components/ConsecutivePairs'
 import TrendMomentum from '../components/TrendMomentum'
 import GapAnalysis from '../components/GapAnalysis'
 import RepeatPattern from '../components/RepeatPattern'
+import HotThreeDigits from '../components/HotThreeDigits'
 
 const TIMEFRAMES = [
   { value: '1_month',  label: '1 ເດືອນ', icon: 'calendar_view_month' },
@@ -34,12 +35,13 @@ const BALL_DATA = [
 
 const SECTION_CONFIGS = [
   { num: '01', icon: 'local_fire_department', title: 'ເລກຮ້ອນ & ເລກດັບ',         subtitle: 'Hot / Cold Numbers',            accent: '#f97316' },
-  { num: '02', icon: 'bar_chart',             title: 'ການກະຈາຍຕົວເລກ',           subtitle: 'Digit Distribution',            accent: '#818cf8' },
-  { num: '03', icon: 'pets',                  title: 'ສະຖິຕິນາມສັດ',               subtitle: 'Animal Frequency Stats',        accent: '#4ade80' },
-  { num: '04', icon: 'insights',              title: 'ການວິເຄາະຂັ້ນສູງ',          subtitle: 'Weekday + Consecutive Patterns', accent: '#c084fc' },
-  { num: '05', icon: 'magic_button',          title: 'ຈັບຄູ່ເລກ & ນາມສັດ',        subtitle: 'Pairing Intelligence',           accent: '#2dd4bf' },
-  { num: '06', icon: 'trending_up',           title: 'Trend Intelligence',          subtitle: 'Momentum + Gap + Repeat',        accent: '#fbbf24' },
-  { num: '07', icon: 'format_list_numbered',  title: 'ຄວາມຖີ່ທຸກຕົວເລກ',          subtitle: 'Full Frequency Matrix 00–99',   accent: '#38bdf8' },
+  { num: '02', icon: 'filter_3',              title: '3 ຕົວທ້າຍ ເດັ່ນ',            subtitle: 'Hot 3-Digit Endings',           accent: '#6366f1' },
+  { num: '03', icon: 'bar_chart',             title: 'ການກະຈາຍຕົວເລກ',           subtitle: 'Digit Distribution',            accent: '#818cf8' },
+  { num: '04', icon: 'pets',                  title: 'ສະຖິຕິນາມສັດ',               subtitle: 'Animal Frequency Stats',        accent: '#4ade80' },
+  { num: '05', icon: 'insights',              title: 'ການວິເຄາະຂັ້ນສູງ',          subtitle: 'Weekday + Consecutive Patterns', accent: '#c084fc' },
+  { num: '06', icon: 'magic_button',          title: 'ຈັບຄູ່ເລກ & ນາມສັດ',        subtitle: 'Pairing Intelligence',           accent: '#2dd4bf' },
+  { num: '07', icon: 'trending_up',           title: 'Trend Intelligence',          subtitle: 'Momentum + Gap + Repeat',        accent: '#fbbf24' },
+  { num: '08', icon: 'format_list_numbered',  title: 'ຄວາມຖີ່ທຸກຕົວເລກ',          subtitle: 'Full Frequency Matrix 00–99',   accent: '#38bdf8' },
 ]
 
 // ── Deferred section ────────────────────────────────────────────────
@@ -392,9 +394,16 @@ export default function DashboardPage() {
             </div>
           </SectionCard>
 
-          {/* 02 — Distribution */}
-          <DeferredSection minHeight="340px">
+          {/* 02 — Hot 3-Digit Endings */}
+          <DeferredSection minHeight="220px">
             <SectionCard cfg={SECTION_CONFIGS[1]}>
+              <HotThreeDigits timeframe={timeframe} typeId={selectedType} />
+            </SectionCard>
+          </DeferredSection>
+
+          {/* 03 — Distribution */}
+          <DeferredSection minHeight="340px">
+            <SectionCard cfg={SECTION_CONFIGS[2]}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-background/60 backdrop-blur-sm rounded-2xl p-5 sm:p-6 border border-border/40">
                   <DigitDistribution timeframe={timeframe} />
@@ -406,16 +415,16 @@ export default function DashboardPage() {
             </SectionCard>
           </DeferredSection>
 
-          {/* 03 — Animal Stats */}
+          {/* 04 — Animal Stats */}
           <DeferredSection minHeight="260px">
-            <SectionCard cfg={SECTION_CONFIGS[2]}>
+            <SectionCard cfg={SECTION_CONFIGS[3]}>
               <AnimalStats timeframe={timeframe} typeId={selectedType} />
             </SectionCard>
           </DeferredSection>
 
-          {/* 04 — Advanced Analytics */}
+          {/* 05 — Advanced Analytics */}
           <DeferredSection minHeight="340px">
-            <SectionCard cfg={SECTION_CONFIGS[3]}>
+            <SectionCard cfg={SECTION_CONFIGS[4]}>
               <div className="space-y-6">
                 <WeekdayStats   timeframe={timeframe} typeId={selectedType} />
                 <ConsecutivePairs timeframe={timeframe} typeId={selectedType} />
@@ -423,16 +432,16 @@ export default function DashboardPage() {
             </SectionCard>
           </DeferredSection>
 
-          {/* 05 — Pairing Stats */}
+          {/* 06 — Pairing Stats */}
           <DeferredSection minHeight="340px">
-            <SectionCard cfg={SECTION_CONFIGS[4]}>
+            <SectionCard cfg={SECTION_CONFIGS[5]}>
               <PairingStats timeframe={timeframe} typeId={selectedType} />
             </SectionCard>
           </DeferredSection>
 
-          {/* 06 — Trend Intelligence */}
+          {/* 07 — Trend Intelligence */}
           <DeferredSection minHeight="340px">
-            <SectionCard cfg={SECTION_CONFIGS[5]}>
+            <SectionCard cfg={SECTION_CONFIGS[6]}>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
                 <TrendMomentum timeframe={timeframe} typeId={selectedType} />
                 <GapAnalysis   timeframe={timeframe} typeId={selectedType} />
@@ -441,9 +450,9 @@ export default function DashboardPage() {
             </SectionCard>
           </DeferredSection>
 
-          {/* 07 — Full Frequency */}
+          {/* 08 — Full Frequency */}
           <DeferredSection minHeight="220px">
-            <SectionCard cfg={SECTION_CONFIGS[6]}>
+            <SectionCard cfg={SECTION_CONFIGS[7]}>
               <CustomFrequency timeframe={timeframe} typeId={selectedType} />
             </SectionCard>
           </DeferredSection>

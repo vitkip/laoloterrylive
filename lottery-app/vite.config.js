@@ -14,9 +14,10 @@ export default defineConfig(({ command }) => ({
   },
   plugins: [react(), tailwindcss()],
 
-  // ໃນ dev mode: base = '/' ເພື່ອໃຫ້ app ເຮັດວຽກທີ່ localhost:5173/
-  // ໃນ build: base = full subfolder path ເພື່ອ assets load ຖືກຕ້ອງໃນ XAMPP
-  base: command === 'build' ? '/lottery-app/dist/' : '/',
+  // dev: '/'  |  mobile build: './'  |  web build: '/lottery-app/dist/'
+  base: command === 'build'
+    ? (process.env.CAPACITOR === 'true' ? './' : '/lottery-app/dist/')
+    : '/',
 
   server: {
     // Dev proxy: forward requests to XAMPP (port 80) so API + uploaded images work at localhost:5173
