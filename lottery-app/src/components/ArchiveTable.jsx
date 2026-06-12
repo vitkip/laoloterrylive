@@ -771,7 +771,7 @@ export default function ArchiveTable({ compact = false }) {
         {/* ══════════════════════════════════════════════
             MOBILE: Card grid  (hidden on md+)
         ══════════════════════════════════════════════ */}
-        <div className="md:hidden" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="md:hidden flex flex-col" style={{ gap: 10 }}>
           {pagedDraws.map(row => {
             const typeColor      = getTypeColor(row.type_id, types)
             const twoDigitResult = row.results_detail?.find(r => r.prize_type === '2_digits')
