@@ -4,6 +4,7 @@ import {
 } from 'recharts'
 import toast from 'react-hot-toast'
 import { API as API_BASE } from '../utils/api'
+import Pagination from '../components/Pagination'
 
 const API = `${API_BASE}/happy545.php`
 
@@ -92,6 +93,12 @@ export default function AdminHappy545() {
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting]     = useState(null)
 
+  // pagination
+  const [drawPage, setDrawPage]         = useState(1)
+  const [drawPageSize, setDrawPageSize] = useState(10)
+  const [statPage, setStatPage]         = useState(1)
+  const [statPageSize, setStatPageSize] = useState(15)
+
   // ── fetch ──────────────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
     const [rN, rD, rS] = await Promise.all([
@@ -138,6 +145,7 @@ export default function AdminHappy545() {
       if (res.ok) {
         toast.success('ບັນທຶກຜົນເລກສຳເລັດ')
         setForm({ draw_date: '', pos1: '', pos2: '', pos3: '', pos4: '', pos5: '' })
+        setDrawPage(1)
         await refreshStats()
       } else {
         toast.error(data.error || 'ເກີດຂໍ້ຜິດພາດ')
@@ -158,6 +166,11 @@ export default function AdminHappy545() {
       const data = await res.json()
       if (res.ok) {
         toast.success('ລຶບສຳເລັດ')
+        setDrawPage(p => {
+          const newTotal = draws.length - 1
+          const maxPage  = Math.max(1, Math.ceil(newTotal / drawPageSize))
+          return Math.min(p, maxPage)
+        })
         await refreshStats()
       } else {
         toast.error(data.error || 'ລຶບບໍ່ສຳເລັດ')
@@ -171,6 +184,9 @@ export default function AdminHappy545() {
   const totalDraws = draws.length
   const topNumber  = stats[0]
   const neverOut   = stats.filter(s => s.count === 0).length
+
+  const paginatedDraws = draws.slice((drawPage - 1) * drawPageSize, drawPage * drawPageSize)
+  const paginatedStats = stats.slice((statPage - 1) * statPageSize, statPage * statPageSize)
 
   const CARD_STYLE = {
     background: 'linear-gradient(135deg, #0c1020 0%, #10152a 100%)',
@@ -293,8 +309,9 @@ export default function AdminHappy545() {
 
       {/* Stats table */}
       <div style={CARD_STYLE}>
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(212,175,55,0.08)' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(212,175,55,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <p style={{ fontSize: 14, fontWeight: 700, color: '#E8E6F0', margin: 0 }}>ຕາຕະລາງສະຖິຕິ pos5</p>
+          <span style={{ fontSize: 11, color: 'rgba(212,175,55,0.45)' }}>{stats.length} ເລກ</span>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -306,40 +323,50 @@ export default function AdminHappy545() {
               </tr>
             </thead>
             <tbody>
-              {stats.map((row, idx) => (
-                <tr key={row.number} style={{ transition: 'background 0.15s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.04)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <td style={{ ...TD_STYLE, color: 'rgba(232,230,240,0.3)', width: 36 }}>
-                    {idx < 3
-                      ? <span style={{ width: 20, height: 20, borderRadius: '50%', background: TOP_COLORS[idx] + '22', color: TOP_COLORS[idx], fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{idx + 1}</span>
-                      : <span style={{ color: 'rgba(232,230,240,0.25)', fontSize: 12 }}>{idx + 1}</span>}
-                  </td>
-                  <td style={TD_STYLE}>
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: 34, height: 34, borderRadius: 8, fontSize: 13, fontWeight: 800,
-                      background: idx < 5 ? TOP_COLORS[idx] + '18' : 'rgba(255,255,255,0.04)',
-                      color: idx < 5 ? TOP_COLORS[idx] : 'rgba(232,230,240,0.5)',
-                      border: idx < 5 ? `1px solid ${TOP_COLORS[idx]}40` : '1px solid rgba(255,255,255,0.06)',
-                    }}>{row.label}</span>
-                  </td>
-                  <td style={{ ...TD_STYLE, textAlign: 'right', fontWeight: 700, color: idx < 5 ? TOP_COLORS[idx] : '#E8E6F0', fontVariantNumeric: 'tabular-nums' }}>{row.count}</td>
-                  <td style={{ ...TD_STYLE, textAlign: 'right', color: 'rgba(232,230,240,0.4)', fontVariantNumeric: 'tabular-nums' }}>{row.percentage}%</td>
-                  <td style={{ ...TD_STYLE, textAlign: 'right', color: 'rgba(232,230,240,0.4)', fontVariantNumeric: 'tabular-nums', fontSize: 12 }}>
-                    {row.last_seen_date ?? <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
-                  </td>
-                  <td style={{ ...TD_STYLE, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                    {row.gap != null
-                      ? <span style={{ color: row.gap <= 7 ? '#4ade80' : row.gap >= 30 ? '#f87171' : 'rgba(232,230,240,0.5)', fontWeight: row.gap <= 7 ? 700 : 400 }}>{row.gap}</span>
-                      : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
-                  </td>
-                </tr>
-              ))}
+              {paginatedStats.map((row, idx) => {
+                const globalIdx = (statPage - 1) * statPageSize + idx
+                return (
+                  <tr key={row.number} style={{ transition: 'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.04)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <td style={{ ...TD_STYLE, color: 'rgba(232,230,240,0.3)', width: 36 }}>
+                      {globalIdx < 3
+                        ? <span style={{ width: 20, height: 20, borderRadius: '50%', background: TOP_COLORS[globalIdx] + '22', color: TOP_COLORS[globalIdx], fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{globalIdx + 1}</span>
+                        : <span style={{ color: 'rgba(232,230,240,0.25)', fontSize: 12 }}>{globalIdx + 1}</span>}
+                    </td>
+                    <td style={TD_STYLE}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: 34, height: 34, borderRadius: 8, fontSize: 13, fontWeight: 800,
+                        background: globalIdx < 5 ? TOP_COLORS[globalIdx] + '18' : 'rgba(255,255,255,0.04)',
+                        color: globalIdx < 5 ? TOP_COLORS[globalIdx] : 'rgba(232,230,240,0.5)',
+                        border: globalIdx < 5 ? `1px solid ${TOP_COLORS[globalIdx]}40` : '1px solid rgba(255,255,255,0.06)',
+                      }}>{row.label}</span>
+                    </td>
+                    <td style={{ ...TD_STYLE, textAlign: 'right', fontWeight: 700, color: globalIdx < 5 ? TOP_COLORS[globalIdx] : '#E8E6F0', fontVariantNumeric: 'tabular-nums' }}>{row.count}</td>
+                    <td style={{ ...TD_STYLE, textAlign: 'right', color: 'rgba(232,230,240,0.4)', fontVariantNumeric: 'tabular-nums' }}>{row.percentage}%</td>
+                    <td style={{ ...TD_STYLE, textAlign: 'right', color: 'rgba(232,230,240,0.4)', fontVariantNumeric: 'tabular-nums', fontSize: 12 }}>
+                      {row.last_seen_date ?? <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
+                    </td>
+                    <td style={{ ...TD_STYLE, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                      {row.gap != null
+                        ? <span style={{ color: row.gap <= 7 ? '#4ade80' : row.gap >= 30 ? '#f87171' : 'rgba(232,230,240,0.5)', fontWeight: row.gap <= 7 ? 700 : 400 }}>{row.gap}</span>
+                        : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
+        <Pagination
+          total={stats.length}
+          page={statPage}
+          pageSize={statPageSize}
+          onPageChange={setStatPage}
+          onPageSizeChange={v => { setStatPageSize(v); setStatPage(1) }}
+        />
       </div>
 
       {/* Draw history + delete */}
@@ -353,58 +380,71 @@ export default function AdminHappy545() {
             ຍັງບໍ່ມີຂໍ້ມູນ — ເພີ່ມຜົນເລກຂ້າງເທິງ
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  {['ວັນທີ', 'P1', 'P2', 'P3', 'P4', 'P5 (ທ້າຍ)', ''].map((h, i) => (
-                    <th key={i} style={{ ...TH_STYLE, textAlign: i === 0 ? 'left' : 'center' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {draws.map(d => (
-                  <tr key={d.id}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.04)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    style={{ transition: 'background 0.15s' }}
-                  >
-                    <td style={{ ...TD_STYLE, fontWeight: 600, color: '#E8E6F0' }}>{d.draw_date}</td>
-                    {[d.pos1, d.pos2, d.pos3, d.pos4].map((p, i) => (
-                      <td key={i} style={{ ...TD_STYLE, textAlign: 'center' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 8, background: 'rgba(59,130,246,0.15)', color: '#60a5fa', fontSize: 13, fontWeight: 700, border: '1px solid rgba(59,130,246,0.2)' }}>
-                          {String(p).padStart(2, '0')}
-                        </span>
-                      </td>
+          <>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {['#', 'ວັນທີ', 'P1', 'P2', 'P3', 'P4', 'P5 (ທ້າຍ)', ''].map((h, i) => (
+                      <th key={i} style={{ ...TH_STYLE, textAlign: i <= 1 ? 'left' : 'center' }}>{h}</th>
                     ))}
-                    <td style={{ ...TD_STYLE, textAlign: 'center' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 8, background: 'rgba(212,175,55,0.18)', color: '#d4af37', fontSize: 13, fontWeight: 800, border: '1px solid rgba(212,175,55,0.3)', boxShadow: '0 0 10px rgba(212,175,55,0.15)' }}>
-                        {String(d.pos5).padStart(2, '0')}
-                      </span>
-                    </td>
-                    <td style={{ ...TD_STYLE, textAlign: 'center', width: 48 }}>
-                      <button
-                        onClick={() => handleDelete(d.id, d.draw_date)}
-                        disabled={deleting === d.id}
-                        style={{
-                          width: 30, height: 30, borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)',
-                          background: 'rgba(239,68,68,0.08)', color: deleting === d.id ? 'rgba(239,68,68,0.3)' : '#f87171',
-                          cursor: deleting === d.id ? 'not-allowed' : 'pointer',
-                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                          transition: 'all 0.15s',
-                        }}
-                        onMouseEnter={e => { if (deleting !== d.id) { e.currentTarget.style.background = 'rgba(239,68,68,0.18)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)' } }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
-                        title="ລຶບ"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
-                      </button>
-                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {paginatedDraws.map((d, idx) => {
+                    const rowNo = (drawPage - 1) * drawPageSize + idx + 1
+                    return (
+                      <tr key={d.id}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,175,55,0.04)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        style={{ transition: 'background 0.15s' }}
+                      >
+                        <td style={{ ...TD_STYLE, color: 'rgba(232,230,240,0.25)', fontSize: 11, width: 36 }}>{rowNo}</td>
+                        <td style={{ ...TD_STYLE, fontWeight: 600, color: '#E8E6F0' }}>{d.draw_date}</td>
+                        {[d.pos1, d.pos2, d.pos3, d.pos4].map((p, i) => (
+                          <td key={i} style={{ ...TD_STYLE, textAlign: 'center' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 8, background: 'rgba(59,130,246,0.15)', color: '#60a5fa', fontSize: 13, fontWeight: 700, border: '1px solid rgba(59,130,246,0.2)' }}>
+                              {String(p).padStart(2, '0')}
+                            </span>
+                          </td>
+                        ))}
+                        <td style={{ ...TD_STYLE, textAlign: 'center' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 8, background: 'rgba(212,175,55,0.18)', color: '#d4af37', fontSize: 13, fontWeight: 800, border: '1px solid rgba(212,175,55,0.3)', boxShadow: '0 0 10px rgba(212,175,55,0.15)' }}>
+                            {String(d.pos5).padStart(2, '0')}
+                          </span>
+                        </td>
+                        <td style={{ ...TD_STYLE, textAlign: 'center', width: 48 }}>
+                          <button
+                            onClick={() => handleDelete(d.id, d.draw_date)}
+                            disabled={deleting === d.id}
+                            style={{
+                              width: 30, height: 30, borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)',
+                              background: 'rgba(239,68,68,0.08)', color: deleting === d.id ? 'rgba(239,68,68,0.3)' : '#f87171',
+                              cursor: deleting === d.id ? 'not-allowed' : 'pointer',
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              transition: 'all 0.15s',
+                            }}
+                            onMouseEnter={e => { if (deleting !== d.id) { e.currentTarget.style.background = 'rgba(239,68,68,0.18)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)' } }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
+                            title="ລຶບ"
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              total={draws.length}
+              page={drawPage}
+              pageSize={drawPageSize}
+              onPageChange={setDrawPage}
+              onPageSizeChange={v => { setDrawPageSize(v); setDrawPage(1) }}
+            />
+          </>
         )}
       </div>
     </div>
