@@ -9,10 +9,11 @@ import RoleBadge from './RoleBadge';
 
 function getNavItems(role) {
   const base = [
-    { path: '/admin',        icon: 'dashboard',        label: 'ພາບລວມລະບົບ',  badge: null },
-    { path: '/admin/live',   icon: 'podcasts',          label: 'ຖ່າຍທອດສົດ',   badge: 'LIVE' },
-    { path: '/admin/draws',  icon: 'add_circle',        label: 'ປ້ອນຜົນຫວຍ',   badge: null },
-    { path: '/admin/types',  icon: 'category',          label: 'ປະເພດຫວຍ',     badge: null },
+    { path: '/admin',          icon: 'dashboard',        label: 'ພາບລວມລະບົບ',  badge: null },
+    { path: '/admin/live',     icon: 'podcasts',          label: 'ຖ່າຍທອດສົດ',   badge: 'LIVE' },
+    { path: '/admin/draws',    icon: 'add_circle',        label: 'ປ້ອນຜົນຫວຍ',   badge: null },
+    { path: '/admin/types',    icon: 'category',          label: 'ປະເພດຫວຍ',     badge: null },
+    { path: '/admin/happy545', icon: 'casino',            label: 'Happy 545',     badge: null },
   ];
   const adminOnly = [
     { path: '/admin/animals',  icon: 'image',            label: 'ຮູບນາມສັດ',     badge: null },
@@ -606,6 +607,7 @@ function Breadcrumb({ location }) {
     '/admin/contacts': 'ຂໍ້ຄວາມຕິດຕໍ່',
     '/admin/logs':     'Audit Logs',
     '/admin/profile':  'Profile ຂອງຂ້ອຍ',
+    '/admin/happy545': 'Happy 545',
   };
   const label = LABELS[location.pathname] || location.pathname.split('/').pop();
   return (

@@ -14,10 +14,7 @@ export default defineConfig(({ command }) => ({
   },
   plugins: [react(), tailwindcss()],
 
-  // dev: '/'  |  mobile build: './'  |  web build: '/lottery-app/dist/'
-  base: command === 'build'
-    ? (process.env.CAPACITOR === 'true' ? './' : '/lottery-app/dist/')
-    : '/',
+  base: command === 'build' ? '/lottery-app/dist/' : '/',
 
   server: {
     // Dev proxy: forward requests to XAMPP (port 80) so API + uploaded images work at localhost:5173

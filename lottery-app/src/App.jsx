@@ -35,8 +35,10 @@ const AdminLotteryTypes   = lazy(() => import('./pages/AdminLotteryTypes'))
 const AdminBanners        = lazy(() => import('./pages/AdminBanners'))
 const AdminContacts       = lazy(() => import('./pages/AdminContacts'))
 
-const TermsPage        = lazy(() => import('./pages/TermsPage'))
-const ContactPage      = lazy(() => import('./pages/ContactPage'))
+const TermsPage            = lazy(() => import('./pages/TermsPage'))
+const ContactPage          = lazy(() => import('./pages/ContactPage'))
+const Happy545Page         = lazy(() => import('./pages/Happy545Page'))
+const AdminHappy545        = lazy(() => import('./pages/AdminHappy545'))
 
 // ── Error pages ───────────────────────────────────────────────────
 const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'))
@@ -125,6 +127,7 @@ export default function App() {
             <Route path="/search"      element={<SearchPage />} />
             <Route path="/terms"       element={<TermsPage />} />
             <Route path="/contact"     element={<ContactPage />} />
+            <Route path="/happy545"    element={<Happy545Page />} />
           </Route>
 
           {/* ══ TIER 1b: Full-screen standalone pages (no Navbar/Footer) */}
@@ -155,8 +158,9 @@ export default function App() {
               <Route path="/admin/animals"  element={<AnimalImageManager />} />
               <Route path="/admin/users"    element={<AdminUsers />} />
               <Route path="/admin/banners"  element={<AdminBanners />} />
-              <Route path="/admin/contacts" element={<AdminContacts />} />
-              <Route path="/admin/profile"  element={<ProfilePage />} />
+              <Route path="/admin/contacts"  element={<AdminContacts />} />
+              <Route path="/admin/profile"   element={<ProfilePage />} />
+              <Route path="/admin/happy545"  element={<AdminHappy545 />} />
 
               {/* Admin-only */}
               <Route element={<ProtectedRoute allowedRoles={['admin']} redirectTo="/unauthorized" />}>

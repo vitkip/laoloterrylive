@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Lao Lottery Live</string>
-    <string name="title_activity_main">Lao Lottery Live</string>
-    <string name="package_name">com.laolots.app</string>
-    <string name="custom_url_scheme">com.laolots.app</string>
-</resources>
