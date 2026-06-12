@@ -3,8 +3,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
 import toast from 'react-hot-toast'
+import { API as API_BASE } from '../utils/api'
 
-const API = '/laoloterylive/api/happy545.php'
+const API = `${API_BASE}/happy545.php`
 
 // ── colour mapping: top-5 gold gradient, rest dim blue ───────────
 const TOP_COLORS = ['#d4af37', '#f59e0b', '#b45309', '#3b82f6', '#6366f1']

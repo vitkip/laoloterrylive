@@ -3,8 +3,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
 import { AlertCircle, Trophy, Calendar, Hash, TrendingDown } from 'lucide-react'
+import { API as API_BASE } from '../utils/api'
 
-const API = '/laoloterylive/api/happy545.php'
+const API = `${API_BASE}/happy545.php`
 
 const TOP_COLORS = ['#f59e0b', '#94a3b8', '#b45309', '#003fb1', '#1d4ed8']
 const DEFAULT_COLOR = '#bfdbfe'
