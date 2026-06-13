@@ -166,5 +166,37 @@ if ($resource === 'stats/last-digit' && $method === 'GET') {
     respond(200, $rows);
 }
 
+// ── GET /stats/all-positions ──────────────────────────────────────────
+if ($resource === 'stats/all-positions' && $method === 'GET') {
+    $result = [];
+    for ($pos = 1; $pos <= 5; $pos++) {
+        $col = "pos{$pos}"; // safe: $pos is loop-controlled int 1–5
+        $sql = "
+            SELECT
+                n.num                                              AS number,
+                n.label,
+                COUNT(d.id)                                        AS `count`,
+                ROUND(COUNT(d.id) * 100.0 / NULLIF((SELECT COUNT(*) FROM h545_draws),0), 2) AS percentage,
+                MAX(d.draw_date)                                   AS last_seen_date,
+                DATEDIFF(CURDATE(), MAX(d.draw_date))              AS gap
+            FROM  h545_numbers n
+            LEFT JOIN h545_draws d ON d.{$col} = n.num
+            GROUP BY n.num, n.label
+            ORDER BY `count` DESC, n.num ASC
+        ";
+        $stmt = $pdo->query($sql);
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['number']     = (int)$row['number'];
+            $row['count']      = (int)$row['count'];
+            $row['percentage'] = $row['percentage'] !== null ? (float)$row['percentage'] : 0.0;
+            $row['gap']        = $row['gap'] !== null ? (int)$row['gap'] : null;
+        }
+        unset($row);
+        $result["pos{$pos}"] = $rows;
+    }
+    respond(200, $result);
+}
+
 // ── 404 fallback ──────────────────────────────────────────────────────
 respond(404, ['error' => "ບໍ່ພົບ resource '$resource'"]);

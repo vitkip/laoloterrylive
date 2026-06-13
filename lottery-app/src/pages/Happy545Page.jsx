@@ -205,10 +205,12 @@ function FrontPagination({ total, page, pageSize, onPageChange, onPageSizeChange
 
 // ── Main page ────────────────────────────────────────────────────
 export default function Happy545Page() {
-  const [draws, setDraws]     = useState([])
-  const [stats, setStats]     = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(false)
+  const [draws, setDraws]       = useState([])
+  const [stats, setStats]       = useState([])
+  const [posStats, setPosStats] = useState({})
+  const [activePos, setActivePos] = useState(5)
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState(false)
 
   const [drawPage, setDrawPage]         = useState(1)
   const [drawPageSize, setDrawPageSize] = useState(15)
@@ -219,12 +221,14 @@ export default function Happy545Page() {
     setLoading(true)
     setError(false)
     try {
-      const [rD, rS] = await Promise.all([
+      const [rD, rS, rP] = await Promise.all([
         fetch(`${API}?r=draws`),
         fetch(`${API}?r=stats/last-digit`),
+        fetch(`${API}?r=stats/all-positions`),
       ])
       if (rD.ok) setDraws(await rD.json())
       if (rS.ok) setStats(await rS.json())
+      if (rP.ok) setPosStats(await rP.json())
     } catch {
       setError(true)
     } finally {
@@ -233,12 +237,14 @@ export default function Happy545Page() {
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { setStatPage(1) }, [activePos])
 
-  const totalDraws     = draws.length
-  const topNumber      = stats[0]
-  const neverOut       = stats.filter(s => s.count === 0).length
-  const paginatedDraws = draws.slice((drawPage - 1) * drawPageSize, drawPage * drawPageSize)
-  const paginatedStats = stats.slice((statPage - 1) * statPageSize, statPage * statPageSize)
+  const totalDraws        = draws.length
+  const topNumber         = stats[0]
+  const neverOut          = stats.filter(s => s.count === 0).length
+  const paginatedDraws    = draws.slice((drawPage - 1) * drawPageSize, drawPage * drawPageSize)
+  const activePosData     = posStats[`pos${activePos}`] ?? []
+  const paginatedStats    = activePosData.slice((statPage - 1) * statPageSize, statPage * statPageSize)
 
   if (error) {
     return (
@@ -325,7 +331,7 @@ export default function Happy545Page() {
                 </span>
               )}
             </div>
-            <p className="text-sm text-[#94a3b8]">ສະຖິຕິເລກທ້າຍ (ຕຳແໜ່ງທີ 5) · ວິເຄາະ 45 ຄ່າ</p>
+            <p className="text-sm text-[#94a3b8]">ສະຖິຕິເລກຕາມຕຳແໜ່ງ P1–P5 · ວິເຄາະ 45 ຄ່າ</p>
           </div>
         </div>
 
@@ -358,34 +364,93 @@ export default function Happy545Page() {
           </div>
         )}
 
-        {/* ── Bar chart ── */}
+        {/* ── Per-position stats ── */}
         <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-6">
-          <div className="mb-5">
-            <h2 className="font-black text-base text-[#0f172a] dark:text-[#f1f5f9] flex items-center gap-2 mb-0.5">
-              <Hash size={15} style={{ color: '#d4af37' }} />
-              ຄວາມຖີ່ເລກທ້າຍ (pos5) ທຸກ 45 ຄ່າ
-            </h2>
-            <p className="text-xs text-[#94a3b8]">
-              ລຽງຈາກຫຼາຍ → ໜ້ອຍ ·&nbsp;
-              <span style={{ color: '#d4af37' }}>■</span> ທອງ = Top 5
-            </p>
+          {/* Header + position tabs */}
+          <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
+            <div>
+              <h2 className="font-black text-base text-[#0f172a] dark:text-[#f1f5f9] flex items-center gap-2 mb-0.5">
+                <Hash size={15} style={{ color: '#d4af37' }} />
+                ຄວາມຖີ່ · ຕຳແໜ່ງ {activePos === 5 ? 'P5 ★' : `P${activePos}`} · ທຸກ 45 ຄ່າ
+              </h2>
+              <p className="text-xs text-[#94a3b8]">
+                ລຽງຈາກຫຼາຍ → ໜ້ອຍ ·&nbsp;
+                <span style={{ color: '#d4af37' }}>■</span> ທອງ = Top 5
+              </p>
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {[1, 2, 3, 4, 5].map(p => (
+                <button
+                  key={p}
+                  onClick={() => setActivePos(p)}
+                  className="h-7 px-3 rounded-lg text-[11px] font-bold border transition-all cursor-pointer"
+                  style={activePos === p ? {
+                    background: 'linear-gradient(135deg,#d4af37,#fbbf24)',
+                    borderColor: '#d4af37',
+                    color: '#060b1a',
+                  } : {
+                    background: 'transparent',
+                    borderColor: 'rgba(148,163,184,0.25)',
+                    color: '#64748b',
+                  }}
+                >
+                  P{p}{p === 5 ? ' ★' : ''}
+                </button>
+              ))}
+            </div>
           </div>
 
+          {/* Position summary row — top number per position */}
+          <div className="grid grid-cols-5 gap-2 mb-5 p-3 bg-[#f8faff] dark:bg-[#080f1e] rounded-xl">
+            {[1, 2, 3, 4, 5].map(p => {
+              const pd  = posStats[`pos${p}`] ?? []
+              const top = pd[0]
+              const isActive = p === activePos
+              return (
+                <button
+                  key={p}
+                  onClick={() => setActivePos(p)}
+                  className="rounded-lg p-2 text-center transition-all cursor-pointer"
+                  style={isActive ? {
+                    background: 'rgba(212,175,55,0.1)',
+                    boxShadow: 'inset 0 0 0 1px rgba(212,175,55,0.35)',
+                  } : {}}
+                >
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-0.5">
+                    ຕຳ {p}{p === 5 ? ' ★' : ''}
+                  </p>
+                  {loading || !top ? (
+                    <div className="h-5 w-7 bg-[#e2e8f0] dark:bg-white/10 rounded animate-pulse mx-auto my-1" />
+                  ) : (
+                    <p
+                      className="text-xl font-black tabular-nums leading-tight"
+                      style={{ color: isActive ? '#d4af37' : '#0f172a' }}
+                    >
+                      {top.label}
+                    </p>
+                  )}
+                  <p className="text-[9px] text-[#64748b] mt-0.5">{top?.count ?? 0}x</p>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Bar chart for active position */}
           {loading ? (
             <div className="h-64 flex items-center justify-center">
               <div
-                className="w-8 h-8 rounded-full border-2 border-t-[#d4af37] animate-spin"
+                className="w-8 h-8 rounded-full border-2 animate-spin"
                 style={{ borderColor: 'rgba(212,175,55,0.2)', borderTopColor: '#d4af37' }}
               />
             </div>
-          ) : stats.length === 0 ? (
+          ) : activePosData.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center gap-3 text-[#94a3b8]">
               <Hash size={32} className="opacity-25" />
               <p className="text-sm">ຍັງບໍ່ມີຂໍ້ມູນສະຖິຕິ</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={stats} margin={{ top: 4, right: 8, left: -20, bottom: 4 }}>
+              <BarChart data={activePosData} margin={{ top: 4, right: 8, left: -20, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.12)" />
                 <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#94a3b8' }} interval={0} angle={-45} textAnchor="end" height={46} />
                 <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} allowDecimals={false} />
@@ -402,14 +467,14 @@ export default function Happy545Page() {
         </div>
 
         {/* ── Top 5 ── */}
-        {!loading && stats.length > 0 && (
+        {!loading && activePosData.length > 0 && (
           <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-6">
             <h2 className="font-black text-base text-[#0f172a] dark:text-[#f1f5f9] flex items-center gap-2 mb-5">
               <Trophy size={16} style={{ color: '#d4af37' }} />
-              Top 5 ເລກທ້າຍທີ່ອອກຫຼາຍສຸດ
+              Top 5 · ຕຳແໜ່ງ {activePos === 5 ? 'P5 ★' : `P${activePos}`}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {stats.slice(0, 5).map((row, i) => {
+              {activePosData.slice(0, 5).map((row, i) => {
                 const m = RANK_META[i]
                 return (
                   <div
@@ -456,8 +521,10 @@ export default function Happy545Page() {
         {/* ── Stats table ── */}
         <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-[#f1f5f9] dark:border-white/5 flex items-center justify-between">
-            <h2 className="font-black text-base text-[#0f172a] dark:text-[#f1f5f9]">ຕາຕະລາງສະຖິຕິທຸກເລກ</h2>
-            <span className="text-xs text-[#94a3b8]">{stats.length} ເລກ</span>
+            <h2 className="font-black text-base text-[#0f172a] dark:text-[#f1f5f9]">
+              ຕາຕະລາງສະຖິຕິ · ຕຳແໜ່ງ {activePos === 5 ? 'P5 ★' : `P${activePos}`}
+            </h2>
+            <span className="text-xs text-[#94a3b8]">{activePosData.length} ເລກ</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -518,7 +585,7 @@ export default function Happy545Page() {
             </table>
           </div>
           <FrontPagination
-            total={stats.length} page={statPage} pageSize={statPageSize}
+            total={activePosData.length} page={statPage} pageSize={statPageSize}
             onPageChange={setStatPage}
             onPageSizeChange={v => { setStatPageSize(v); setStatPage(1) }}
           />
