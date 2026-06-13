@@ -602,7 +602,16 @@ function Happy545Strip() {
   if (!draws545.length) return null
 
   const latest = draws545[0]
-  const top3 = stats545.slice(0, 3)
+  const top3   = stats545.slice(0, 3)
+
+  // Compute top (pos4, pos5) pairs from all draws
+  const pairFreq = {}
+  draws545.forEach(d => {
+    const k = `${String(d.pos4).padStart(2, '0')}-${String(d.pos5).padStart(2, '0')}`
+    if (!pairFreq[k]) pairFreq[k] = { p4: d.pos4, p5: d.pos5, count: 0 }
+    pairFreq[k].count++
+  })
+  const topPairs = Object.values(pairFreq).sort((a, b) => b.count - a.count).slice(0, 5)
 
   const pBallBlue = {
     background: 'radial-gradient(circle at 35% 30%, #bfdbfe 0%, #3b82f6 45%, #1e3a8a 80%)',
@@ -726,6 +735,48 @@ function Happy545Strip() {
             </div>
           )}
         </div>
+
+        {/* ── Top pairs (pos4 + pos5) ── */}
+        {topPairs.length > 0 && (
+          <>
+            <div className="h-px bg-white/[0.06] mt-5" />
+            <div className="flex flex-wrap items-center gap-3 mt-4">
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/30 shrink-0">
+                ສອງຄູ່ທ້າຍ P4+P5
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {topPairs.map((pair, i) => (
+                  <div
+                    key={`${pair.p4}-${pair.p5}`}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-300 hover:scale-[1.04]"
+                    style={{
+                      background: i === 0 ? 'rgba(212,175,55,0.05)' : 'rgba(255,255,255,0.02)',
+                      borderColor: i === 0 ? 'rgba(212,175,55,0.28)' : 'rgba(255,255,255,0.07)',
+                    }}
+                  >
+                    <span className="text-[9px] font-black w-3 text-center shrink-0 tabular-nums"
+                      style={{ color: i === 0 ? '#d4af37' : 'rgba(255,255,255,0.2)' }}>
+                      {i + 1}
+                    </span>
+                    {/* pos4 — blue */}
+                    <div className="hp-ball shrink-0" style={{ width: 28, height: 28, fontSize: 11, fontWeight: 900, background: 'radial-gradient(circle at 35% 30%, #bfdbfe 0%, #3b82f6 45%, #1e3a8a 80%)', color: '#fff', boxShadow: '0 2px 6px rgba(59,130,246,0.3), inset 0 -1px 3px rgba(0,0,0,0.2)' }}>
+                      <span style={{ position: 'relative', zIndex: 1 }}>{String(pair.p4).padStart(2, '0')}</span>
+                    </div>
+                    <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 11, lineHeight: 1 }}>·</span>
+                    {/* pos5 — gold */}
+                    <div className="hp-ball shrink-0" style={{ width: 28, height: 28, fontSize: 11, fontWeight: 900, background: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #d4af37 42%, #92400e 78%, #78350f 100%)', color: '#78350f', boxShadow: '0 2px 8px rgba(212,175,55,0.45), inset 0 -1px 3px rgba(0,0,0,0.2)' }}>
+                      <span style={{ position: 'relative', zIndex: 1 }}>{String(pair.p5).padStart(2, '0')}</span>
+                    </div>
+                    <span className="text-[10px] font-black tabular-nums ml-0.5"
+                      style={{ color: i === 0 ? '#d4af37' : 'rgba(255,255,255,0.4)' }}>
+                      {pair.count}×
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </section>
   )
