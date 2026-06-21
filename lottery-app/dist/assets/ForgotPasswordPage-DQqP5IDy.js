@@ -1,4 +1,4 @@
-import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{v as t}from"./vendor-charts-iQ_2Absj.js";import{t as n}from"./vendor-react-nvcEvhRQ.js";import{c as r,l as i,n as a}from"./chunk-OE4NN4TA-BrSHlpGf.js";import{n as o}from"./AuthContext-CzfFrjcE.js";var s=e(t(),1),c=n();function l(e){return e===`admin`||e===`staff`?`/admin`:`/`}var u=Array.from({length:22},(e,t)=>({id:t,num:Math.floor(Math.random()*60)+1,x:Math.random()*100,y:Math.random()*100,size:Math.random()*18+22,dur:Math.random()*14+10,delay:-(Math.random()*12),op:Math.random()*.13+.04})),d=Array.from({length:50},(e,t)=>({id:t,x:Math.random()*100,y:Math.random()*100,s:Math.random()*2.5+.5,dur:Math.random()*3+2,delay:Math.random()*6})),f=`
+import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{v as t}from"./vendor-charts-iQ_2Absj.js";import{r as n,t as r}from"./vendor-react-nvcEvhRQ.js";import{n as i}from"./chunk-OE4NN4TA-BrSHlpGf.js";import{i as a,r as o}from"./vendor-forms-BHXbt_dt.js";import{t as s}from"./authService-D7bpGJje.js";import{t as c}from"./authSchemas-yXb8lSlF.js";var l=e(t(),1),u=r(),d=Array.from({length:22},(e,t)=>({id:t,num:Math.floor(Math.random()*60)+1,x:Math.random()*100,y:Math.random()*100,size:Math.random()*18+22,dur:Math.random()*14+10,delay:-(Math.random()*12),op:Math.random()*.13+.04})),f=Array.from({length:50},(e,t)=>({id:t,x:Math.random()*100,y:Math.random()*100,s:Math.random()*2.5+.5,dur:Math.random()*3+2,delay:Math.random()*6})),p=`
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Noto+Sans+Lao:wght@300;400;500;600;700;800&display=swap');
 
 .ll-wrap {
@@ -212,28 +212,6 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{v as t}from"./vendor-c
   padding: 1.75rem 2rem 2rem;
 }
 
-/* ── alerts ── */
-.ll-alert {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  border-radius: 12px;
-  padding: .7rem 1rem;
-  margin-bottom: 1.25rem;
-  font-size: .78rem;
-  font-weight: 600;
-}
-.ll-alert-warn {
-  background: rgba(255,160,0,.07);
-  border: 1px solid rgba(255,160,0,.22);
-  color: rgba(255,190,60,.9);
-}
-.ll-alert-err {
-  background: rgba(220,38,38,.07);
-  border: 1px solid rgba(220,38,38,.22);
-  color: rgba(248,113,113,.95);
-}
-
 /* ── label ── */
 .ll-label {
   display: block;
@@ -244,12 +222,13 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{v as t}from"./vendor-c
   text-transform: uppercase;
   color: rgba(255,215,0,.42);
   margin-bottom: .45rem;
+  text-align: left;
 }
 
 /* ── input ── */
 .ll-field {
   position: relative;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 .ll-input-icon {
   position: absolute;
@@ -279,21 +258,6 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{v as t}from"./vendor-c
   background: rgba(255,215,0,.07);
   box-shadow: 0 0 0 3px rgba(255,215,0,.07), 0 0 22px rgba(255,200,0,.06);
 }
-
-/* ── eye toggle ── */
-.ll-eye {
-  position: absolute;
-  right: .9rem; top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: rgba(255,215,0,.35);
-  padding: 0;
-  display: flex;
-  transition: color .2s;
-}
-.ll-eye:hover { color: rgba(255,215,0,.75); }
 
 /* ── submit ── */
 .ll-submit {
@@ -361,38 +325,6 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{v as t}from"./vendor-c
   flex-shrink: 0;
 }
 
-/* ── forgot ── */
-.ll-forgot {
-  display: block;
-  text-align: right;
-  font-family: 'Cinzel', serif;
-  font-size: .62rem;
-  letter-spacing: .07em;
-  color: rgba(255,215,0,.3);
-  text-decoration: none;
-  margin-top: .5rem;
-  transition: color .2s;
-}
-.ll-forgot:hover { color: rgba(255,215,0,.7); }
-
-/* ── divider ── */
-.ll-divider {
-  display: flex;
-  align-items: center;
-  gap: .9rem;
-  margin: 1.4rem 0;
-}
-.ll-div-line {
-  flex: 1; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,215,0,.18), transparent);
-}
-.ll-div-txt {
-  font-family: 'Cinzel', serif;
-  font-size: .58rem;
-  letter-spacing: .14em;
-  color: rgba(255,215,0,.28);
-}
-
 /* ── register btn ── */
 .ll-register {
   display: flex;
@@ -430,4 +362,4 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{v as t}from"./vendor-c
   transition: color .2s;
 }
 .ll-back:hover { color: rgba(255,215,0,.45); }
-`;function p(){let[e,t]=(0,s.useState)(``),[n,p]=(0,s.useState)(``),[m,h]=(0,s.useState)(!1),[g,_]=(0,s.useState)(``),[v,y]=(0,s.useState)(!1),{login:b,user:x,loading:S}=o(),C=r(),[w]=i(),T=w.get(`from`);return(0,s.useEffect)(()=>{!S&&x&&C(T||l(x.role),{replace:!0})},[x,S]),S?null:(0,c.jsxs)(c.Fragment,{children:[(0,c.jsx)(`style`,{dangerouslySetInnerHTML:{__html:f}}),(0,c.jsxs)(`div`,{className:`ll-wrap`,children:[(0,c.jsx)(`div`,{className:`fixed inset-0 bg-[#060410] -z-20 pointer-events-none`}),(0,c.jsx)(`div`,{className:`fixed inset-0 bg-[radial-gradient(ellipse_at_15%_15%,#1c0e34_0%,transparent_55%)] -z-20 pointer-events-none`}),(0,c.jsx)(`div`,{className:`fixed inset-0 bg-[radial-gradient(ellipse_at_85%_85%,#1a0a08_0%,transparent_55%)] -z-20 pointer-events-none`}),(0,c.jsx)(`div`,{className:`ll-glow-tl`}),(0,c.jsx)(`div`,{className:`ll-glow-br`}),d.map(e=>(0,c.jsx)(`div`,{className:`ll-star`,style:{left:`${e.x}%`,top:`${e.y}%`,width:`${e.s}px`,height:`${e.s}px`,"--d":`${e.dur}s`,"--dl":`${e.delay}s`}},e.id)),u.map(e=>(0,c.jsx)(`div`,{className:`ll-ball`,style:{left:`${e.x}%`,top:`${e.y}%`,width:`${e.size}px`,height:`${e.size}px`,fontSize:`${e.size*.34}px`,opacity:e.op,"--d":`${e.dur}s`,"--dl":`${e.delay}s`},children:e.num},e.id)),(0,c.jsx)(`div`,{className:`ll-card-wrap`,children:(0,c.jsx)(`div`,{className:`ll-border`,children:(0,c.jsxs)(`div`,{className:`ll-card`,children:[(0,c.jsxs)(`div`,{className:`ll-header`,children:[(0,c.jsxs)(`div`,{className:`ll-logo`,children:[(0,c.jsx)(`div`,{className:`ll-ring-outer`}),(0,c.jsx)(`div`,{className:`ll-ring-inner`,children:(0,c.jsx)(`span`,{className:`ll-logo-icon`,style:{display:`flex`,alignItems:`center`,justifyContent:`center`,width:38,height:38},children:(0,c.jsxs)(`svg`,{viewBox:`0 0 38 38`,style:{width:`100%`,height:`100%`,display:`block`},children:[(0,c.jsxs)(`defs`,{children:[(0,c.jsx)(`clipPath`,{id:`circleClipLogin`,children:(0,c.jsx)(`circle`,{cx:`19`,cy:`19`,r:`17`})}),(0,c.jsxs)(`linearGradient`,{id:`goldStripeLogin`,x1:`0%`,y1:`0%`,x2:`100%`,y2:`0%`,children:[(0,c.jsx)(`stop`,{offset:`0%`,stopColor:`#A67C1E`}),(0,c.jsx)(`stop`,{offset:`50%`,stopColor:`#F5D77F`}),(0,c.jsx)(`stop`,{offset:`100%`,stopColor:`#A67C1E`})]}),(0,c.jsxs)(`linearGradient`,{id:`darkStripeLogin`,x1:`0%`,y1:`0%`,x2:`100%`,y2:`0%`,children:[(0,c.jsx)(`stop`,{offset:`0%`,stopColor:`#0F1326`}),(0,c.jsx)(`stop`,{offset:`50%`,stopColor:`#1E2548`}),(0,c.jsx)(`stop`,{offset:`100%`,stopColor:`#0F1326`})]}),(0,c.jsxs)(`radialGradient`,{id:`goldCircleLogin`,cx:`50%`,cy:`50%`,r:`50%`,children:[(0,c.jsx)(`stop`,{offset:`0%`,stopColor:`#FFFDF5`}),(0,c.jsx)(`stop`,{offset:`70%`,stopColor:`#F3D072`}),(0,c.jsx)(`stop`,{offset:`100%`,stopColor:`#C99E32`})]})]}),(0,c.jsxs)(`g`,{clipPath:`url(#circleClipLogin)`,children:[(0,c.jsx)(`rect`,{x:`0`,y:`0`,width:`38`,height:`9.5`,fill:`url(#goldStripeLogin)`}),(0,c.jsx)(`rect`,{x:`0`,y:`9.5`,width:`38`,height:`19`,fill:`url(#darkStripeLogin)`}),(0,c.jsx)(`rect`,{x:`0`,y:`28.5`,width:`38`,height:`9.5`,fill:`url(#goldStripeLogin)`}),(0,c.jsx)(`circle`,{cx:`19`,cy:`19`,r:`6.5`,fill:`url(#goldCircleLogin)`})]})]})})})]}),(0,c.jsx)(`h1`,{className:`ll-title`,children:`ເຂົ້າສູ່ລະບົບ`}),(0,c.jsx)(`p`,{className:`ll-subtitle`,children:`Lao Lottery Live System`}),(0,c.jsx)(`div`,{className:`ll-badge`,children:`✦ \xA0FORTUNE AWAITS\xA0 ✦`})]}),(0,c.jsxs)(`div`,{className:`ll-perf`,children:[(0,c.jsx)(`div`,{className:`ll-perf-hole left`}),(0,c.jsx)(`div`,{className:`ll-perf-hole right`})]}),(0,c.jsxs)(`div`,{className:`ll-form-area`,children:[T&&!g&&(0,c.jsxs)(`div`,{className:`ll-alert ll-alert-warn`,children:[(0,c.jsx)(`span`,{className:`material-symbols-outlined`,style:{fontSize:16,fontVariationSettings:`'FILL' 1`},children:`info`}),`ກະລຸນາ login ກ່ອນເຂົ້າໃຊ້ໜ້ານີ້`]}),g&&(0,c.jsxs)(`div`,{className:`ll-alert ll-alert-err`,children:[(0,c.jsx)(`span`,{className:`material-symbols-outlined`,style:{fontSize:16,fontVariationSettings:`'FILL' 1`},children:`error`}),g]}),(0,c.jsxs)(`form`,{onSubmit:async t=>{t.preventDefault(),_(``),y(!0);let r=await b(e,n);r.success?C(T||l(r.role??`member`),{replace:!0}):_(r.error),y(!1)},noValidate:!0,children:[(0,c.jsx)(`label`,{className:`ll-label`,children:`ຊື່ຜູ້ໃຊ້ (Username)`}),(0,c.jsxs)(`div`,{className:`ll-field`,children:[(0,c.jsx)(`span`,{className:`material-symbols-outlined ll-input-icon`,style:{fontVariationSettings:`'FILL' 1`},children:`person`}),(0,c.jsx)(`input`,{type:`text`,className:`ll-input`,autoComplete:`username`,placeholder:`ປ້ອນ username`,required:!0,value:e,onChange:e=>t(e.target.value)})]}),(0,c.jsx)(`label`,{className:`ll-label`,children:`ລະຫັດຜ່ານ (Password)`}),(0,c.jsxs)(`div`,{className:`ll-field`,children:[(0,c.jsx)(`span`,{className:`material-symbols-outlined ll-input-icon`,style:{fontVariationSettings:`'FILL' 1`},children:`lock`}),(0,c.jsx)(`input`,{type:m?`text`:`password`,className:`ll-input`,style:{paddingRight:`2.8rem`},autoComplete:`current-password`,placeholder:`••••••••`,required:!0,value:n,onChange:e=>p(e.target.value)}),(0,c.jsx)(`button`,{type:`button`,className:`ll-eye`,onClick:()=>h(e=>!e),children:(0,c.jsx)(`span`,{className:`material-symbols-outlined`,style:{fontSize:18},children:m?`visibility_off`:`visibility`})})]}),(0,c.jsx)(`button`,{type:`submit`,disabled:v,className:`ll-submit`,children:v?(0,c.jsxs)(c.Fragment,{children:[(0,c.jsx)(`div`,{className:`ll-spinner`}),`ກຳລັງເຂົ້າລະບົບ...`]}):(0,c.jsxs)(c.Fragment,{children:[(0,c.jsx)(`span`,{style:{fontSize:`1.1rem`},children:`🎯`}),`ເຂົ້າສູ່ລະບົບ`]})}),(0,c.jsx)(a,{to:`/forgot-password`,className:`ll-forgot`,children:`ລືມລະຫັດຜ່ານ?`})]}),(0,c.jsxs)(`div`,{className:`ll-divider`,children:[(0,c.jsx)(`div`,{className:`ll-div-line`}),(0,c.jsx)(`span`,{className:`ll-div-txt`,children:`OR`}),(0,c.jsx)(`div`,{className:`ll-div-line`})]}),(0,c.jsxs)(a,{to:`/register`,className:`ll-register`,children:[(0,c.jsx)(`span`,{style:{fontSize:`1rem`},children:`✨`}),`ສ້າງບັນຊີໃໝ່ ຟຣີ`]}),(0,c.jsx)(a,{to:`/home`,className:`ll-back`,children:`← ກັບໄປໜ້າຫຼັກ`})]})]})})})]})]})}export{p as default};
+`;function m(){let[e,t]=(0,l.useState)(!1),[r,m]=(0,l.useState)(null),[h,g]=(0,l.useState)(``),{register:_,handleSubmit:v,formState:{errors:y,isSubmitting:b}}=a({resolver:o(c)});return(0,u.jsxs)(u.Fragment,{children:[(0,u.jsx)(`style`,{dangerouslySetInnerHTML:{__html:p}}),(0,u.jsxs)(`div`,{className:`ll-wrap`,children:[(0,u.jsx)(`div`,{className:`fixed inset-0 bg-[#060410] -z-20 pointer-events-none`}),(0,u.jsx)(`div`,{className:`fixed inset-0 bg-[radial-gradient(ellipse_at_15%_15%,#1c0e34_0%,transparent_55%)] -z-20 pointer-events-none`}),(0,u.jsx)(`div`,{className:`fixed inset-0 bg-[radial-gradient(ellipse_at_85%_85%,#1a0a08_0%,transparent_55%)] -z-20 pointer-events-none`}),(0,u.jsx)(`div`,{className:`ll-glow-tl`}),(0,u.jsx)(`div`,{className:`ll-glow-br`}),f.map(e=>(0,u.jsx)(`div`,{className:`ll-star`,style:{left:`${e.x}%`,top:`${e.y}%`,width:`${e.s}px`,height:`${e.s}px`,"--d":`${e.dur}s`,"--dl":`${e.delay}s`}},e.id)),d.map(e=>(0,u.jsx)(`div`,{className:`ll-ball`,style:{left:`${e.x}%`,top:`${e.y}%`,width:`${e.size}px`,height:`${e.size}px`,fontSize:`${e.size*.34}px`,opacity:e.op,"--d":`${e.dur}s`,"--dl":`${e.delay}s`},children:e.num},e.id)),(0,u.jsx)(`div`,{className:`ll-card-wrap`,children:(0,u.jsx)(`div`,{className:`ll-border`,children:(0,u.jsxs)(`div`,{className:`ll-card`,children:[(0,u.jsxs)(`div`,{className:`ll-header`,children:[(0,u.jsxs)(`div`,{className:`ll-logo`,children:[(0,u.jsx)(`div`,{className:`ll-ring-outer`}),(0,u.jsx)(`div`,{className:`ll-ring-inner`,children:(0,u.jsx)(`span`,{className:`ll-logo-icon`,style:{display:`flex`,alignItems:`center`,justifyContent:`center`,width:38,height:38},children:(0,u.jsxs)(`svg`,{viewBox:`0 0 38 38`,style:{width:`100%`,height:`100%`,display:`block`},children:[(0,u.jsxs)(`defs`,{children:[(0,u.jsx)(`clipPath`,{id:`circleClipForgot`,children:(0,u.jsx)(`circle`,{cx:`19`,cy:`19`,r:`17`})}),(0,u.jsxs)(`linearGradient`,{id:`goldStripeForgot`,x1:`0%`,y1:`0%`,x2:`100%`,y2:`0%`,children:[(0,u.jsx)(`stop`,{offset:`0%`,stopColor:`#A67C1E`}),(0,u.jsx)(`stop`,{offset:`50%`,stopColor:`#F5D77F`}),(0,u.jsx)(`stop`,{offset:`100%`,stopColor:`#A67C1E`})]}),(0,u.jsxs)(`linearGradient`,{id:`darkStripeForgot`,x1:`0%`,y1:`0%`,x2:`100%`,y2:`0%`,children:[(0,u.jsx)(`stop`,{offset:`0%`,stopColor:`#0F1326`}),(0,u.jsx)(`stop`,{offset:`50%`,stopColor:`#1E2548`}),(0,u.jsx)(`stop`,{offset:`100%`,stopColor:`#0F1326`})]}),(0,u.jsxs)(`radialGradient`,{id:`goldCircleForgot`,cx:`50%`,cy:`50%`,r:`50%`,children:[(0,u.jsx)(`stop`,{offset:`0%`,stopColor:`#FFFDF5`}),(0,u.jsx)(`stop`,{offset:`70%`,stopColor:`#F3D072`}),(0,u.jsx)(`stop`,{offset:`100%`,stopColor:`#C99E32`})]})]}),(0,u.jsxs)(`g`,{clipPath:`url(#circleClipForgot)`,children:[(0,u.jsx)(`rect`,{x:`0`,y:`0`,width:`38`,height:`9.5`,fill:`url(#goldStripeForgot)`}),(0,u.jsx)(`rect`,{x:`0`,y:`9.5`,width:`38`,height:`19`,fill:`url(#darkStripeForgot)`}),(0,u.jsx)(`rect`,{x:`0`,y:`28.5`,width:`38`,height:`9.5`,fill:`url(#goldStripeForgot)`}),(0,u.jsx)(`circle`,{cx:`19`,cy:`19`,r:`6.5`,fill:`url(#goldCircleForgot)`})]})]})})})]}),(0,u.jsx)(`h1`,{className:`ll-title`,children:`ລືມລະຫັດຜ່ານ`}),(0,u.jsx)(`p`,{className:`ll-subtitle`,children:`Lao Lottery Live System`}),(0,u.jsx)(`div`,{className:`ll-badge`,children:`✦ \xA0FORTUNE AWAITS\xA0 ✦`})]}),(0,u.jsxs)(`div`,{className:`ll-perf`,children:[(0,u.jsx)(`div`,{className:`ll-perf-hole left`}),(0,u.jsx)(`div`,{className:`ll-perf-hole right`})]}),(0,u.jsx)(`div`,{className:`ll-form-area`,children:e?(0,u.jsxs)(`div`,{className:`text-center py-4 space-y-6`,children:[(0,u.jsx)(`div`,{className:`w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto border border-emerald-500/20 shadow-lg shadow-emerald-500/5`,children:(0,u.jsx)(`span`,{className:`material-symbols-outlined text-emerald-400 text-4xl`,style:{fontVariationSettings:`'FILL' 1`},children:`mark_email_read`})}),(0,u.jsxs)(`div`,{children:[(0,u.jsx)(`h2`,{className:`text-lg font-black text-white`,children:`ສົ່ງລິ້ງສຳເລັດ!`}),(0,u.jsxs)(`p`,{className:`text-sm text-white/60 mt-2 leading-relaxed`,children:[`ກວດ Email ທີ່`,` `,(0,u.jsx)(`span`,{className:`font-bold text-white`,children:h}),` `,`ເພື່ອຮັບລິ້ງລີເຊັດລະຫັດຜ່ານ (ໝົດອາຍຸ 1 ຊົ່ວໂມງ)`]})]}),r&&(0,u.jsxs)(`div`,{className:`bg-black/35 border border-[#d4af37]/20 rounded-xl p-4 text-left shadow-inner`,children:[(0,u.jsxs)(`p`,{className:`text-xs font-bold text-[#d4af37] mb-1.5 flex items-center gap-1`,children:[(0,u.jsx)(`span`,{className:`material-symbols-outlined text-[14px]`,style:{fontVariationSettings:`'FILL' 1`},children:`developer_mode`}),`DEV MODE — Reset Token`]}),(0,u.jsx)(`p`,{className:`text-[11px] font-mono text-white/50 break-all leading-relaxed bg-black/25 p-2 rounded border border-white/[0.03]`,children:r}),(0,u.jsxs)(i,{to:`/reset-password?token=${r}`,className:`mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#d4af37] hover:underline`,children:[(0,u.jsx)(`span`,{className:`material-symbols-outlined text-[14px]`,children:`open_in_new`}),`ຄລິກລີເຊັດລະຫັດຜ່ານ (dev)`]})]}),(0,u.jsx)(`div`,{className:`pt-2`,children:(0,u.jsxs)(i,{to:`/login`,className:`ll-register`,children:[(0,u.jsx)(`span`,{className:`material-symbols-outlined text-[18px]`,children:`arrow_back`}),`ກັບໄປໜ້າ Login`]})})]}):(0,u.jsxs)(`form`,{onSubmit:v(async e=>{let r=await s.forgotPassword(e.email).catch(()=>null);if(!r){n.error(`ເຊື່ອມຕໍ່ server ບໍ່ສຳເລັດ`);return}r.ok?(g(e.email),m(r.data.dev_token??null),t(!0)):n.error(r.data?.error||`ມີຂໍ້ຜິດພາດ`)}),noValidate:!0,className:`space-y-5`,children:[(0,u.jsx)(`p`,{className:`text-sm text-white/60 text-left leading-relaxed`,children:`ປ້ອນ Email ທີ່ທ່ານໃຊ້ລົງທະບຽນ ເຮົາຈະສົ່ງລິ້ງລີເຊັດລະຫັດຜ່ານໃຫ້ທ່ານ`}),(0,u.jsxs)(`div`,{children:[(0,u.jsx)(`label`,{className:`ll-label`,children:`Email Address`}),(0,u.jsxs)(`div`,{className:`ll-field`,children:[(0,u.jsx)(`span`,{className:`absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-[#d4af37]/45`,children:`mail`}),(0,u.jsx)(`input`,{..._(`email`),type:`email`,placeholder:`example@email.com`,autoComplete:`email`,className:`ll-input ${y.email?`!border-red-500/40 focus:!border-red-500 focus:!ring-red-500/20`:``}`})]}),y.email&&(0,u.jsxs)(`p`,{className:`mt-1.5 text-xs text-red-400 font-bold flex items-center gap-1 text-left`,children:[(0,u.jsx)(`span`,{className:`material-symbols-outlined text-[13px]`,style:{fontVariationSettings:`'FILL' 1`},children:`error`}),y.email.message]})]}),(0,u.jsx)(`button`,{type:`submit`,disabled:b,className:`ll-submit`,children:b?(0,u.jsxs)(u.Fragment,{children:[(0,u.jsx)(`div`,{className:`ll-spinner`}),`ກຳລັງສົ່ງ...`]}):(0,u.jsxs)(u.Fragment,{children:[(0,u.jsx)(`span`,{className:`material-symbols-outlined text-[18px]`,children:`send`}),`ສົ່ງລິ້ງລີເຊັດ`]})}),(0,u.jsx)(`div`,{className:`text-center pt-2`,children:(0,u.jsx)(i,{to:`/login`,className:`text-sm text-white/35 hover:text-[#d4af37] transition-colors font-medium`,children:`← ກັບໄປ Login`})})]})})]})})})]})]})}export{m as default};

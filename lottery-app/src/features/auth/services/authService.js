@@ -33,4 +33,10 @@ export const authService = {
 
   verifyEmail: (token) =>
     post('verify_email', { token }),
+
+  // ── Social login (placeholder — wire up when OAuth is configured) ──
+  // provider: 'google' | 'facebook'
+  // payload: { id_token: '...' } for Google, { access_token: '...' } for Facebook
+  socialLogin: (provider, payload) =>
+    post('social_login', { provider, ...payload }),
 };

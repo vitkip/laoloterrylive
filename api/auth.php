@@ -227,6 +227,257 @@ $action = isset($_GET['action']) ? $_GET['action'] : '';
 switch ($action) {
 
     // ================================================================
+    // SOCIAL LOGIN (GOOGLE / FACEBOOK)
+    // ================================================================
+    case 'social_login':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(["error" => "Only POST allowed"]);
+            break;
+        }
+
+        $ip = clientIP();
+
+        // Rate limit: max 20 login attempts per IP per 15 minutes
+        if (!checkIPRateLimit($conn, 'Social login failed', $ip, 20, 900)) {
+            http_response_code(429);
+            echo json_encode(["error" => "ລອງເຂົ້າສູ່ລະບົບຫຼາຍເກີນໄປ ກະລຸນາລໍຖ້າ 15 ນາທີ"]);
+            break;
+        }
+
+        $input       = json_decode(file_get_contents('php://input'), true);
+        $provider    = trim($input['provider'] ?? '');
+        $accessToken = trim($input['access_token'] ?? '');
+
+        if (!$provider || !$accessToken) {
+            http_response_code(400);
+            echo json_encode(["error" => "Provider and access token are required"]);
+            break;
+        }
+
+        $oauthId = '';
+        $email   = '';
+        $name    = '';
+        $avatar  = null;
+
+        if ($provider === 'google') {
+            $googleClientId = env('GOOGLE_CLIENT_ID');
+            if (!$googleClientId) {
+                http_response_code(500);
+                echo json_encode(["error" => "Google Login is not configured on the server."]);
+                break;
+            }
+
+            // Verify Google token
+            $verifyUrl = "https://oauth2.googleapis.com/tokeninfo?access_token=" . urlencode($accessToken);
+            $verifyRes = @file_get_contents($verifyUrl);
+            if ($verifyRes === false) {
+                http_response_code(401);
+                echo json_encode(["error" => "ລະຫັດຢືນຢັນຕົວຕົນ Google ບໍ່ຖືກຕ້ອງ ຫຼື ໝົດອາຍຸ"]);
+                break;
+            }
+
+            $tokenInfo = json_decode($verifyRes, true);
+            if (!isset($tokenInfo['sub']) || ($tokenInfo['aud'] !== $googleClientId && $tokenInfo['azp'] !== $googleClientId)) {
+                http_response_code(401);
+                echo json_encode(["error" => "ການຢືນຢັນຕົວຕົນ Google Mismatch client ID"]);
+                break;
+            }
+
+            $oauthId = $tokenInfo['sub'];
+            $email   = strtolower(trim($tokenInfo['email'] ?? ''));
+
+            // Fetch profile info (name, picture)
+            $profileUrl = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" . urlencode($accessToken);
+            $profileRes = @file_get_contents($profileUrl);
+            if ($profileRes) {
+                $profile = json_decode($profileRes, true);
+                $name    = trim($profile['name'] ?? '');
+                $avatar  = trim($profile['picture'] ?? '');
+            }
+            if (!$name) {
+                $name = $email ? strstr($email, '@', true) : 'Google User';
+            }
+
+        } elseif ($provider === 'facebook') {
+            $fbAppId = env('FACEBOOK_APP_ID');
+            if (!$fbAppId) {
+                http_response_code(500);
+                echo json_encode(["error" => "Facebook Login is not configured on the server."]);
+                break;
+            }
+
+            // Verify Facebook Token and fetch profile info in one Graph API request
+            $profileUrl = "https://graph.facebook.com/v18.0/me?fields=id,name,email,picture.type(large)&access_token=" . urlencode($accessToken);
+            $profileRes = @file_get_contents($profileUrl);
+            if ($profileRes === false) {
+                http_response_code(401);
+                echo json_encode(["error" => "ລະຫັດຢືນຢັນຕົວຕົນ Facebook ບໍ່ຖືກຕ້ອງ ຫຼື ໝົດອາຍຸ"]);
+                break;
+            }
+
+            $profile = json_decode($profileRes, true);
+            if (!isset($profile['id'])) {
+                http_response_code(401);
+                echo json_encode(["error" => "ບໍ່ສາມາດຢືນຢັນຕົວຕົນ Facebook ໄດ້"]);
+                break;
+            }
+
+            // Verify App ID if App Secret is configured
+            $fbAppSecret = env('FACEBOOK_APP_SECRET');
+            if ($fbAppSecret) {
+                $debugUrl = "https://graph.facebook.com/debug_token?input_token=" . urlencode($accessToken) . "&access_token=" . urlencode("$fbAppId|$fbAppSecret");
+                $debugRes = @file_get_contents($debugUrl);
+                if ($debugRes) {
+                    $debugData = json_decode($debugRes, true);
+                    if (isset($debugData['data']['app_id']) && $debugData['data']['app_id'] != $fbAppId) {
+                        http_response_code(401);
+                        echo json_encode(["error" => "ການຢືນຢັນຕົວຕົນ Facebook App ID ບໍ່ຖືກຕ້ອງ"]);
+                        break;
+                    }
+                }
+            }
+
+            $oauthId = $profile['id'];
+            $email   = strtolower(trim($profile['email'] ?? ''));
+            $name    = trim($profile['name'] ?? 'Facebook User');
+            $avatar  = trim($profile['picture']['data']['url'] ?? '');
+
+        } else {
+            http_response_code(400);
+            echo json_encode(["error" => "Unsupported social provider"]);
+            break;
+        }
+
+        // Find user by provider credentials
+        $stmt = $conn->prepare("SELECT * FROM users WHERE oauth_provider = ? AND oauth_id = ? LIMIT 1");
+        $stmt->bind_param("ss", $provider, $oauthId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+
+        $user = ($result && $result->num_rows > 0) ? $result->fetch_assoc() : null;
+
+        if (!$user) {
+            // User not found by social ID, check by email if we got one
+            if ($email) {
+                $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
+                $stmt->bind_param("s", $email);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $stmt->close();
+
+                $user = ($result && $result->num_rows > 0) ? $result->fetch_assoc() : null;
+
+                if ($user) {
+                    // Email exists, link this social provider to this user
+                    $stmt = $conn->prepare("UPDATE users SET oauth_provider = ?, oauth_id = ?, avatar_url = COALESCE(avatar_url, ?), is_active = 1 WHERE user_id = ?");
+                    $stmt->bind_param("sssi", $provider, $oauthId, $avatar, $user['user_id']);
+                    $stmt->execute();
+                    $stmt->close();
+
+                    // Refresh user info
+                    $user['oauth_provider'] = $provider;
+                    $user['oauth_id']       = $oauthId;
+                    $user['is_active']      = 1;
+                    if (!$user['avatar_url']) {
+                        $user['avatar_url'] = $avatar;
+                    }
+                }
+            }
+        }
+
+        // If user still not found, register new user automatically
+        if (!$user) {
+            // Generate unique username
+            $baseUsername = $email ? strstr($email, '@', true) : ($provider . '_' . substr($oauthId, -6));
+            $baseUsername = preg_replace('/[^a-zA-Z0-9_]/', '', $baseUsername);
+            if (strlen($baseUsername) < 4) {
+                $baseUsername = $baseUsername . rand(100, 999);
+            }
+            $baseUsername = substr($baseUsername, 0, 15);
+
+            // Loop to ensure username is unique
+            $username = $baseUsername;
+            $isUnique = false;
+            $attempts = 0;
+            while (!$isUnique && $attempts < 10) {
+                $stmt = $conn->prepare("SELECT user_id FROM users WHERE username = ? LIMIT 1");
+                $stmt->bind_param("s", $username);
+                $stmt->execute();
+                $stmt->store_result();
+                if ($stmt->num_rows == 0) {
+                    $isUnique = true;
+                } else {
+                    $username = $baseUsername . '_' . rand(100, 999);
+                }
+                $stmt->close();
+                $attempts++;
+            }
+
+            // Create random password hash as placeholder
+            $randPass     = bin2hex(random_bytes(16));
+            $passwordHash = password_hash($randPass, PASSWORD_BCRYPT, ['cost' => 12]);
+
+            // Insert new user
+            $role     = 'member';
+            $isActive = 1;
+            $stmt     = $conn->prepare(
+                "INSERT INTO users (username, password_hash, full_name, email, role, is_active, oauth_provider, oauth_id, avatar_url)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+            $stmt->bind_param("sssssisss", $username, $passwordHash, $name, $email, $role, $isActive, $provider, $oauthId, $avatar);
+            $stmt->execute();
+            
+            if ($stmt->affected_rows < 1) {
+                $stmt->close();
+                http_response_code(500);
+                echo json_encode(["error" => "ບໍ່ສາມາດສ້າງບັນຊີໃໝ່ໄດ້"]);
+                break;
+            }
+            $newUserId = $conn->insert_id;
+            $stmt->close();
+
+            // Fetch newly created user
+            $stmt = $conn->prepare("SELECT * FROM users WHERE user_id = ? LIMIT 1");
+            $stmt->bind_param("i", $newUserId);
+            $stmt->execute();
+            $user = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+        }
+
+        // Check if account is active
+        if (!$user['is_active']) {
+            http_response_code(403);
+            echo json_encode(["error" => "ບັນຊີຍັງບໍ່ໄດ້ຢືນຢັນ ຫຼື ຖືກລະງັບການໃຊ້ງານ"]);
+            break;
+        }
+
+        // Login the user (generate JWT access token + refresh token)
+        $accessToken  = generateToken($user);
+        $refreshToken = issueRefreshToken($conn, (int)$user['user_id']);
+        
+        $act  = 'Social Login success (' . $provider . ')';
+        $logS = $conn->prepare('INSERT INTO user_logs (user_id, action, ip_address) VALUES (?, ?, ?)');
+        $logS->bind_param('iss', $user['user_id'], $act, $ip);
+        $logS->execute();
+        $logS->close();
+
+        echo json_encode([
+            'token'         => $accessToken,
+            'refresh_token' => $refreshToken,
+            'expires_in'    => JWT_ACCESS_TTL,
+            'user'          => [
+                'id'         => $user['user_id'],
+                'username'   => $user['username'],
+                'name'       => $user['full_name'],
+                'role'       => $user['role'],
+                'avatar_url' => $user['avatar_url']
+            ],
+        ]);
+        break;
+
+    // ================================================================
     // LOGIN
     // ================================================================
     case 'login':

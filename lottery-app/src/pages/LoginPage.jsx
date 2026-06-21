@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 function getDefaultRedirect(role) {
   if (role === 'admin' || role === 'staff') return '/admin';
@@ -417,6 +418,7 @@ const CSS = `
   background: linear-gradient(90deg, transparent, rgba(255,215,0,.18), transparent);
 }
 .ll-div-txt {
+  text-transform: uppercase;
   font-family: 'Cinzel', serif;
   font-size: .58rem;
   letter-spacing: .14em;
@@ -449,6 +451,64 @@ const CSS = `
   box-shadow: 0 4px 16px rgba(255,180,0,.12);
 }
 
+/* ── social login btns ── */
+.ll-social-btns {
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+}
+.ll-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  width: 100%;
+  padding: .85rem 1rem;
+  border-radius: 14px;
+  font-size: .84rem;
+  font-weight: 700;
+  font-family: 'Noto Sans Lao', sans-serif;
+  cursor: pointer;
+  border: 1px solid rgba(255,215,0,.12);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.78);
+  transition: all .3s cubic-bezier(.2,.8,.4,1);
+  position: relative;
+  overflow: hidden;
+}
+.ll-social-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.ll-social-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+}
+.ll-social-btn:active {
+  transform: translateY(0);
+}
+.ll-social-btn--google {
+  border-color: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+}
+.ll-social-btn--google:hover {
+  border-color: rgba(255,255,255,.28);
+  background: rgba(255,255,255,.1);
+  box-shadow: 0 6px 24px rgba(66,133,244,.18);
+}
+.ll-social-btn--facebook {
+  border-color: rgba(66,103,178,.2);
+  background: rgba(66,103,178,.08);
+}
+.ll-social-btn--facebook:hover {
+  border-color: rgba(66,103,178,.45);
+  background: rgba(66,103,178,.15);
+  box-shadow: 0 6px 24px rgba(66,103,178,.2);
+}
+
 /* ── back link ── */
 .ll-back {
   display: block;
@@ -469,10 +529,102 @@ export default function LoginPage() {
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
 
-  const { login, user, loading: authLoading } = useAuth();
+  const { login, user, loading: authLoading, socialLogin } = useAuth();
   const navigate        = useNavigate();
   const [searchParams]  = useSearchParams();
   const fromPath        = searchParams.get('from');
+
+  const googleClientRef = useRef(null);
+
+  useEffect(() => {
+    const initGoogle = () => {
+      if (window.google && window.google.accounts) {
+        try {
+          googleClientRef.current = window.google.accounts.oauth2.initTokenClient({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            scope: 'openid email profile',
+            callback: async (tokenResponse) => {
+              if (tokenResponse && tokenResponse.access_token) {
+                await handleSocialLogin('google', tokenResponse.access_token);
+              }
+            },
+          });
+        } catch (err) {
+          console.error('Failed to initialize Google Client:', err);
+        }
+      }
+    };
+
+    if (window.google) {
+      initGoogle();
+    } else {
+      const interval = setInterval(() => {
+        if (window.google) {
+          initGoogle();
+          clearInterval(interval);
+        }
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, []);
+
+  useEffect(() => {
+    const initFacebook = () => {
+      if (window.FB) {
+        window.FB.init({
+          appId      : import.meta.env.VITE_FACEBOOK_APP_ID,
+          cookie     : true,
+          xfbml      : true,
+          version    : 'v18.0'
+        });
+      }
+    };
+
+    if (window.FB) {
+      initFacebook();
+    } else {
+      window.fbAsyncInit = function() {
+        initFacebook();
+      };
+    }
+  }, []);
+
+  const handleSocialLogin = async (provider, accessToken) => {
+    setLoading(true);
+    setError('');
+    const result = await socialLogin(provider, { access_token: accessToken });
+    if (result.success) {
+      toast.success('ເຂົ້າສູ່ລະບົບ ສຳເລັດ!');
+      const dest = fromPath || getDefaultRedirect(result.role ?? 'member');
+      navigate(dest, { replace: true });
+    } else {
+      setError(result.error);
+      toast.error(result.error);
+    }
+    setLoading(false);
+  };
+
+  const handleGoogleLogin = () => {
+    if (googleClientRef.current) {
+      googleClientRef.current.requestAccessToken();
+    } else {
+      toast.error('ກຳລັງໂຫຼດລະບົບ Google Login, ກະລຸນາລອງໃໝ່ອີກຄັ້ງ...');
+    }
+  };
+
+  const handleFacebookLogin = () => {
+    if (window.FB) {
+      window.FB.login((response) => {
+        if (response.authResponse) {
+          handleSocialLogin('facebook', response.authResponse.accessToken);
+        } else {
+          toast.error('ເຂົ້າສູ່ລະບົບດ້ວຍ Facebook ຖືກຍົກເລີກ');
+        }
+      }, { scope: 'public_profile,email' });
+    } else {
+      toast.error('ກຳລັງໂຫຼດລະບົບ Facebook Login, ກະລຸນາລອງໃໝ່ອີກຄັ້ງ...');
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -667,7 +819,43 @@ export default function LoginPage() {
 
                 <div className="ll-divider">
                   <div className="ll-div-line" />
-                  <span className="ll-div-txt">OR</span>
+                  <span className="ll-div-txt">ເຂົ້າສູ່ລະບົບດ້ວຍ</span>
+                  <div className="ll-div-line" />
+                </div>
+
+                {/* Social login buttons */}
+                <div className="ll-social-btns">
+                  <button
+                    type="button"
+                    className="ll-social-btn ll-social-btn--google"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                    </svg>
+                    ເຂົ້າສູ່ລະບົບດ້ວຍ Google
+                  </button>
+
+                  <button
+                    type="button"
+                    className="ll-social-btn ll-social-btn--facebook"
+                    onClick={handleFacebookLogin}
+                    disabled={loading}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12S0 5.446 0 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2" />
+                    </svg>
+                    ເຂົ້າສູ່ລະບົບດ້ວຍ Facebook
+                  </button>
+                </div>
+
+                <div className="ll-divider">
+                  <div className="ll-div-line" />
+                  <span className="ll-div-txt">ຫຼື</span>
                   <div className="ll-div-line" />
                 </div>
 

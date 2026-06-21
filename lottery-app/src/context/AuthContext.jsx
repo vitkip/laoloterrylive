@@ -98,6 +98,30 @@ export const AuthProvider = ({ children }) => {
     return { success: false, error: data.error || 'Login failed' };
   };
 
+  const socialLogin = async (provider, payload) => {
+    const res  = await fetch(`${API}/auth.php?action=social_login`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ provider, ...payload }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setUser(data.user);
+      setToken(data.token);
+      tokenRef.current = data.token;
+      localStorage.setItem(USER_KEY,  JSON.stringify(data.user));
+      localStorage.setItem(TOKEN_KEY, data.token);
+      if (data.refresh_token) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+      }
+      if (data.expires_in) {
+        localStorage.setItem(EXPIRES_KEY, String(Date.now() + data.expires_in * 1000));
+      }
+      return { success: true, role: data.user.role };
+    }
+    return { success: false, error: data.error || 'Social login failed' };
+  };
+
   /**
    * Authenticated fetch wrapper.
    * - Auto-injects Authorization header
@@ -139,7 +163,7 @@ export const AuthProvider = ({ children }) => {
   }, [logout, refreshAccessToken]);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, authFetch }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, authFetch, socialLogin }}>
       {children}
     </AuthContext.Provider>
   );
