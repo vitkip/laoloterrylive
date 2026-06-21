@@ -36,14 +36,14 @@ $conn->set_charset("utf8mb4");
 // Ensure refresh_tokens table exists (idempotent — safe to run every request)
 $conn->query("CREATE TABLE IF NOT EXISTS refresh_tokens (
     rt_id       INT           AUTO_INCREMENT PRIMARY KEY,
-    user_id     INT           NOT NULL,
+    user_id     BIGINT UNSIGNED NOT NULL,
     token_hash  VARCHAR(64)   NOT NULL UNIQUE,
     expires_at  DATETIME      NOT NULL,
     ip_address  VARCHAR(45),
     user_agent  VARCHAR(255),
     revoked_at  DATETIME      NULL DEFAULT NULL,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_rt_user_expires (user_id, expires_at),
     INDEX idx_rt_expires      (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
@@ -203,6 +203,43 @@ function clientIP()
     return substr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1', 0, 45);
 }
 
+function fetchUrl(string $url): string|false
+{
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        if (!PRODUCTION) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        $result = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpCode >= 400) {
+            return false;
+        }
+        return $result;
+    }
+    
+    $opts = [
+        "http" => [
+            "method" => "GET",
+            "timeout" => 15
+        ]
+    ];
+    if (!PRODUCTION) {
+        $opts["ssl"] = [
+            "verify_peer" => false,
+            "verify_peer_name" => false
+        ];
+    }
+    $context = stream_context_create($opts);
+    return @file_get_contents($url, false, $context);
+}
+
 // ── Rate-limit helper: max N actions per IP per window ─────────────
 
 function checkIPRateLimit($conn, $action, $ip, $max, $windowSeconds)
@@ -270,7 +307,7 @@ switch ($action) {
 
             // Verify Google token
             $verifyUrl = "https://oauth2.googleapis.com/tokeninfo?access_token=" . urlencode($accessToken);
-            $verifyRes = @file_get_contents($verifyUrl);
+            $verifyRes = fetchUrl($verifyUrl);
             if ($verifyRes === false) {
                 http_response_code(401);
                 echo json_encode(["error" => "ລະຫັດຢືນຢັນຕົວຕົນ Google ບໍ່ຖືກຕ້ອງ ຫຼື ໝົດອາຍຸ"]);
@@ -289,7 +326,7 @@ switch ($action) {
 
             // Fetch profile info (name, picture)
             $profileUrl = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" . urlencode($accessToken);
-            $profileRes = @file_get_contents($profileUrl);
+            $profileRes = fetchUrl($profileUrl);
             if ($profileRes) {
                 $profile = json_decode($profileRes, true);
                 $name    = trim($profile['name'] ?? '');
@@ -309,7 +346,7 @@ switch ($action) {
 
             // Verify Facebook Token and fetch profile info in one Graph API request
             $profileUrl = "https://graph.facebook.com/v18.0/me?fields=id,name,email,picture.type(large)&access_token=" . urlencode($accessToken);
-            $profileRes = @file_get_contents($profileUrl);
+            $profileRes = fetchUrl($profileUrl);
             if ($profileRes === false) {
                 http_response_code(401);
                 echo json_encode(["error" => "ລະຫັດຢືນຢັນຕົວຕົນ Facebook ບໍ່ຖືກຕ້ອງ ຫຼື ໝົດອາຍຸ"]);
@@ -327,7 +364,7 @@ switch ($action) {
             $fbAppSecret = env('FACEBOOK_APP_SECRET');
             if ($fbAppSecret) {
                 $debugUrl = "https://graph.facebook.com/debug_token?input_token=" . urlencode($accessToken) . "&access_token=" . urlencode("$fbAppId|$fbAppSecret");
-                $debugRes = @file_get_contents($debugUrl);
+                $debugRes = fetchUrl($debugUrl);
                 if ($debugRes) {
                     $debugData = json_decode($debugRes, true);
                     if (isset($debugData['data']['app_id']) && $debugData['data']['app_id'] != $fbAppId) {
