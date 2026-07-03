@@ -237,9 +237,8 @@ function HotColdPanel({ draws }) {
 }
 
 // ── Analysis Panel 2: Gap Analysis ───────────────────────────────
-function GapAnalysisPanel({ draws, posStats }) {
+function GapAnalysisPanel({ posStats }) {
   const p5Data = posStats?.pos5 ?? []
-  const totalDraws = draws.length
 
   function gapColor(gap) {
     if (gap == null) return '#94a3b8'
@@ -250,16 +249,16 @@ function GapAnalysisPanel({ draws, posStats }) {
   }
 
   const sorted = useMemo(() =>
-    [...p5Data].sort((a, b) => (b.gap ?? totalDraws) - (a.gap ?? totalDraws)),
-    [p5Data, totalDraws])
+    [...p5Data].sort((a, b) => (b.gap ?? 9999) - (a.gap ?? 9999)),
+    [p5Data])
 
-  const maxGap = sorted[0]?.gap ?? totalDraws
+  const maxGap = sorted[0]?.gap ?? 9999
 
   return (
     <div className="space-y-5">
       {/* Legend */}
       <div className="flex gap-2 flex-wrap">
-        {[['#22c55e', '≤5 ງວດ — ອອກໃໝ່'], ['#f59e0b', '6-15 ງວດ — ກາງ'], ['#ef4444', '16-30 ງວດ — ຄ້າງ'], ['#9f1239', '>30 ງວດ — ຊ້ານານ']].map(([c, l]) => (
+        {[['#22c55e', '≤5 ວັນ — ອອກໃໝ່'], ['#f59e0b', '6-15 ວັນ — ກາງ'], ['#ef4444', '16-30 ວັນ — ຄ້າງ'], ['#9f1239', '>30 ວັນ — ຊ້ານານ']].map(([c, l]) => (
           <span key={c} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full"
             style={{ background: c + '18', color: c, border: `1px solid ${c}40` }}>
             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: c }} />{l}
@@ -270,7 +269,7 @@ function GapAnalysisPanel({ draws, posStats }) {
       {/* Grid of 45 numbers */}
       <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-5">
         <h3 className="font-black text-sm mb-4 text-[#0f172a] dark:text-[#f1f5f9]">
-          Grid ໄລຍະຫ່າງ P5 ★ (ທຸກ 45 ເລກ) — ສີຕາມຈຳນວນງວດທີ່ຫ່າງ
+          Grid ໄລຍະຫ່າງ P5 ★ (ທຸກ 45 ເລກ) — ສີຕາມຈຳນວນວັນທີ່ຫ່າງ
         </h3>
         <div className="grid grid-cols-9 sm:grid-cols-9 gap-1.5">
           {Array.from({ length: 45 }, (_, i) => {
@@ -285,7 +284,7 @@ function GapAnalysisPanel({ draws, posStats }) {
                   {String(num).padStart(2, '0')}
                 </p>
                 <p className="text-[9px] font-bold leading-tight" style={{ color: col + 'aa' }}>
-                  {gap != null ? `${gap}ງ` : '—'}
+                  {gap != null ? `${gap}ວ` : '—'}
                 </p>
               </div>
             )
@@ -301,7 +300,7 @@ function GapAnalysisPanel({ draws, posStats }) {
         </h3>
         <div className="space-y-2">
           {sorted.slice(0, 10).map((row, i) => {
-            const gap = row.gap ?? totalDraws
+            const gap = row.gap ?? 9999
             const col = gapColor(gap)
             return (
               <div key={row.number} className="flex items-center gap-3 p-2.5 rounded-xl"
@@ -314,7 +313,7 @@ function GapAnalysisPanel({ draws, posStats }) {
                 <div className="flex-1 h-2 bg-[#f1f5f9] dark:bg-white/5 rounded-full overflow-hidden">
                   <div className="h-full rounded-full transition-all" style={{ width: `${(gap / Math.max(maxGap, 1)) * 100}%`, background: col }} />
                 </div>
-                <span className="text-xs font-black w-14 text-right shrink-0" style={{ color: col }}>{gap} ງວດ</span>
+                <span className="text-xs font-black w-14 text-right shrink-0" style={{ color: col }}>{gap} ວັນ</span>
                 <span className="text-[10px] text-[#94a3b8] w-20 text-right shrink-0 hidden sm:block">
                   {row.last_seen_date ?? 'ຍັງບໍ່ເຄີຍ'}
                 </span>
@@ -327,9 +326,9 @@ function GapAnalysisPanel({ draws, posStats }) {
       {/* Stat summary */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'ເລກ P5 ທີ່ອອກ ≤5 ງວດ', val: p5Data.filter(d => d.gap != null && d.gap <= 5).length, color: '#22c55e' },
-          { label: 'ເລກ P5 ຄ້າງ 16-30 ງວດ', val: p5Data.filter(d => d.gap != null && d.gap > 15 && d.gap <= 30).length, color: '#ef4444' },
-          { label: 'ເລກ P5 ຊ້ານານ >30 ງວດ', val: p5Data.filter(d => d.gap == null || d.gap > 30).length, color: '#9f1239' },
+          { label: 'ເລກ P5 ທີ່ອອກ ≤5 ວັນ', val: p5Data.filter(d => d.gap != null && d.gap <= 5).length, color: '#22c55e' },
+          { label: 'ເລກ P5 ຄ້າງ 16-30 ວັນ', val: p5Data.filter(d => d.gap != null && d.gap > 15 && d.gap <= 30).length, color: '#ef4444' },
+          { label: 'ເລກ P5 ຊ້ານານ >30 ວັນ', val: p5Data.filter(d => d.gap == null || d.gap > 30).length, color: '#9f1239' },
         ].map(({ label, val, color }) => (
           <div key={label} className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-4 text-center">
             <p className="text-2xl font-black" style={{ color }}>{val}</p>
@@ -626,7 +625,8 @@ function DayFreqPanel({ draws }) {
 
     draws.forEach(d => {
       if (!d.draw_date) return
-      const dow = new Date(d.draw_date).getDay()
+      const [y, m, day] = d.draw_date.split('-').map(Number)
+      const dow = new Date(y, m - 1, day).getDay()
       byDay[dow].count++
       const p5 = +d.pos5
       if (p5) byDay[dow].p5[p5] = (byDay[dow].p5[p5] || 0) + 1
@@ -798,7 +798,7 @@ function TicketCheckerPanel({ draws, posStats }) {
       const regMatched = iregs.filter(n => aregs.includes(n)).length
       const allMatch = iregs.length === 4 && iregs.every(n => allFive.includes(n)) && allFive.includes(ip5)
 
-      if (allMatch) special++
+      if (allMatch && !p5ok) special++
       if (p5ok) {
         let tier = 0
         if (regMatched >= 4) { h1++; tier = 1 }
@@ -1217,7 +1217,7 @@ export default function Happy545Page() {
 
         {/* ── Tab: Gap Analysis ── */}
         {tab === 'gap' && !loading && (
-          <GapAnalysisPanel draws={draws} posStats={posStats} />
+          <GapAnalysisPanel posStats={posStats} />
         )}
 
         {/* ── Tab: Smart Pick ── */}
