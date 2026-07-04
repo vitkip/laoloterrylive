@@ -364,20 +364,42 @@ function SmartPickPanel({ draws, posStats }) {
       .sort((a, b) => b.score - a.score)
     const suggestedP5 = p5Sorted[0]?.num
 
-    // P1-P4 combined recency-weighted frequency, exclude suggestedP5
-    const regScore = {}
-    for (let i = 1; i <= 45; i++) regScore[i] = 0
-    recent.forEach((d, idx) => {
-      ;[d.pos1, d.pos2, d.pos3, d.pos4].forEach(v => {
-        if (v) regScore[+v] += (n20 - idx) / n20
-      })
+    // P1-P4: pick numbers that tend to appear together (co-occurrence), exclude suggestedP5
+    const pairCount = {}
+    for (let i = 1; i <= 45; i++) pairCount[i] = {}
+    draws.forEach(d => {
+      const nums = [d.pos1, d.pos2, d.pos3, d.pos4].filter(Boolean).map(Number)
+      for (let i = 0; i < nums.length; i++) {
+        for (let j = i + 1; j < nums.length; j++) {
+          const [a, b] = [nums[i], nums[j]]
+          pairCount[a][b] = (pairCount[a][b] || 0) + 1
+          pairCount[b][a] = (pairCount[b][a] || 0) + 1
+        }
+      }
     })
-    const reg4 = Object.entries(regScore)
-      .map(([num, score]) => ({ num: +num, score }))
-      .filter(x => x.num !== suggestedP5)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 4)
-      .map(x => x.num)
+
+    let bestPair = null, bestPairScore = -1
+    for (let a = 1; a <= 45; a++) {
+      if (a === suggestedP5) continue
+      for (let b = a + 1; b <= 45; b++) {
+        if (b === suggestedP5) continue
+        const score = pairCount[a][b] || 0
+        if (score > bestPairScore) { bestPairScore = score; bestPair = [a, b] }
+      }
+    }
+
+    const reg4 = bestPair ? [...bestPair] : []
+    while (reg4.length < 4) {
+      let bestNum = null, bestScore = -1
+      for (let num = 1; num <= 45; num++) {
+        if (num === suggestedP5 || reg4.includes(num)) continue
+        const score = reg4.reduce((sum, m) => sum + (pairCount[num][m] || 0), 0)
+        if (score > bestScore) { bestScore = score; bestNum = num }
+      }
+      if (bestNum == null) break
+      reg4.push(bestNum)
+    }
+    reg4.sort((a, b) => a - b)
 
     // Backtest against up to 100 draws
     const bt = draws.slice(0, Math.min(100, draws.length))
@@ -411,8 +433,8 @@ function SmartPickPanel({ draws, posStats }) {
       <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-4">
         <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
         <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
-          ຕົວເລກທີ່ແນະນຳ ຄຳນວນຈາກ <strong>ຄວາມຖີ່ + Gap</strong> ໃນ 20 ງວດລ່າສຸດ.
-          ຫວຍເປັນການສຸ່ມ — ບໍ່ຮັບປະກັນຜົນ.
+          ເລກ P1-P4 ແນະນຳ ຄຳນວນຈາກ <strong>ເລກທີ່ມັກອອກນຳກັນ</strong> (co-occurrence) ຈາກປະຫວັດທັງໝົດ,
+          ສ່ວນ P5 ★ ຄຳນວນຈາກ <strong>ຄວາມຖີ່ + Gap</strong> ໃນ 20 ງວດລ່າສຸດ. ຫວຍເປັນການສຸ່ມ — ບໍ່ຮັບປະກັນຜົນ.
         </p>
       </div>
 
