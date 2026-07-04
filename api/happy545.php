@@ -7,6 +7,7 @@
  *   GET  ?r=draws             — list all draws (newest first)
  *   POST ?r=draws             — add a draw result
  *   DELETE ?r=draws&id={n}   — delete draw by id
+ *   POST ?r=draws&action=delete — delete draw by id (fallback for hosts that block the DELETE verb)
  *   GET  ?r=stats/last-digit  — pos5 frequency stats (all 45 numbers)
  */
 
@@ -78,6 +79,22 @@ if ($resource === 'draws' && $method === 'GET') {
           ORDER BY draw_date DESC'
     );
     respond(200, $stmt->fetchAll());
+}
+
+// ── POST /draws&action=delete ─────────────────────────────────────────
+// (fallback for hosts/WAFs that block the raw DELETE HTTP verb)
+if ($resource === 'draws' && $method === 'POST' && ($_GET['action'] ?? '') === 'delete') {
+    $body = json_decode(file_get_contents('php://input'), true);
+    $id = filter_var(is_array($body) ? ($body['id'] ?? null) : null, FILTER_VALIDATE_INT);
+    if (!$id || $id < 1) {
+        respond(422, ['error' => 'id ບໍ່ຖືກຕ້ອງ']);
+    }
+    $stmt = $pdo->prepare('DELETE FROM h545_draws WHERE id = :id');
+    $stmt->execute([':id' => $id]);
+    if ($stmt->rowCount() === 0) {
+        respond(404, ['error' => 'ບໍ່ພົບ draw id=' . $id]);
+    }
+    respond(200, ['message' => 'ລຶບສຳເລັດ']);
 }
 
 // ── POST /draws ───────────────────────────────────────────────────────
