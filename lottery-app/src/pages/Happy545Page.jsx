@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { AlertCircle, Trophy, Calendar, Hash, TrendingDown, RefreshCw, Crown, Star, Flame, Snowflake, Zap, Target, CheckCircle, XCircle, ClipboardList } from 'lucide-react'
+import { AlertCircle, Trophy, Calendar, Hash, TrendingDown, RefreshCw, Crown, Star, Flame, Snowflake, Zap, Target, CheckCircle, XCircle, ClipboardList, Layers, Link2 } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
 
 const API = `${API_BASE}/happy545.php`
@@ -1022,6 +1022,410 @@ function TicketCheckerPanel({ draws, posStats }) {
   )
 }
 
+// ── Analysis Panel 6: Wheel Generator ───────────────────────────
+function WheelPanel({ posStats }) {
+  const [p5, setP5] = useState('')
+  const [pool, setPool] = useState([])
+  const [comboPage, setComboPage] = useState(1)
+  const COMBO_PAGE_SIZE = 20
+
+  const nums = Array.from({ length: 45 }, (_, i) => i + 1)
+
+  function C(n, k) {
+    if (k > n || k < 0) return 0
+    let r = 1
+    for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1)
+    return Math.round(r)
+  }
+
+  function togglePool(n) {
+    setPool(prev =>
+      prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n].sort((a, b) => a - b)
+    )
+    setComboPage(1)
+  }
+
+  const combos = useMemo(() => {
+    if (pool.length < 4) return []
+    const result = []
+    const chosen = []
+    function bt(start) {
+      if (chosen.length === 4) { result.push([...chosen]); return }
+      for (let i = start; i < pool.length; i++) {
+        chosen.push(pool[i])
+        bt(i + 1)
+        chosen.pop()
+      }
+    }
+    bt(0)
+    return result
+  }, [pool])
+
+  const totalCombos = combos.length
+  const totalPages = Math.max(1, Math.ceil(totalCombos / COMBO_PAGE_SIZE))
+  const pageCombos = combos.slice((comboPage - 1) * COMBO_PAGE_SIZE, comboPage * COMBO_PAGE_SIZE)
+
+  const p5Stats = posStats?.pos5 ?? []
+  function gapColor(gap) {
+    if (gap == null) return '#94a3b8'
+    if (gap <= 5) return '#22c55e'
+    if (gap <= 15) return '#f59e0b'
+    if (gap <= 30) return '#ef4444'
+    return '#9f1239'
+  }
+
+  const COVERAGE_ROWS = [4, 5, 6, 7, 8, 9, 10].map(n => ({
+    n, tickets: C(n, 4),
+    guarantee: n === 4 ? 'ລາງ 1 ຖ້າທຸກ 4 ໂຕຕົງ' : `ລາງ 1 ຖ້າ 4 ໃນ ${n} ໂຕອອກ`,
+  }))
+
+  return (
+    <div className="space-y-5">
+      {/* Info banner */}
+      <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-4">
+        <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
+          <strong>ລະບົບ Wheel</strong> — ເລືອກ P5 ★ 1 ໂຕ + ເລກ P1-P4 ≥4 ໂຕ.
+          ລະບົບສ້າງທຸກ combination 4 ໂຕ. ຖ້າ P5 ຕົງ + 4 ໃນ N ໂຕອອກ = <strong>ລາງວັນທີ 1 ແນ່ນອນ</strong>
+        </p>
+      </div>
+
+      {/* Coverage table */}
+      <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-5">
+        <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
+          <Layers size={14} style={{ color: '#d4af37' }} />
+          ຕາຕະລາງ Wheel — ຈຳນວນໃບ vs. ການຄຸ້ມ
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-[#94a3b8] text-[10px] uppercase tracking-wide border-b border-[#f1f5f9] dark:border-white/5">
+                <th className="text-left py-2 px-3">ເລກ P1-P4 (N)</th>
+                <th className="text-right py-2 px-3">ໃບທີ່ຕ້ອງຊື້</th>
+                <th className="text-left py-2 px-3 hidden sm:table-cell">ການຄຸ້ມ (ຖ້າ P5 ຕົງ)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COVERAGE_ROWS.map(({ n, tickets, guarantee }) => {
+                const active = pool.length === n
+                return (
+                  <tr key={n} className={`border-b border-[#f1f5f9] dark:border-white/4 transition-all ${active ? 'bg-amber-50 dark:bg-amber-950/20' : ''}`}>
+                    <td className="py-2.5 px-3">
+                      <span className="font-black text-base" style={{ color: active ? '#d4af37' : '#0f172a' }}>
+                        {n} ໂຕ
+                      </span>
+                      {active && <span className="ml-2 text-[10px] font-bold text-amber-500">← ເລືອກຢູ່</span>}
+                    </td>
+                    <td className="py-2.5 px-3 text-right">
+                      <span className="font-black text-base" style={{ color: active ? '#d4af37' : '#374151' }}>{tickets}</span>
+                      <span className="text-[10px] text-[#94a3b8] ml-1">ໃບ</span>
+                    </td>
+                    <td className="py-2.5 px-3 text-[#64748b] hidden sm:table-cell">{guarantee}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* P5 picker grid */}
+      <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-5">
+        <p className="text-[10px] font-black uppercase tracking-wider text-[#d4af37] mb-3">
+          P5 ★ ເລືອກ 1 ໂຕ (ຕ້ອງຕົງ)
+          {p5 && <span className="ml-2 normal-case font-bold">— ເລືອກ {String(+p5).padStart(2,'0')}</span>}
+        </p>
+        <div className="grid grid-cols-9 gap-1.5">
+          {nums.map(n => {
+            const stat = p5Stats.find(r => r.number === n)
+            const col = gapColor(stat?.gap)
+            const sel = +p5 === n
+            return (
+              <button key={n} onClick={() => setP5(sel ? '' : String(n))}
+                className="rounded-xl p-1.5 text-center transition-all cursor-pointer border"
+                style={sel ? {
+                  background: 'linear-gradient(135deg,#d4af37,#fbbf24)',
+                  borderColor: '#d4af37',
+                  boxShadow: '0 2px 12px rgba(212,175,55,0.4)',
+                } : { background: col + '12', borderColor: col + '30' }}>
+                <p className="text-[11px] font-black leading-tight" style={{ color: sel ? '#060b1a' : col }}>
+                  {String(n).padStart(2, '0')}
+                </p>
+                <p className="text-[8px] leading-tight" style={{ color: sel ? '#060b1a99' : col + 'aa' }}>
+                  {stat?.gap != null ? `${stat.gap}ວ` : '—'}
+                </p>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* P1-P4 pool picker grid */}
+      <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <p className="text-[10px] font-black uppercase tracking-wider text-[#3b82f6]">
+            P1-P4 ເລືອກ ≥4 ໂຕ
+            {pool.length >= 4 && (
+              <span className="ml-2 text-amber-500 normal-case">({pool.length} ໂຕ → {C(pool.length, 4)} ໃບ)</span>
+            )}
+          </p>
+          {pool.length > 0 && (
+            <button onClick={() => { setPool([]); setComboPage(1) }}
+              className="text-[10px] text-[#94a3b8] hover:text-red-400 transition-colors cursor-pointer">
+              ລ້າງທັງໝົດ
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-9 gap-1.5">
+          {nums.map(n => {
+            const sel = pool.includes(n)
+            const isP5 = +p5 === n
+            return (
+              <button key={n} onClick={() => !isP5 && togglePool(n)} disabled={isP5}
+                className="rounded-xl p-1.5 text-center border transition-all"
+                style={isP5 ? {
+                  background: 'rgba(212,175,55,0.06)', borderColor: 'rgba(212,175,55,0.15)',
+                  cursor: 'not-allowed', opacity: 0.35,
+                } : sel ? {
+                  background: 'rgba(59,130,246,0.14)', borderColor: 'rgba(59,130,246,0.5)',
+                  boxShadow: '0 0 8px rgba(59,130,246,0.2)', cursor: 'pointer',
+                } : {
+                  background: 'rgba(148,163,184,0.06)', borderColor: 'rgba(148,163,184,0.15)',
+                  cursor: 'pointer',
+                }}>
+                <p className="text-[11px] font-black leading-tight"
+                  style={{ color: isP5 ? '#d4af37' : sel ? '#3b82f6' : '#94a3b8' }}>
+                  {String(n).padStart(2, '0')}
+                </p>
+                {sel && <p className="text-[8px] font-black leading-tight text-[#3b82f6]">✓</p>}
+                {!sel && !isP5 && <p className="text-[8px] leading-tight text-transparent">·</p>}
+              </button>
+            )
+          })}
+        </div>
+        {pool.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-1.5 items-center">
+            <span className="text-[10px] text-[#94a3b8] font-bold mr-1">Pool:</span>
+            {pool.map(n => (
+              <span key={n} onClick={() => togglePool(n)}
+                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-extrabold cursor-pointer hover:opacity-60 transition-opacity"
+                style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' }}>
+                {String(n).padStart(2, '0')}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Empty state */}
+      {pool.length < 4 && (
+        <div className="text-center py-10 text-[#94a3b8]">
+          <Layers size={40} className="mx-auto mb-3 opacity-20" />
+          <p className="text-sm">ເລືອກຢ່າງໜ້ອຍ 4 ໂຕ P1-P4 ເພື່ອສ້າງ combo</p>
+        </div>
+      )}
+
+      {/* Generated combos */}
+      {pool.length >= 4 && (
+        <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] flex items-center gap-2">
+              <Trophy size={14} style={{ color: '#d4af37' }} />
+              Combo ທັງໝົດ ({totalCombos} ໃບ)
+            </h3>
+            {p5 && (
+              <span className="text-xs font-bold px-3 py-1 rounded-full"
+                style={{ background: 'rgba(212,175,55,0.12)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)' }}>
+                P5 ★ {String(+p5).padStart(2, '0')}
+              </span>
+            )}
+          </div>
+
+          {!p5 && (
+            <div className="mb-4 flex gap-2 items-center text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 rounded-xl px-3 py-2">
+              <AlertCircle size={12} /> ກະລຸນາເລືອກ P5 ★ ດ້ານເທິງ
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            {pageCombos.map((combo, i) => {
+              const idx = (comboPage - 1) * COMBO_PAGE_SIZE + i + 1
+              return (
+                <div key={i}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl border border-[#f1f5f9] dark:border-white/5 hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
+                  <span className="text-[10px] text-[#94a3b8] w-6 shrink-0 text-right font-bold tabular-nums">{idx}</span>
+                  <div className="flex gap-1.5 flex-1 items-center">
+                    {combo.map(n => (
+                      <span key={n}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-extrabold"
+                        style={{ background: 'rgba(59,130,246,0.10)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.22)' }}>
+                        {String(n).padStart(2, '0')}
+                      </span>
+                    ))}
+                    <span className="text-[#d1d5db] text-xs mx-0.5">+</span>
+                    {p5 ? (
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-extrabold"
+                        style={{ background: 'linear-gradient(135deg,#d4af37,#fbbf24)', color: '#060b1a' }}>
+                        {String(+p5).padStart(2, '0')}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-[10px] font-bold text-[#94a3b8]"
+                        style={{ border: '1px dashed rgba(148,163,184,0.4)' }}>P5</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <button onClick={() => setComboPage(p => Math.max(1, p - 1))} disabled={comboPage === 1}
+                className="h-8 w-8 rounded-xl border border-[#e2e8f0] dark:border-[#2a1e50] text-sm disabled:opacity-25 cursor-pointer hover:border-amber-300 transition-all">←</button>
+              <span className="text-xs text-[#64748b] tabular-nums">{comboPage} / {totalPages}</span>
+              <button onClick={() => setComboPage(p => Math.min(totalPages, p + 1))} disabled={comboPage === totalPages}
+                className="h-8 w-8 rounded-xl border border-[#e2e8f0] dark:border-[#2a1e50] text-sm disabled:opacity-25 cursor-pointer hover:border-amber-300 transition-all">→</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Analysis Panel 7: Combo Frequency (numbers that appear together) ────
+function ComboFreqPanel({ draws }) {
+  const [size, setSize] = useState(2)
+  const [range, setRange] = useState('all')
+  const RANGES = [{ v: '20', l: '20 ງວດ' }, { v: '50', l: '50 ງວດ' }, { v: '100', l: '100 ງວດ' }, { v: 'all', l: 'ທັງໝົດ' }]
+  const SIZES = [{ v: 2, l: 'ຄູ່ 2 ເລກ' }, { v: 3, l: 'ຊຸດ 3 ເລກ' }, { v: 4, l: 'ຊຸດ 4 ເລກ (ເຕັມ)' }]
+
+  function combinations(arr, k) {
+    const result = []
+    const chosen = []
+    function bt(start) {
+      if (chosen.length === k) { result.push([...chosen]); return }
+      for (let i = start; i < arr.length; i++) {
+        chosen.push(arr[i])
+        bt(i + 1)
+        chosen.pop()
+      }
+    }
+    bt(0)
+    return result
+  }
+
+  const data = useMemo(() => {
+    if (!draws?.length) return null
+    const n = range === 'all' ? draws.length : Math.min(parseInt(range), draws.length)
+    const recent = draws.slice(0, n)
+
+    const counts = {}
+    const lastSeen = {}
+    recent.forEach(d => {
+      const nums = [d.pos1, d.pos2, d.pos3, d.pos4].filter(Boolean).map(Number).sort((a, b) => a - b)
+      combinations(nums, size).forEach(combo => {
+        const key = combo.join('-')
+        counts[key] = (counts[key] || 0) + 1
+        if (lastSeen[key] === undefined) lastSeen[key] = d.draw_date
+      })
+    })
+
+    const list = Object.entries(counts)
+      .map(([key, count]) => ({
+        nums: key.split('-').map(Number),
+        count,
+        pct: +((count / n) * 100).toFixed(1),
+        lastSeen: lastSeen[key],
+      }))
+      .sort((a, b) => b.count - a.count)
+
+    return { list, n }
+  }, [draws, size, range])
+
+  if (!data) return null
+  const top = data.list.slice(0, 20)
+  const maxCount = top[0]?.count || 1
+
+  return (
+    <div className="space-y-5">
+      <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-4">
+        <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
+          ວິເຄາະຊຸດເລກ P1-P4 ທີ່ <strong>ອອກພ້ອມກັນ</strong> ໃນງວດດຽວກັນຫຼາຍທີ່ສຸດ (ບໍ່ນັບ P5 ★)
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="flex gap-2 flex-wrap items-center">
+          <span className="text-xs font-bold text-[#94a3b8]">ຂະໜາດຊຸດ:</span>
+          {SIZES.map(({ v, l }) => (
+            <button key={v} onClick={() => setSize(v)}
+              className="h-8 px-4 rounded-xl text-xs font-bold border transition-all cursor-pointer"
+              style={size === v ? {
+                background: 'linear-gradient(135deg,#d4af37,#fbbf24)', borderColor: '#d4af37', color: '#060b1a',
+              } : { background: 'transparent', borderColor: 'rgba(148,163,184,0.25)', color: '#64748b' }}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 flex-wrap items-center">
+          <span className="text-xs font-bold text-[#94a3b8]">ຊ່ວງ:</span>
+          {RANGES.map(({ v, l }) => (
+            <button key={v} onClick={() => setRange(v)}
+              className="h-8 px-4 rounded-xl text-xs font-bold border transition-all cursor-pointer"
+              style={range === v ? {
+                background: 'linear-gradient(135deg,#3b82f6,#60a5fa)', borderColor: '#3b82f6', color: '#fff',
+              } : { background: 'transparent', borderColor: 'rgba(148,163,184,0.25)', color: '#64748b' }}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-5">
+        <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
+          <Link2 size={14} style={{ color: '#d4af37' }} />
+          Top 20 ຊຸດເລກ P1-P4 ທີ່ອອກພ້ອມກັນຫຼາຍສຸດ ({data.n} ງວດ)
+        </h3>
+        {top.length === 0 ? (
+          <p className="text-xs text-[#94a3b8] py-6 text-center">ຍັງບໍ່ມີຂໍ້ມູນພຽງພໍ</p>
+        ) : (
+          <div className="space-y-2">
+            {top.map((row, i) => (
+              <div key={row.nums.join('-')} className="flex items-center gap-2">
+                <span className="w-5 text-[10px] text-[#94a3b8] text-right shrink-0">{i + 1}</span>
+                <div className="flex gap-1.5 shrink-0">
+                  {row.nums.map(num => (
+                    <span key={num}
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-sm font-extrabold"
+                      style={i < 3 ? {
+                        background: 'linear-gradient(135deg,#d4af37,#fbbf24,#b8860b)', color: '#060b1a',
+                        boxShadow: '0 2px 12px rgba(212,175,55,0.4)',
+                      } : { background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }}>
+                      {String(num).padStart(2, '0')}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex-1 h-2 bg-[#f1f5f9] dark:bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all"
+                    style={{ width: `${(row.count / maxCount) * 100}%`, background: i < 3 ? 'linear-gradient(90deg,#d4af37,#f59e0b)' : '#3b82f6' }} />
+                </div>
+                <span className="text-xs font-bold text-[#374151] dark:text-[#94a3b8] w-24 text-right shrink-0">
+                  {row.count}x · {row.pct}%
+                </span>
+                <span className="text-[10px] text-[#94a3b8] w-20 text-right shrink-0 hidden sm:block">
+                  {row.lastSeen ?? '—'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ────────────────────────────────────────────────────
 const ANALYSIS_TABS = [
   { id: 'stats',     label: 'ສະຖິຕິ',         icon: Hash },
@@ -1029,7 +1433,9 @@ const ANALYSIS_TABS = [
   { id: 'gap',       label: 'Gap Analysis',   icon: TrendingDown },
   { id: 'smartpick', label: 'ຊ່ວຍເລືອກ',      icon: Target },
   { id: 'dayfreq',   label: 'ຄວາມຖີ່ຕາມວັນ',  icon: Calendar },
+  { id: 'combo',     label: 'ຊຸດເລກຮ່ວມ',      icon: Link2 },
   { id: 'ticket',    label: 'ທົດສອບ Ticket',   icon: ClipboardList },
+  { id: 'wheel',     label: 'ລະບົບ Wheel',      icon: Layers },
 ]
 
 export default function Happy545Page() {
@@ -1230,9 +1636,19 @@ export default function Happy545Page() {
           <DayFreqPanel draws={draws} />
         )}
 
+        {/* ── Tab: Combo Frequency ── */}
+        {tab === 'combo' && !loading && (
+          <ComboFreqPanel draws={draws} />
+        )}
+
         {/* ── Tab: Ticket Checker ── */}
         {tab === 'ticket' && !loading && (
           <TicketCheckerPanel draws={draws} posStats={posStats} />
+        )}
+
+        {/* ── Tab: Wheel Generator ── */}
+        {tab === 'wheel' && !loading && (
+          <WheelPanel posStats={posStats} />
         )}
 
         {/* ── Per-position stats + Top5 + Stats table (stats tab only) ── */}
