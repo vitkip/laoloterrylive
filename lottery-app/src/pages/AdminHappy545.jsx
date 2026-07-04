@@ -162,7 +162,11 @@ export default function AdminHappy545() {
     if (!confirm(`ລຶບຜົນເລກວັນທີ ${date}?`)) return
     setDeleting(id)
     try {
-      const res  = await fetch(`${API}?r=draws&id=${id}`, { method: 'DELETE' })
+      const res  = await fetch(`${API}?r=draws&action=delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
       const data = await res.json()
       if (res.ok) {
         toast.success('ລຶບສຳເລັດ')
