@@ -14,6 +14,7 @@ const LoginPage       = lazy(() => import('./pages/LoginPage'))
 const DashboardPage   = lazy(() => import('./pages/DashboardPage'))
 const SearchPage      = lazy(() => import('./pages/SearchPage'))
 const AnalyticsPage   = lazy(() => import('./pages/AnalyticsPage'))
+const PredictionSummaryPage = lazy(() => import('./pages/PredictionSummaryPage'))
 const MemberProfilePage = lazy(() => import('./pages/MemberProfilePage'))
 
 // ── Auth / Registration pages ─────────────────────────────────────
@@ -143,6 +144,7 @@ export default function App() {
           <Route element={<AuthRoute />}>
             <Route element={<PublicLayout />}>
               <Route path="/analytics"     element={<AnalyticsPage />} />
+              <Route path="/prediction"    element={<PredictionSummaryPage />} />
               <Route path="/member/profile" element={<MemberProfilePage />} />
             </Route>
           </Route>

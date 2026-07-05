@@ -105,6 +105,94 @@ export function computeAnalytics(draws, range) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GENERIC N-DIGIT ANALYTICS ENGINE
+// Same math as computeAnalytics (freq / gap / momentum / AI score / decision
+// score) but parameterised over digit length + prize_type, so it also works
+// for 3-digit (000–999), 4-digit, etc. results_detail rows.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function computeAnalyticsND(draws, range, prizeType, digitLen) {
+  if (!draws?.length) return null
+  const total = 10 ** digitLen
+  const n = range === 'all' ? draws.length : Math.min(parseInt(range), draws.length)
+  const sliced = draws.slice(0, n)
+  const chrono = [...sliced].reverse()
+
+  const freq = {}
+  const lastAt = {}
+  for (let i = 0; i < total; i++) {
+    const k = i.toString().padStart(digitLen, '0')
+    freq[k] = 0
+    lastAt[k] = -1
+  }
+
+  chrono.forEach((d, idx) => {
+    const v = d.results_detail?.find(r => r.prize_type === prizeType)?.result_value
+    if (v !== undefined && freq[v] !== undefined) {
+      freq[v]++
+      lastAt[v] = idx
+    }
+  })
+
+  const r10Map = {}; const r30Map = {}
+  for (let i = 0; i < total; i++) {
+    const k = i.toString().padStart(digitLen, '0'); r10Map[k] = 0; r30Map[k] = 0
+  }
+  chrono.slice(-10).forEach(d => {
+    const v = d.results_detail?.find(r => r.prize_type === prizeType)?.result_value
+    if (v && r10Map[v] !== undefined) r10Map[v]++
+  })
+  chrono.slice(-30).forEach(d => {
+    const v = d.results_detail?.find(r => r.prize_type === prizeType)?.result_value
+    if (v && r30Map[v] !== undefined) r30Map[v]++
+  })
+
+  const maxFreq = Math.max(...Object.values(freq), 1)
+
+  const scores = Object.keys(freq).map(num => {
+    const f = freq[num]
+    const lastIdx = lastAt[num]
+    const gap = lastIdx === -1 ? n : n - 1 - lastIdx
+    const avgGap = f > 0 ? n / f : n
+    const overdue = gap / Math.max(avgGap, 1)
+    const r10 = r10Map[num]
+    const r30 = r30Map[num]
+    const recentRate = r10 / Math.max(Math.min(10, chrono.length), 1)
+    const baseRate   = r30 / Math.max(Math.min(30, chrono.length), 1)
+    const momentum   = +(recentRate - baseRate).toFixed(3)
+
+    const freqScore     = (f / maxFreq) * 35
+    const gapScore      = Math.min(overdue / 3, 1) * 35
+    const momentumScore = Math.max(Math.min((momentum + 0.1) / 0.2, 1), 0) * 30
+    const aiScore       = +Math.min(freqScore + gapScore + momentumScore, 100).toFixed(1)
+
+    const sig1 = overdue >= 1.0 ? 1 : 0
+    const sig2 = momentum > 0 ? 1 : 0
+    const sig3 = aiScore >= 60 ? 1 : 0
+    const decisionScore = sig1 + sig2 + sig3
+
+    return {
+      num, freq: f, gap, avgGap: Math.round(avgGap), overdue: +overdue.toFixed(2),
+      pct: +((f / Math.max(n, 1)) * 100).toFixed(1), r10, r30, momentum, aiScore,
+      decisionScore, sig1, sig2, sig3,
+    }
+  })
+
+  return {
+    n, digitLen, scores,
+    hot:         [...scores].sort((a, b) => b.freq - a.freq).slice(0, 10),
+    cold:        [...scores].sort((a, b) => b.gap  - a.gap ).slice(0, 10),
+    aiTop:       [...scores].sort((a, b) => b.aiScore - a.aiScore).slice(0, 10),
+    rising:      [...scores].filter(s => s.momentum > 0).sort((a, b) => b.momentum - a.momentum).slice(0, 8),
+    falling:     [...scores].filter(s => s.momentum < 0).sort((a, b) => a.momentum - b.momentum).slice(0, 8),
+    overdue:     [...scores].filter(s => s.overdue >= 1.0).sort((a, b) => b.overdue - a.overdue).slice(0, 12),
+    decisionTop: [...scores].filter(s => s.decisionScore > 0)
+                            .sort((a, b) => b.decisionScore - a.decisionScore || b.aiScore - a.aiScore)
+                            .slice(0, 20),
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // COMBINED PROBABILITY ENGINE  (4 independent signals × 25 pts = 100 pts max)
 //
 // Logic:  Previously aiW was included alongside freqW/overdueW/momentumW which
@@ -449,4 +537,112 @@ ${rankFull}
      ບໍ່ຮັບປະກັນຜົນລາງວັນ — ຫ້າມລົງທຶນເກີນຄວາມສາມາດ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📲 laolots.com — ຂໍ້ມູນຫວຍລາວ ຄົບຖ້ວນທີ່ສຸດ`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PREDICTION SET BUILDER
+// Pulls the top result out of every existing analysis engine (frequency,
+// gap/overdue, momentum, 4-signal AI composite, 8-signal enhanced engine)
+// and packages them as 5 labelled 2-digit sets + 5 labelled 3-digit sets,
+// each with a Lao-language explanation of the signal behind it.
+// Used by PredictionSummaryPage ("ເລກໜ້າຈະອອກໃນງວດນີ້").
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function buildPredictionSets(draws, range = '50') {
+  if (!draws?.length) return null
+
+  const a2 = computeAnalytics(draws, range)
+  if (!a2) return null
+  const combined2 = computeCombinedTop10(a2)
+  const enhanced2 = computeEnhancedPrediction(draws, range)
+
+  const a3 = computeAnalyticsND(draws, range, '3_digits', 3)
+
+  const twoDigitSets = [
+    {
+      key: 'hot2',
+      title: 'ເລກຮ້ອນ (ຄວາມຖີ່ສູງສຸດ)',
+      icon: 'local_fire_department',
+      color: '#ef4444',
+      numbers: a2.hot.slice(0, 5).map(s => s.num),
+      reason: `ອອກເລື້ອຍທີ່ສຸດໃນຊ່ວງ ${a2.n} ງວດຫຼ້າສຸດທີ່ວິເຄາະ — ຄວາມຖີ່ສູງອາດສະທ້ອນແນວໂນ້ມທີ່ຈະສືບຕໍ່ອອກອີກ.`,
+    },
+    {
+      key: 'overdue2',
+      title: 'ເລກຄ້າງງວດ (Overdue)',
+      icon: 'hourglass_top',
+      color: '#fbbf24',
+      numbers: (a2.overdue.length ? a2.overdue : a2.cold).slice(0, 5).map(s => s.num),
+      reason: `ບໍ່ໄດ້ອອກດົນກວ່າຄ່າສະເລ່ຍຂອງມັນເອງຫຼາຍເທົ່າ — ອີງທິດສະດີ "ຄ້າງງວດ" ອາດໃກ້ຮອບທີ່ຈະອອກຄືນ.`,
+    },
+    {
+      key: 'momentum2',
+      title: 'ເລກກຳລັງມາແຮງ (Momentum)',
+      icon: 'trending_up',
+      color: '#6cf8bb',
+      numbers: (a2.rising.length ? a2.rising : a2.hot).slice(0, 5).map(s => s.num),
+      reason: `ອັດຕາການອອກໃນ 10 ງວດຫຼ້າສຸດ ສູງກວ່າອັດຕາສະເລ່ຍໃນ 30 ງວດ — ສະແດງແນວໂນ້ມກຳລັງຂຶ້ນ (momentum ບວກ).`,
+    },
+    {
+      key: 'ai2',
+      title: 'AI Composite (4-Signal)',
+      icon: 'psychology',
+      color: '#818cf8',
+      numbers: combined2.slice(0, 5).map(s => s.num),
+      reason: `ລວມ 4 ສັນຍານ: ຄວາມຖີ່ · ຊ້ານານ · Momentum · ສັນຍານຕັດສິນໃຈ (25pts/ດ້ານ) ເປັນຄະແນນດຽວ ແລ້ວເລືອກ 5 ອັນດັບເທິງສຸດ.`,
+    },
+    {
+      key: 'enhanced2',
+      title: 'Enhanced 8-Signal Engine',
+      icon: 'auto_awesome',
+      color: '#f472b6',
+      numbers: (enhanced2?.top10 ?? []).slice(0, 5).map(s => s.num),
+      reason: `ເພີ່ມອີກ 4 ສັນຍານ: ຄວາມຖີ່ໃນເດືອນດຽວກັນ, ວັນອາທິດດຽວກັນ, ເລກທີ່ມັກຕໍ່ຈາກຜົນຫຼ້າສຸດ, ແລະ ເລກສະລັບ (mirror) — ລວມ 8 ດ້ານ.`,
+    },
+  ]
+
+  const threeDigitSets = a3 ? [
+    {
+      key: 'hot3',
+      title: 'ເລກ 3 ຕົວ ຮ້ອນ',
+      icon: 'local_fire_department',
+      color: '#ef4444',
+      numbers: a3.hot.slice(0, 5).map(s => s.num),
+      reason: `ເລກ 3 ຕົວເຫຼົ່ານີ້ອອກເລື້ອຍທີ່ສຸດໃນ ${a3.n} ງວດຫຼ້າສຸດທີ່ວິເຄາະ.`,
+    },
+    {
+      key: 'overdue3',
+      title: 'ເລກ 3 ຕົວ ຄ້າງງວດ',
+      icon: 'hourglass_top',
+      color: '#fbbf24',
+      numbers: (a3.overdue.length ? a3.overdue : a3.cold).slice(0, 5).map(s => s.num),
+      reason: `ບໍ່ໄດ້ອອກດົນກວ່າຄ່າສະເລ່ຍຂອງມັນເອງ — ອາດໃກ້ຮອບທີ່ຈະອອກຄືນ.`,
+    },
+    {
+      key: 'momentum3',
+      title: 'ເລກ 3 ຕົວ ກຳລັງມາແຮງ',
+      icon: 'trending_up',
+      color: '#6cf8bb',
+      numbers: (a3.rising.length ? a3.rising : a3.hot).slice(0, 5).map(s => s.num),
+      reason: `ອັດຕາການອອກໃນ 10 ງວດຫຼ້າສຸດ ສູງກວ່າອັດຕາສະເລ່ຍໃນ 30 ງວດ.`,
+    },
+    {
+      key: 'ai3',
+      title: 'ເລກ 3 ຕົວ AI Composite',
+      icon: 'psychology',
+      color: '#818cf8',
+      numbers: computeCombinedTop10(a3).slice(0, 5).map(s => s.num),
+      reason: `ຄິດໄລ່ຈາກ 4 ສັນຍານລວມກັນ ຄືກັນກັບເລກ 2 ຕົວ ແຕ່ນຳໃຊ້ກັບພື້ນທີ່ເລກ 3 ຕົວ (000–999).`,
+    },
+    {
+      key: 'decision3',
+      title: 'ເລກ 3 ຕົວ ສັນຍານຄົບ',
+      icon: 'stars',
+      color: '#f97316',
+      numbers: a3.decisionTop.slice(0, 5).map(s => s.num),
+      reason: `ຜ່ານສັນຍານຕັດສິນໃຈຫຼາຍສຸດພ້ອມກັນ (ຄ້າງງວດ + momentum ບວກ + AI Score ສູງ).`,
+    },
+  ] : []
+
+  return { n: a2.n, twoDigitSets, threeDigitSets }
 }
