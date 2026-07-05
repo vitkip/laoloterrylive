@@ -13,10 +13,24 @@ const RANGE_OPTIONS = [
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
+// DUPLICATE DETECTION — numbers appearing in more than one set get flagged
+// ─────────────────────────────────────────────────────────────────────────────
+
+function countAcrossSets(setList) {
+  const counts = {}
+  setList.forEach(s => {
+    s.numbers.forEach(num => {
+      counts[num] = (counts[num] || 0) + 1
+    })
+  })
+  return counts
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SET CARD — one analysis method → up to 5 numbers + Lao explanation
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SetCard({ index, title, icon, color, numbers, reason, digitLen }) {
+function SetCard({ index, title, icon, color, numbers, reason, digitLen, dupeCounts }) {
   return (
     <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl p-5 border border-white/[0.09] shadow-xl shadow-black/40 flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -34,14 +48,26 @@ function SetCard({ index, title, icon, color, numbers, reason, digitLen }) {
         {numbers.length === 0 && (
           <span className="text-xs text-white/30">ຂໍ້ມູນບໍ່ພໍສຳລັບຊຸດນີ້</span>
         )}
-        {numbers.map(num => (
-          <span key={num}
-            className={`font-black font-mono text-white flex items-center justify-center rounded-xl border
-              ${digitLen === 3 ? 'text-lg px-3.5 py-2' : 'text-xl px-4 py-2'}`}
-            style={{ background: color + '1a', borderColor: color + '40' }}>
-            {num}
-          </span>
-        ))}
+        {numbers.map(num => {
+          const hitCount = dupeCounts?.[num] ?? 0
+          const isDupe = hitCount > 1
+          return (
+            <span key={num}
+              className={`font-black font-mono text-white flex items-center justify-center rounded-xl border relative
+                ${digitLen === 3 ? 'text-lg px-3.5 py-2' : 'text-xl px-4 py-2'}
+                ${isDupe ? 'ring-2 ring-red-500 shadow-[0_0_14px_rgba(239,68,68,0.55)]' : ''}`}
+              style={isDupe
+                ? { background: 'rgba(239,68,68,0.22)', borderColor: '#ef4444' }
+                : { background: color + '1a', borderColor: color + '40' }}>
+              {num}
+              {isDupe && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-[9px] flex items-center justify-center font-black text-white shadow">
+                  {hitCount}
+                </span>
+              )}
+            </span>
+          )
+        })}
       </div>
 
       <p className="text-[11px] text-white/45 leading-relaxed">{reason}</p>
@@ -64,6 +90,9 @@ export default function PredictionSummaryPage() {
 
   const sets = useMemo(() => buildPredictionSets(filteredDraws, range), [filteredDraws, range])
   const latestDraw = filteredDraws?.[0] ?? null
+
+  const threeDigitDupes = useMemo(() => sets ? countAcrossSets(sets.threeDigitSets) : {}, [sets])
+  const twoDigitDupes   = useMemo(() => sets ? countAcrossSets(sets.twoDigitSets)   : {}, [sets])
 
   return (
     <div className="space-y-6 pb-16">
@@ -169,10 +198,14 @@ export default function PredictionSummaryPage() {
               <span className="material-symbols-outlined text-[18px] text-[#a78bfa]">looks_3</span>
               <h2 className="font-black text-white text-lg">ເລກ 3 ຕົວ — 5 ຊຸດ</h2>
               <span className="text-xs text-white/30">(5 ໂຕ/ຊຸດ — ອິງ 000–999)</span>
+              <span className="ml-auto flex items-center gap-1.5 text-[10px] font-bold text-red-400">
+                <span className="w-2.5 h-2.5 rounded-full ring-2 ring-red-500 shrink-0" />
+                ໄຮໄລສີແດງ = ເລກຊ້ຳຫຼາຍຊຸດ
+              </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {sets.threeDigitSets.map((s, i) => (
-                <SetCard key={s.key} index={i + 1} digitLen={3} {...s} />
+                <SetCard key={s.key} index={i + 1} digitLen={3} dupeCounts={threeDigitDupes} {...s} />
               ))}
             </div>
           </div>
@@ -183,10 +216,14 @@ export default function PredictionSummaryPage() {
               <span className="material-symbols-outlined text-[18px] text-[#f472b6]">looks_two</span>
               <h2 className="font-black text-white text-lg">ເລກ 2 ຕົວ — 5 ຊຸດ</h2>
               <span className="text-xs text-white/30">(5 ໂຕ/ຊຸດ — ອິງ 00–99)</span>
+              <span className="ml-auto flex items-center gap-1.5 text-[10px] font-bold text-red-400">
+                <span className="w-2.5 h-2.5 rounded-full ring-2 ring-red-500 shrink-0" />
+                ໄຮໄລສີແດງ = ເລກຊ້ຳຫຼາຍຊຸດ
+              </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {sets.twoDigitSets.map((s, i) => (
-                <SetCard key={s.key} index={i + 1} digitLen={2} {...s} />
+                <SetCard key={s.key} index={i + 1} digitLen={2} dupeCounts={twoDigitDupes} {...s} />
               ))}
             </div>
           </div>
