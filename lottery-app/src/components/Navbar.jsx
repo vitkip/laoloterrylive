@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, Clock, BarChart2, TrendingUp, Search,
   Moon, Sun, Menu, User, Shield, LogOut, Lock,
-  ChevronDown, Dices, Sparkles,
+  ChevronDown, Dices, Sparkles, Target,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -19,6 +19,7 @@ const GUEST_LINKS = [
   { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history',    Icon: Clock },
   { label: 'ສະຖິຕິ',          href: '/statistics', Icon: BarChart2 },
   { label: 'Happy 545',       href: '/happy545',   Icon: Dices },
+  { label: 'ຊຸດຫວຍ 545',     href: '/happy545/sets', Icon: Target },
   { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search',     Icon: Search },
 ]
 const MEMBER_LINKS = [
@@ -26,6 +27,7 @@ const MEMBER_LINKS = [
   { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history',    Icon: Clock },
   { label: 'ສະຖິຕິ',          href: '/statistics', Icon: BarChart2 },
   { label: 'Happy 545',       href: '/happy545',   Icon: Dices },
+  { label: 'ຊຸດຫວຍ 545',     href: '/happy545/sets', Icon: Target },
   { label: 'AI Analytics',    href: '/analytics',  Icon: TrendingUp },
   { label: 'ເລກໜ້າຈະອອກ',    href: '/prediction', Icon: Sparkles },
   { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search',     Icon: Search },

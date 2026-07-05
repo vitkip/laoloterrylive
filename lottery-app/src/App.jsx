@@ -39,6 +39,7 @@ const AdminContacts       = lazy(() => import('./pages/AdminContacts'))
 const TermsPage            = lazy(() => import('./pages/TermsPage'))
 const ContactPage          = lazy(() => import('./pages/ContactPage'))
 const Happy545Page         = lazy(() => import('./pages/Happy545Page'))
+const Happy545SetsPage     = lazy(() => import('./pages/Happy545SetsPage'))
 const AdminHappy545        = lazy(() => import('./pages/AdminHappy545'))
 
 // ── Error pages ───────────────────────────────────────────────────
@@ -129,6 +130,7 @@ export default function App() {
             <Route path="/terms"       element={<TermsPage />} />
             <Route path="/contact"     element={<ContactPage />} />
             <Route path="/happy545"    element={<Happy545Page />} />
+            <Route path="/happy545/sets" element={<Happy545SetsPage />} />
           </Route>
 
           {/* ══ TIER 1b: Full-screen standalone pages (no Navbar/Footer) */}
