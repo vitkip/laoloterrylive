@@ -16,6 +16,7 @@ import TrendMomentum from '../components/TrendMomentum'
 import GapAnalysis from '../components/GapAnalysis'
 import RepeatPattern from '../components/RepeatPattern'
 import HotThreeDigits from '../components/HotThreeDigits'
+import HotFourDigits from '../components/HotFourDigits'
 
 const TIMEFRAMES = [
   { value: '1_month',  label: '1 ເດືອນ', icon: 'calendar_view_month' },
@@ -35,7 +36,7 @@ const BALL_DATA = [
 
 const SECTION_CONFIGS = [
   { num: '01', icon: 'local_fire_department', title: 'ເລກຮ້ອນ & ເລກດັບ',         subtitle: 'Hot / Cold Numbers',            accent: '#f97316' },
-  { num: '02', icon: 'filter_3',              title: '3 ຕົວທ້າຍ ເດັ່ນ',            subtitle: 'Hot 3-Digit Endings',           accent: '#6366f1' },
+  { num: '02', icon: 'filter_3',              title: 'ຕົວທ້າຍເດັ່ນ',              subtitle: 'Hot 3 & 4-Digit Endings',       accent: '#6366f1' },
   { num: '03', icon: 'bar_chart',             title: 'ການກະຈາຍຕົວເລກ',           subtitle: 'Digit Distribution',            accent: '#818cf8' },
   { num: '04', icon: 'pets',                  title: 'ສະຖິຕິນາມສັດ',               subtitle: 'Animal Frequency Stats',        accent: '#4ade80' },
   { num: '05', icon: 'insights',              title: 'ການວິເຄາະຂັ້ນສູງ',          subtitle: 'Weekday + Consecutive Patterns', accent: '#c084fc' },
@@ -394,10 +395,13 @@ export default function DashboardPage() {
             </div>
           </SectionCard>
 
-          {/* 02 — Hot 3-Digit Endings */}
+          {/* 02 — Hot 3 & 4-Digit Endings */}
           <DeferredSection minHeight="220px">
             <SectionCard cfg={SECTION_CONFIGS[1]}>
-              <HotThreeDigits timeframe={timeframe} typeId={selectedType} />
+              <div className="space-y-6">
+                <HotThreeDigits timeframe={timeframe} typeId={selectedType} />
+                <HotFourDigits timeframe={timeframe} typeId={selectedType} />
+              </div>
             </SectionCard>
           </DeferredSection>
 

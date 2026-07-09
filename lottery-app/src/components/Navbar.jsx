@@ -455,8 +455,7 @@ export default function Navbar() {
     setIsDark(next)
   }
 
-  const isActive = (href) =>
-    href === '/' ? location.pathname === '/' : location.pathname.startsWith(href)
+  const isActive = (href) => location.pathname === href
 
   return (
     <>

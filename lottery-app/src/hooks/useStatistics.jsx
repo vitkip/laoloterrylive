@@ -248,6 +248,23 @@ export const useStatistics = (timeframe = 'all', typeId = 'all') => {
       .sort((a, b) => b.count - a.count || a.number.localeCompare(b.number))
       .slice(0, 5);
 
+    // ─── Hot Four-Digit Endings (last 4 of 6-digit full_result, ຫວຍພັດທະນາ) ───
+    const fourDigitCount = {};
+    chronologicalDraws.forEach(d => {
+      const fr = d.full_result;
+      if (fr && fr.length >= 6) {
+        const tail = fr.slice(-4);
+        if (/^\d{4}$/.test(tail)) {
+          fourDigitCount[tail] = (fourDigitCount[tail] || 0) + 1;
+        }
+      }
+    });
+
+    const hotFourDigits = Object.entries(fourDigitCount)
+      .map(([number, count]) => ({ number, count }))
+      .sort((a, b) => b.count - a.count || a.number.localeCompare(b.number))
+      .slice(0, 5);
+
     return {
       hotNumbers,
       coldNumbers,
@@ -259,6 +276,7 @@ export const useStatistics = (timeframe = 'all', typeId = 'all') => {
       gapAnalysis,
       repeatPatterns,
       hotThreeDigits,
+      hotFourDigits,
     };
   }, [draws, animals, timeframe, typeId]);
 
