@@ -203,6 +203,38 @@ function clientIP()
     return substr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1', 0, 45);
 }
 
+/**
+ * Grant the one-time demo-wallet signup bonus. Safe to call more than once
+ * per user — wallets.user_id is UNIQUE, so a second call for the same user
+ * is a no-op (INSERT IGNORE affects 0 rows, no duplicate ledger entry).
+ * Failures are logged and swallowed: a wallet hiccup must never block
+ * registration/verification.
+ */
+function credit_signup_bonus(mysqli $conn, int $userId, float $amount = 100000.00): void
+{
+    $conn->begin_transaction();
+    try {
+        $stmt = $conn->prepare("INSERT IGNORE INTO wallets (user_id, balance) VALUES (?, ?)");
+        $stmt->bind_param('id', $userId, $amount);
+        $stmt->execute();
+        $inserted = $stmt->affected_rows > 0;
+        $stmt->close();
+
+        if ($inserted) {
+            $type = 'signup_bonus';
+            $note = 'ໂບນັດສະໝັກສະມາຊິກ (Demo)';
+            $tx = $conn->prepare("INSERT INTO wallet_transactions (user_id, type, amount, balance_after, note) VALUES (?, ?, ?, ?, ?)");
+            $tx->bind_param('isdds', $userId, $type, $amount, $amount, $note);
+            $tx->execute();
+            $tx->close();
+        }
+        $conn->commit();
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log('[credit_signup_bonus] ' . $e->getMessage());
+    }
+}
+
 function fetchUrl(string $url): string|false
 {
     if (function_exists('curl_init')) {
@@ -474,6 +506,8 @@ switch ($action) {
             }
             $newUserId = $conn->insert_id;
             $stmt->close();
+
+            credit_signup_bonus($conn, $newUserId);
 
             // Fetch newly created user
             $stmt = $conn->prepare("SELECT * FROM users WHERE user_id = ? LIMIT 1");
@@ -880,6 +914,8 @@ switch ($action) {
         $upd->execute();
         $upd->close();
 
+        credit_signup_bonus($conn, $userId);
+
         // Fetch user for JWT
         $stmt = $conn->prepare("SELECT * FROM users WHERE user_id = ? LIMIT 1");
         $stmt->bind_param("i", $userId);
@@ -1217,7 +1253,12 @@ switch ($action) {
         $upd = $conn->prepare("UPDATE users SET is_active = 1, updated_at = NOW() WHERE user_id = ? AND is_active = 0");
         $upd->bind_param("i", $userId);
         $upd->execute();
+        $justActivated = $upd->affected_rows > 0;
         $upd->close();
+
+        if ($justActivated) {
+            credit_signup_bonus($conn, $userId);
+        }
 
         echo json_encode(["success" => true, "message" => "ຢືນຢັນ Email ສຳເລັດ"]);
         break;
