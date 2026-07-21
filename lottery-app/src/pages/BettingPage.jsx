@@ -29,6 +29,21 @@ const TX_LABEL = {
   admin_adjustment: { label: 'Admin ປັບຍອດ', color: '#c084fc' },
 };
 
+/** Betting is only accepted Mon–Fri before 20:00 Laos time. Reads the wall
+ *  clock via Intl so it's correct regardless of the visitor's own timezone —
+ *  this is a UX mirror of the same rule the server enforces on place_bet. */
+function isBettingClosedNow() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Vientiane', weekday: 'short', hour: 'numeric', hour12: false,
+  }).formatToParts(new Date());
+  const map = {};
+  parts.forEach(p => { map[p.type] = p.value; });
+  const dow = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 }[map.weekday];
+  const hour = Number(map.hour) % 24;
+  if (dow > 5) return false;
+  return hour >= 20;
+}
+
 function fmt(n) {
   return Number(n || 0).toLocaleString('lo-LA', { maximumFractionDigits: 2 });
 }
@@ -81,6 +96,12 @@ export default function BettingPage() {
 
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  const [bettingClosed, setBettingClosed] = useState(isBettingClosedNow());
+  useEffect(() => {
+    const id = setInterval(() => setBettingClosed(isBettingClosedNow()), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const fetchCore = useCallback(async () => {
     setLoading(true);
@@ -235,7 +256,15 @@ export default function BettingPage() {
 
       {/* ─── Place Bet ─── */}
       {tab === 'place' && (
-        rounds.length === 0 && !loading ? (
+        bettingClosed ? (
+          <div className="bg-[#0e1124]/85 backdrop-blur-md rounded-3xl border border-white/[0.05] shadow-lg p-6">
+            <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
+              <span className="material-symbols-outlined text-5xl text-white/10">bedtime</span>
+              <p className="text-sm text-white font-black">ປິດຮັບແທງແລ້ວສຳລັບມື້ນີ້</p>
+              <p className="text-xs text-white/35 font-bold max-w-xs">ຮັບແທງທຸກວັນ ຈັນ–ສຸກ ຈົນຮອດ 20:00 ໂມງ — ກະລຸນາກັບມາໃໝ່ຕອນເຊົ້າມື້ຖັດໄປ</p>
+            </div>
+          </div>
+        ) : rounds.length === 0 && !loading ? (
           <div className="bg-[#0e1124]/85 backdrop-blur-md rounded-3xl border border-white/[0.05] shadow-lg p-6">
             <div className="flex flex-col items-center justify-center py-14 gap-3">
               <span className="material-symbols-outlined text-5xl text-white/10">event_busy</span>

@@ -117,6 +117,22 @@ $PRIZE_DIGIT_LEN = [
     '6_digits' => 6, '5_digits' => 5, '4_digits' => 4, '3_digits' => 3, '2_digits' => 2,
 ];
 
+/**
+ * On Monday–Friday, betting closes at 20:00 Laos time regardless of a
+ * round's own status. This rule doesn't say anything about weekends —
+ * whether betting is possible then is left entirely to the round's status.
+ * Uses an explicit timezone rather than the server default so the cutoff
+ * is correct no matter how the host is configured.
+ */
+function isWithinDailyBettingWindow(): bool
+{
+    $now = new DateTime('now', new DateTimeZone('Asia/Vientiane'));
+    $dayOfWeek = (int)$now->format('N'); // 1 = Monday ... 7 = Sunday
+    if ($dayOfWeek > 5) return true;
+    $cutoff = (clone $now)->setTime(20, 0, 0);
+    return $now < $cutoff;
+}
+
 // ── Wallet helpers ───────────────────────────────────────────────────
 
 /** Read-only balance lookup; lazily creates a zero-balance wallet row for
@@ -264,6 +280,11 @@ switch ($action) {
         }
         if ($stake <= 0) {
             http_response_code(400); echo json_encode(["error" => "ຈຳນວນເງິນເດີມພັນຕ້ອງຫຼາຍກວ່າ 0"]); break;
+        }
+        if (!isWithinDailyBettingWindow()) {
+            http_response_code(400);
+            echo json_encode(["error" => "ປິດຮັບແທງແລ້ວ — ຮັບແທງໄດ້ວັນຈັນ-ສຸກ ກ່ອນເວລາ 20:00 ໂມງ ເທົ່ານັ້ນ"]);
+            break;
         }
 
         $conn->begin_transaction();
