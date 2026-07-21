@@ -16,16 +16,16 @@ const DIGIT_LEN = { '2_digits': 2, '3_digits': 3, '4_digits': 4, '5_digits': 5, 
 
 const STATUS_BADGE = {
   pending: { label: 'ລໍຖ້າຜົນ', cls: 'bg-amber-500/10 border-amber-500/25 text-amber-400' },
-  won:     { label: 'ຖືກລາງວັນ', cls: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400' },
-  lost:    { label: 'ບໍ່ຖືກ', cls: 'bg-white/[0.02] border-white/[0.05] text-white/30' },
-  void:    { label: 'ຍົກເລີກ', cls: 'bg-sky-500/10 border-sky-500/25 text-sky-400' },
+  won: { label: 'ຖືກລາງວັນ', cls: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400' },
+  lost: { label: 'ບໍ່ຖືກ', cls: 'bg-white/[0.02] border-white/[0.05] text-white/30' },
+  void: { label: 'ຍົກເລີກ', cls: 'bg-sky-500/10 border-sky-500/25 text-sky-400' },
 };
 
 const TX_LABEL = {
-  signup_bonus:     { label: 'ໂບນັດສະໝັກ', color: '#34d399' },
-  bet_placed:       { label: 'ວາງເດີມພັນ',   color: '#f87171' },
-  bet_won:          { label: 'ຖືກລາງວັນ',    color: '#34d399' },
-  bet_void_refund:  { label: 'ຄືນເງິນ',       color: '#60a5fa' },
+  signup_bonus: { label: 'ໂບນັດສະໝັກ', color: '#34d399' },
+  bet_placed: { label: 'ວາງເດີມພັນ', color: '#f87171' },
+  bet_won: { label: 'ຖືກລາງວັນ', color: '#34d399' },
+  bet_void_refund: { label: 'ຄືນເງິນ', color: '#60a5fa' },
   admin_adjustment: { label: 'Admin ປັບຍອດ', color: '#c084fc' },
 };
 
@@ -41,10 +41,10 @@ function fmtDate(str) {
  *  lost → nothing won, pending → what the bet could still win. */
 function betAmountDisplay(b) {
   switch (b.status) {
-    case 'won':  return { text: `+${fmt(b.payout_amount)}`, cls: 'text-emerald-400' };
+    case 'won': return { text: `+${fmt(b.payout_amount)}`, cls: 'text-emerald-400' };
     case 'void': return { text: `+${fmt(b.stake)}`, cls: 'text-sky-400' };
     case 'lost': return { text: '0', cls: 'text-white/30' };
-    default:     return { text: fmt(b.potential_payout), cls: 'text-white' };
+    default: return { text: fmt(b.potential_payout), cls: 'text-white' };
   }
 }
 
@@ -70,7 +70,9 @@ export default function BettingPage() {
   const [roundId, setRoundId] = useState('');
   const [prizeType, setPrizeType] = useState('2_digits');
   const [chosenNumber, setChosenNumber] = useState('');
-  const [stake, setStake] = useState('');
+  const [stake, setStake] = useState('1000');
+  const [cart, setCart] = useState([]);
+  const [keypadOpen, setKeypadOpen] = useState(true);
   const [placing, setPlacing] = useState(false);
 
   const [bets, setBets] = useState([]);
@@ -127,26 +129,61 @@ export default function BettingPage() {
   const stakeNum = Number(stake) || 0;
   const potential = stakeNum * multiplier;
 
-  const handlePlaceBet = async () => {
-    if (placing) return;
+  const STAKE_STEP = 100;
+
+  const handleRandom = () => {
+    let s = '';
+    for (let i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
+    setChosenNumber(s);
+  };
+
+  const handleKeypadPress = (key) => {
+    if (key === '⌫') { setChosenNumber(prev => prev.slice(0, -1)); return; }
+    setChosenNumber(prev => (prev + key).replace(/\D/g, '').slice(0, len));
+  };
+
+  const handleAddToCart = () => {
     if (!roundId) { toast.error('ຍັງບໍ່ມີຮອບເປີດຮັບແທງ'); return; }
     if (chosenNumber.length !== len) { toast.error(`ເລກຕ້ອງມີ ${len} ໂຕ`); return; }
     if (stakeNum <= 0) { toast.error('ກະລຸນາໃສ່ຈຳນວນເງິນເດີມພັນ'); return; }
-    if (stakeNum > balance) { toast.error('ຍອດເງິນໃນກະເປົາບໍ່ພຽງພໍ'); return; }
+    setCart(prev => [...prev, { id: crypto.randomUUID(), roundId, prizeType, number: chosenNumber, stake: stakeNum }]);
+    setChosenNumber('');
+  };
+
+  const adjustCartStake = (id, delta) => {
+    setCart(prev => prev.map(it => it.id === id ? { ...it, stake: Math.max(STAKE_STEP, it.stake + delta) } : it));
+  };
+
+  const removeCartItem = (id) => setCart(prev => prev.filter(it => it.id !== id));
+
+  const cartTotal = cart.reduce((s, it) => s + it.stake, 0);
+  const cartPotential = cart.reduce((s, it) => s + it.stake * (rates[it.prizeType] || 0), 0);
+
+  const handleCheckout = async () => {
+    if (placing) return;
+    if (cart.length === 0) { toast.error('ຍັງບໍ່ມີລາຍການໃນກະຕ່າ'); return; }
+    if (cartTotal > balance) { toast.error('ຍອດເງິນໃນກະເປົາບໍ່ພຽງພໍ'); return; }
 
     setPlacing(true);
-    const { ok, data } = await authFetch(`${API}/betting.php?action=place_bet`, {
-      method: 'POST',
-      body: JSON.stringify({ round_id: Number(roundId), prize_type: prizeType, chosen_number: chosenNumber, stake: stakeNum }),
-    });
-    if (ok) {
-      toast.success('ວາງເດີມພັນສຳເລັດ!');
-      setBalance(data.new_balance);
-      setChosenNumber('');
-      setStake('');
-    } else {
-      toast.error(data.error || 'ວາງເດີມພັນບໍ່ສຳເລັດ');
+    let newBalance = balance;
+    let successCount = 0;
+    const remaining = [];
+    for (const item of cart) {
+      const { ok, data } = await authFetch(`${API}/betting.php?action=place_bet`, {
+        method: 'POST',
+        body: JSON.stringify({ round_id: Number(item.roundId), prize_type: item.prizeType, chosen_number: item.number, stake: item.stake }),
+      });
+      if (ok) {
+        successCount++;
+        newBalance = data.new_balance;
+      } else {
+        remaining.push(item);
+        toast.error(`ເລກ ${item.number}: ${data.error || 'ວາງເດີມພັນບໍ່ສຳເລັດ'}`);
+      }
     }
+    setBalance(newBalance);
+    setCart(remaining);
+    if (successCount > 0) toast.success(`ວາງເດີມພັນສຳເລັດ ${successCount} ລາຍການ`);
     setPlacing(false);
   };
 
@@ -164,7 +201,7 @@ export default function BettingPage() {
               <span className="text-[9px] font-black uppercase tracking-widest">Demo — ບໍ່ໃຊ້ເງິນຈິງ</span>
             </div>
             <h1 className="text-xl sm:text-2.5xl font-black text-white leading-tight font-headline">
-              ພະນັນ <span className="text-[#d4af37] ml-1.5">ຫວຍພັດທະນາ</span>
+              ແທງ <span className="text-[#d4af37] ml-1.5">ຫວຍພັດທະນາ</span>
             </h1>
             <p className="text-white/50 text-[11px] mt-1.5 font-bold">ແທງດ້ວຍເງິນຈຳລອງ — ສະໝັກແລ້ວຮັບໂບນັດທັນທີ</p>
           </div>
@@ -180,16 +217,15 @@ export default function BettingPage() {
       {/* ─── Tabs ─── */}
       <div className="flex bg-[#0b0e1a] rounded-xl p-1 border border-white/[0.06] gap-1 w-fit">
         {[
-          { v: 'place',  label: 'ວາງເດີມພັນ', icon: 'add_circle' },
+          { v: 'place', label: 'ວາງເດີມພັນ', icon: 'add_circle' },
           { v: 'mybets', label: 'ການແທງຂອງຂ້ອຍ', icon: 'receipt_long' },
           { v: 'wallet', label: 'ປະຫວັດກະເປົາ', icon: 'history' },
         ].map(o => (
           <button
             key={o.v}
             onClick={() => setTab(o.v)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer ${
-              tab === o.v ? 'bg-[#d4af37] text-black shadow-md' : 'text-white/45 hover:text-white'
-            }`}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer ${tab === o.v ? 'bg-[#d4af37] text-black shadow-md' : 'text-white/45 hover:text-white'
+              }`}
           >
             <span className="material-symbols-outlined text-[15px]">{o.icon}</span>
             {o.label}
@@ -199,84 +235,178 @@ export default function BettingPage() {
 
       {/* ─── Place Bet ─── */}
       {tab === 'place' && (
-        <div className="bg-[#0e1124]/85 backdrop-blur-md rounded-3xl border border-white/[0.05] shadow-lg p-6 space-y-5">
-          {rounds.length === 0 && !loading ? (
+        rounds.length === 0 && !loading ? (
+          <div className="bg-[#0e1124]/85 backdrop-blur-md rounded-3xl border border-white/[0.05] shadow-lg p-6">
             <div className="flex flex-col items-center justify-center py-14 gap-3">
               <span className="material-symbols-outlined text-5xl text-white/10">event_busy</span>
               <p className="text-xs text-white/30 font-bold">ຍັງບໍ່ມີຮອບເປີດຮັບແທງໃນຕອນນີ້</p>
             </div>
-          ) : (
-            <>
-              {/* Round select */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-white/35 uppercase tracking-widest">ງວດ</label>
-                <FieldBox>
-                  <select className={inputCls} value={roundId} onChange={e => setRoundId(e.target.value)}>
-                    {rounds.map(r => (
-                      <option key={r.round_id} value={r.round_id} className="bg-[#0b0e1a]">
-                        ງວດ #{r.draw_number} — {r.draw_date}
-                      </option>
-                    ))}
-                  </select>
-                </FieldBox>
-              </div>
+          </div>
+        ) : (
+          <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-6 space-y-5 lg:space-y-0 lg:items-start">
 
-              {/* Prize type tabs */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-white/35 uppercase tracking-widest">ປະເພດເລກ</label>
-                <div className="flex flex-wrap gap-2">
-                  {PRIZE_TABS.map(o => (
-                    <button
-                      key={o.v}
-                      onClick={() => { setPrizeType(o.v); setChosenNumber(''); }}
-                      className={`px-4 py-2 rounded-xl text-xs font-black border-2 transition-all cursor-pointer ${
-                        prizeType === o.v ? 'border-[#d4af37] bg-[#d4af37]/10 text-[#d4af37]' : 'border-white/[0.06] bg-[#0b0e1a] text-white/40'
-                      }`}
-                    >
-                      {o.label} <span className="opacity-60">×{rates[o.v] || '—'}</span>
-                    </button>
-                  ))}
+            {/* Left: round / prize type / number entry / keypad */}
+            <div className="bg-[#0e1124]/85 backdrop-blur-md rounded-3xl border border-white/[0.05] shadow-lg p-6 space-y-5">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-white/35 uppercase tracking-widest">ງວດ</label>
+                  <FieldBox>
+                    <select className={inputCls} value={roundId} onChange={e => setRoundId(e.target.value)}>
+                      {rounds.map(r => (
+                        <option key={r.round_id} value={r.round_id} className="bg-[#0b0e1a]">
+                          ງວດ #{r.draw_number} — {r.draw_date}
+                        </option>
+                      ))}
+                    </select>
+                  </FieldBox>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-white/35 uppercase tracking-widest">ປະເພດເລກ</label>
+                  <div className="flex flex-wrap gap-2">
+                    {PRIZE_TABS.map(o => (
+                      <button
+                        key={o.v}
+                        onClick={() => { setPrizeType(o.v); setChosenNumber(''); }}
+                        className={`px-3 py-2 rounded-xl text-[11px] font-black border-2 transition-all cursor-pointer ${prizeType === o.v ? 'border-[#d4af37] bg-[#d4af37]/10 text-[#d4af37]' : 'border-white/[0.06] bg-[#0b0e1a] text-white/40'
+                          }`}
+                      >
+                        {o.label} <span className="opacity-60">×{rates[o.v] || '—'}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Number input */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-white/35 uppercase tracking-widest">ເລກທີ່ເລືອກ ({len} ໂຕ)</label>
-                <FieldBox>
-                  <input
-                    className={inputCls + ' font-mono tracking-[0.3em] text-center text-lg'}
-                    value={chosenNumber}
-                    maxLength={len}
-                    placeholder={'0'.repeat(len)}
-                    onChange={e => setChosenNumber(e.target.value.replace(/\D/g, '').slice(0, len))}
-                  />
-                </FieldBox>
+              {/* Number + stake entry */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black text-white/35 uppercase tracking-widest">ເລກທີ່ເລືອກ ({len} ໂຕ)</label>
+                  <button
+                    onClick={() => setKeypadOpen(o => !o)}
+                    className="flex items-center gap-1 text-[10px] font-black text-white/35 hover:text-[#d4af37] cursor-pointer transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">{keypadOpen ? 'keyboard_hide' : 'keyboard'}</span>
+                    {keypadOpen ? 'ປິດແປ້ນພິມ' : 'ເປີດແປ້ນພິມ'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-[auto_1fr] gap-2.5">
+                  <button
+                    onClick={handleRandom}
+                    className="flex items-center gap-1.5 px-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white/60 hover:border-[#d4af37]/40 hover:text-[#d4af37] text-xs font-black transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">shuffle</span>
+                    ສຸ່ມເລກ
+                  </button>
+                  <FieldBox>
+                    <input
+                      className={inputCls + ' font-mono tracking-[0.3em] text-center text-lg'}
+                      value={chosenNumber}
+                      maxLength={len}
+                      placeholder={'0'.repeat(len)}
+                      onFocus={() => setKeypadOpen(true)}
+                      onChange={e => setChosenNumber(e.target.value.replace(/\D/g, '').slice(0, len))}
+                    />
+                  </FieldBox>
+                </div>
+
+                <div className="grid grid-cols-[1fr_auto] gap-2.5">
+                  <FieldBox>
+                    <input
+                      type="number"
+                      min="1"
+                      className={inputCls}
+                      value={stake}
+                      placeholder="ຈຳນວນເງິນ ເຊັ່ນ: 1000"
+                      onChange={e => setStake(e.target.value)}
+                    />
+                  </FieldBox>
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex items-center gap-1.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-black transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+                    ເພີ່ມ
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-white/30 font-bold px-1">
+                  ຖ້າຖືກ ຈະໄດ້ຮັບ <span className="text-[#d4af37] font-black">{fmt(potential)} KIP</span>
+                </p>
               </div>
 
-              {/* Stake input */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-white/35 uppercase tracking-widest">ຈຳນວນເງິນເດີມພັນ</label>
-                <FieldBox>
-                  <input
-                    type="number"
-                    min="1"
-                    className={inputCls}
-                    value={stake}
-                    placeholder="ເຊັ່ນ: 1000"
-                    onChange={e => setStake(e.target.value)}
-                  />
-                </FieldBox>
+              {/* On-screen keypad */}
+              {keypadOpen && (
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0', '⌫'].map(k => (
+                    <button
+                      key={k}
+                      onClick={() => handleKeypadPress(k)}
+                      className="py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-base font-black hover:border-[#d4af37]/40 hover:bg-[#d4af37]/5 transition-colors cursor-pointer flex items-center justify-center"
+                    >
+                      {k === '⌫' ? <span className="material-symbols-outlined text-[18px]">backspace</span> : k}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Right: cart + checkout */}
+            <div className="bg-[#0e1124]/85 backdrop-blur-md rounded-3xl border border-white/[0.05] shadow-lg p-6 space-y-4 lg:sticky lg:top-6">
+              <div className="flex items-center justify-between bg-gradient-to-r from-[#d4af37]/15 to-[#d4af37]/5 border border-[#d4af37]/25 rounded-2xl px-5 py-3.5">
+                <div>
+                  <p className="text-[10px] font-black text-[#d4af37]/70 uppercase tracking-widest">ລວມມູນຄ່າ</p>
+                  <p className="text-xl font-black text-white font-space leading-tight">{fmt(cartTotal)} <span className="text-xs text-white/40 font-bold">KIP</span></p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-white/35 uppercase tracking-widest">ຖ້າຖືກໝົດ</p>
+                  <p className="text-sm font-black text-emerald-400">+{fmt(cartPotential)}</p>
+                </div>
               </div>
 
-              {/* Potential payout */}
-              <div className="flex items-center justify-between bg-[#d4af37]/5 border border-[#d4af37]/20 rounded-xl px-4 py-3">
-                <span className="text-xs font-bold text-white/50">ຖ້າຖືກ ຈະໄດ້ຮັບ</span>
-                <span className="text-lg font-black text-[#d4af37]">{fmt(potential)} KIP</span>
-              </div>
+              {cart.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-2">
+                  <span className="material-symbols-outlined text-4xl text-white/10">shopping_cart</span>
+                  <p className="text-[11px] text-white/30 font-bold">ຍັງບໍ່ມີເລກໃນກະຕ່າ</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-0.5">
+                  {cart.map((it, idx) => {
+                    const prizeLabel = PRIZE_TABS.find(p => p.v === it.prizeType)?.label;
+                    return (
+                      <div key={it.id} className="flex items-center gap-2.5 bg-[#0b0e1a] border border-white/[0.05] rounded-2xl px-3.5 py-3">
+                        <span className="text-[11px] font-black text-white/25 w-4 text-center shrink-0">{idx + 1}</span>
+                        <div className="w-10 h-10 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/25 flex items-center justify-center font-mono font-black text-[#d4af37] text-[11px] shrink-0">
+                          {it.number}
+                        </div>
+                        <span className="text-[9px] font-black text-white/30 uppercase shrink-0">{prizeLabel}</span>
+                        <div className="flex items-center gap-1.5 ml-auto">
+                          <button
+                            onClick={() => adjustCartStake(it.id, -STAKE_STEP)}
+                            className="w-6 h-6 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/60 hover:border-[#d4af37]/40 hover:text-[#d4af37] flex items-center justify-center text-xs font-black cursor-pointer transition-colors"
+                          >−</button>
+                          <span className="text-xs font-black text-white font-space w-[64px] text-center">{fmt(it.stake)}</span>
+                          <button
+                            onClick={() => adjustCartStake(it.id, STAKE_STEP)}
+                            className="w-6 h-6 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/60 hover:border-[#d4af37]/40 hover:text-[#d4af37] flex items-center justify-center text-xs font-black cursor-pointer transition-colors"
+                          >+</button>
+                        </div>
+                        <button
+                          onClick={() => removeCartItem(it.id)}
+                          className="w-7 h-7 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">close</span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <button
-                onClick={handlePlaceBet}
-                disabled={placing || !roundId}
+                onClick={handleCheckout}
+                disabled={placing || cart.length === 0}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#d4af37] hover:bg-[#b8860b] text-black text-sm font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {placing ? (
@@ -284,11 +414,11 @@ export default function BettingPage() {
                 ) : (
                   <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>casino</span>
                 )}
-                ວາງເດີມພັນ
+                ຈ່າຍເງິນ{cart.length > 0 && ` · ${fmt(cartTotal)} KIP`}
               </button>
-            </>
-          )}
-        </div>
+            </div>
+          </div>
+        )
       )}
 
       {/* ─── My Bets ─── */}
@@ -299,9 +429,8 @@ export default function BettingPage() {
               <button
                 key={v}
                 onClick={() => setBetStatusFilter(v)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer ${
-                  betStatusFilter === v ? 'bg-[#d4af37] text-black' : 'text-white/45 hover:text-white'
-                }`}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer ${betStatusFilter === v ? 'bg-[#d4af37] text-black' : 'text-white/45 hover:text-white'
+                  }`}
               >{v === 'all' ? 'ທັງໝົດ' : STATUS_BADGE[v]?.label}</button>
             ))}
           </div>

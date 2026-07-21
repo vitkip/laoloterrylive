@@ -602,7 +602,7 @@ function Happy545Strip() {
   if (!draws545.length) return null
 
   const latest = draws545[0]
-  const top3   = stats545.slice(0, 3)
+  const top3 = stats545.slice(0, 3)
 
   // Compute top (pos4, pos5) pairs from all draws
   const pairFreq = {}
@@ -894,6 +894,14 @@ export default function HomePage() {
               <Link to="/history" className="inline-flex items-center gap-2 border border-white/[0.12] bg-white/[0.03] backdrop-blur-sm text-white/80 px-7 py-3.5 rounded-full font-black text-xs uppercase tracking-wider hover:bg-white/[0.08] hover:text-white transition-all duration-300 hover:-translate-y-0.5">
                 <span className="material-symbols-outlined text-[16px]">history</span>
                 ປະຫວັດຫວຍ
+              </Link>
+              <Link to="/betting" className="group relative inline-flex items-center gap-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 text-black px-8 sm:px-9 py-4 sm:py-4.5 rounded-full font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-1 hover:scale-[1.03] transition-all duration-300">
+                <span className="material-symbols-outlined text-[18px] sm:text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>casino</span>
+                ແທງຫວຍ ແບບຈຳຮອງ
+                <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-60" />
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-white" />
+                </span>
               </Link>
             </div>
           </div>

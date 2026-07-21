@@ -15,23 +15,23 @@ import { cn } from '@/lib/utils'
 // ── Nav links ──────────────────────────────────────────────────────
 
 const GUEST_LINKS = [
-  { label: 'ຜົນຫວຍລ່າສຸດ',   href: '/',           Icon: Home },
-  { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history',    Icon: Clock },
-  { label: 'ສະຖິຕິ',          href: '/statistics', Icon: BarChart2 },
-  { label: 'Happy 545',       href: '/happy545',   Icon: Dices },
-  { label: 'ຊຸດຫວຍ 545',     href: '/happy545/sets', Icon: Target },
-  { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search',     Icon: Search },
+  { label: 'ຜົນຫວຍລ່າສຸດ', href: '/', Icon: Home },
+  { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history', Icon: Clock },
+  { label: 'ສະຖິຕິ', href: '/statistics', Icon: BarChart2 },
+  { label: 'Happy 545', href: '/happy545', Icon: Dices },
+  { label: 'ຊຸດຫວຍ 545', href: '/happy545/sets', Icon: Target },
+  { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search', Icon: Search },
 ]
 const MEMBER_LINKS = [
-  { label: 'ຜົນຫວຍລ່າສຸດ',   href: '/',           Icon: Home },
-  { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history',    Icon: Clock },
-  { label: 'ສະຖິຕິ',          href: '/statistics', Icon: BarChart2 },
-  { label: 'Happy 545',       href: '/happy545',   Icon: Dices },
-  { label: 'ຊຸດຫວຍ 545',     href: '/happy545/sets', Icon: Target },
-  { label: 'AI Analytics',    href: '/analytics',  Icon: TrendingUp },
-  { label: 'ເລກໜ້າຈະອອກ',    href: '/prediction', Icon: Sparkles },
-  { label: 'ພະນັນຈຳລອງ',     href: '/betting',    Icon: Coins },
-  { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search',     Icon: Search },
+  { label: 'ຜົນຫວຍລ່າສຸດ', href: '/', Icon: Home },
+  { label: 'ປະຫວັດຍ້ອນຫຼັງ', href: '/history', Icon: Clock },
+  { label: 'ສະຖິຕິ', href: '/statistics', Icon: BarChart2 },
+  { label: 'Happy 545', href: '/happy545', Icon: Dices },
+  { label: 'ຊຸດຫວຍ 545', href: '/happy545/sets', Icon: Target },
+  { label: 'AI Analytics', href: '/analytics', Icon: TrendingUp },
+  { label: 'ເລກໜ້າຈະອອກ', href: '/prediction', Icon: Sparkles },
+  { label: 'ແທງຫວຍ (Demo)', href: '/betting', Icon: Coins },
+  { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search', Icon: Search },
 ]
 
 function getNavLinks(user) { return user ? MEMBER_LINKS : GUEST_LINKS }
@@ -370,8 +370,8 @@ const STYLE = `
 
 function RolePill({ role }) {
   const cls = {
-    admin:  'nb-role-admin',
-    staff:  'nb-role-staff',
+    admin: 'nb-role-admin',
+    staff: 'nb-role-staff',
     member: 'nb-role-member',
   }
   return (
@@ -422,15 +422,15 @@ function LotteryBall() {
 // ── Main Navbar ────────────────────────────────────────────────────
 
 export default function Navbar() {
-  const [scrolled,   setScrolled]   = useState(false)
-  const [isDark,     setIsDark]     = useState(true)
-  const [sheetOpen,  setSheetOpen]  = useState(false)
-  const location  = useLocation()
-  const navigate  = useNavigate()
+  const [scrolled, setScrolled] = useState(false)
+  const [isDark, setIsDark] = useState(true)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
   const { user, logout } = useAuth()
 
-  const navLinks   = getNavLinks(user)
-  const isAdmin    = user?.role === 'admin' || user?.role === 'staff'
+  const navLinks = getNavLinks(user)
+  const isAdmin = user?.role === 'admin' || user?.role === 'staff'
   const profilePath = isAdmin ? '/admin/profile' : '/member/profile'
   const userInitial = ((user?.name || user?.username || 'U')[0]).toUpperCase()
 
@@ -497,7 +497,7 @@ export default function Navbar() {
             {/* Theme toggle */}
             <button className="nb-icon-btn" onClick={toggleDark} aria-label="Toggle theme">
               {isDark
-                ? <Sun  style={{ width: 16, height: 16 }} />
+                ? <Sun style={{ width: 16, height: 16 }} />
                 : <Moon style={{ width: 16, height: 16 }} />
               }
             </button>

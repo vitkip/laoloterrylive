@@ -9,26 +9,26 @@ import RoleBadge from './RoleBadge';
 
 function getNavItems(role) {
   const base = [
-    { path: '/admin',          icon: 'dashboard',        label: 'ພາບລວມລະບົບ',  badge: null },
-    { path: '/admin/live',     icon: 'podcasts',          label: 'ຖ່າຍທອດສົດ',   badge: 'LIVE' },
-    { path: '/admin/draws',    icon: 'add_circle',        label: 'ປ້ອນຜົນຫວຍ',   badge: null },
-    { path: '/admin/types',    icon: 'category',          label: 'ປະເພດຫວຍ',     badge: null },
-    { path: '/admin/happy545', icon: 'casino',            label: 'Happy 545',     badge: null },
-    { path: '/admin/betting',  icon: 'casino',            label: 'ຮອບແທງຫວຍ',    badge: null },
+    { path: '/admin', icon: 'dashboard', label: 'ພາບລວມລະບົບ', badge: null },
+    { path: '/admin/live', icon: 'podcasts', label: 'ຖ່າຍທອດສົດ', badge: 'LIVE' },
+    { path: '/admin/draws', icon: 'add_circle', label: 'ປ້ອນຜົນຫວຍ', badge: null },
+    { path: '/admin/types', icon: 'category', label: 'ປະເພດຫວຍ', badge: null },
+    { path: '/admin/happy545', icon: 'casino', label: 'Happy 545', badge: null },
+    { path: '/admin/betting', icon: 'casino', label: 'ຮອບແທງຫວຍ', badge: null },
   ];
   const adminOnly = [
-    { path: '/admin/animals',  icon: 'image',            label: 'ຮູບນາມສັດ',     badge: null },
-    { path: '/admin/users',    icon: 'manage_accounts',  label: 'ຈັດການຜູ້ໃຊ້',  badge: null },
-    { path: '/admin/banners',  icon: 'view_carousel',    label: 'Banner ເລື່ອນ', badge: null },
-    { path: '/admin/contacts', icon: 'mail',             label: 'ຂໍ້ຄວາມຕິດຕໍ່',  badge: null },
-    { path: '/admin/betting/rates',   icon: 'payments',          label: 'ອັດຕາຈ່າຍພະນັນ', badge: null },
+    { path: '/admin/animals', icon: 'image', label: 'ຮູບນາມສັດ', badge: null },
+    { path: '/admin/users', icon: 'manage_accounts', label: 'ຈັດການຜູ້ໃຊ້', badge: null },
+    { path: '/admin/banners', icon: 'view_carousel', label: 'Banner ເລື່ອນ', badge: null },
+    { path: '/admin/contacts', icon: 'mail', label: 'ຂໍ້ຄວາມຕິດຕໍ່', badge: null },
+    { path: '/admin/betting/rates', icon: 'payments', label: 'ອັດຕາຈ່າຍຫວຍ', badge: null },
     { path: '/admin/betting/wallets', icon: 'account_balance_wallet', label: 'ກະເປົາເງິນຈຳລອງ', badge: null },
-    { path: '/admin/logs',     icon: 'history',          label: 'Audit Logs',    badge: null },
+    { path: '/admin/logs', icon: 'history', label: 'Audit Logs', badge: null },
   ];
   const staffOnly = [
-    { path: '/admin/animals',  icon: 'image',            label: 'ຮູບນາມສັດ',     badge: null },
-    { path: '/admin/users',    icon: 'manage_accounts',  label: 'ຈັດການຜູ້ໃຊ້',  badge: null },
-    { path: '/admin/contacts', icon: 'mail',             label: 'ຂໍ້ຄວາມຕິດຕໍ່',  badge: null },
+    { path: '/admin/animals', icon: 'image', label: 'ຮູບນາມສັດ', badge: null },
+    { path: '/admin/users', icon: 'manage_accounts', label: 'ຈັດການຜູ້ໃຊ້', badge: null },
+    { path: '/admin/contacts', icon: 'mail', label: 'ຂໍ້ຄວາມຕິດຕໍ່', badge: null },
   ];
   if (role === 'admin') return [...base, ...adminOnly];
   if (role === 'staff') return [...base, ...staffOnly];
@@ -536,8 +536,8 @@ function NavItem({ item, isActive, collapsed, onClick }) {
 
 function UserDropdown({ user, onLogout, collapsed }) {
   const [open, setOpen] = useState(false);
-  const ref             = useRef(null);
-  const navigate        = useNavigate();
+  const ref = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -579,7 +579,7 @@ function UserDropdown({ user, onLogout, collapsed }) {
           </div>
           {[
             { icon: 'account_circle', label: 'Profile ຂອງຂ້ອຍ', action: () => { navigate('/admin/profile'); setOpen(false); } },
-            { icon: 'key',            label: 'ປ່ຽນ Password',    action: () => { navigate('/admin/users');   setOpen(false); } },
+            { icon: 'key', label: 'ປ່ຽນ Password', action: () => { navigate('/admin/users'); setOpen(false); } },
           ].map(item => (
             <button key={item.label} className="al-dropdown-item" onClick={item.action}>
               <span className="material-symbols-outlined mat-icon">{item.icon}</span>
@@ -600,16 +600,16 @@ function UserDropdown({ user, onLogout, collapsed }) {
 
 function Breadcrumb({ location }) {
   const LABELS = {
-    '/admin':          'Dashboard',
-    '/admin/live':     'ຖ່າຍທອດສົດ',
-    '/admin/draws':    'ປ້ອນຜົນຫວຍ',
-    '/admin/types':    'ປະເພດຫວຍ',
-    '/admin/animals':  'ຮູບນາມສັດ',
-    '/admin/users':    'ຈັດການຜູ້ໃຊ້',
-    '/admin/banners':  'Banner ເລື່ອນ',
+    '/admin': 'Dashboard',
+    '/admin/live': 'ຖ່າຍທອດສົດ',
+    '/admin/draws': 'ປ້ອນຜົນຫວຍ',
+    '/admin/types': 'ປະເພດຫວຍ',
+    '/admin/animals': 'ຮູບນາມສັດ',
+    '/admin/users': 'ຈັດການຜູ້ໃຊ້',
+    '/admin/banners': 'Banner ເລື່ອນ',
     '/admin/contacts': 'ຂໍ້ຄວາມຕິດຕໍ່',
-    '/admin/logs':     'Audit Logs',
-    '/admin/profile':  'Profile ຂອງຂ້ອຍ',
+    '/admin/logs': 'Audit Logs',
+    '/admin/profile': 'Profile ຂອງຂ້ອຍ',
     '/admin/happy545': 'Happy 545',
   };
   const label = LABELS[location.pathname] || location.pathname.split('/').pop();
@@ -662,9 +662,9 @@ function SidebarContent({ collapsed, navItems, location, onNavClick, user, onLog
 
 export default function AdminLayout() {
   const { user, logout, authFetch } = useAuth();
-  const location                     = useLocation();
-  const [collapsed, setCollapsed]    = useState(false);
-  const [mobileOpen, setMobileOpen]  = useState(false);
+  const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [contactUnread, setContactUnread] = useState(0);
 
   const fetchUnreadCount = useCallback(async () => {
@@ -673,7 +673,7 @@ export default function AdminLayout() {
       if (res.ok) {
         setContactUnread(res.data.count || 0);
       }
-    } catch (_) {}
+    } catch (_) { }
   }, [authFetch]);
 
   useEffect(() => {
