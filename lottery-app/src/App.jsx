@@ -16,6 +16,7 @@ const SearchPage      = lazy(() => import('./pages/SearchPage'))
 const AnalyticsPage   = lazy(() => import('./pages/AnalyticsPage'))
 const PredictionSummaryPage = lazy(() => import('./pages/PredictionSummaryPage'))
 const MemberProfilePage = lazy(() => import('./pages/MemberProfilePage'))
+const BettingPage       = lazy(() => import('./pages/BettingPage'))
 
 // ── Auth / Registration pages ─────────────────────────────────────
 const RegisterPage      = lazy(() => import('./features/auth/pages/RegisterPage'))
@@ -35,6 +36,9 @@ const ProfilePage         = lazy(() => import('./pages/ProfilePage'))
 const AdminLotteryTypes   = lazy(() => import('./pages/AdminLotteryTypes'))
 const AdminBanners        = lazy(() => import('./pages/AdminBanners'))
 const AdminContacts       = lazy(() => import('./pages/AdminContacts'))
+const AdminBettingRounds  = lazy(() => import('./pages/AdminBettingRounds'))
+const AdminBettingRates   = lazy(() => import('./pages/AdminBettingRates'))
+const AdminWallets        = lazy(() => import('./pages/AdminWallets'))
 
 const TermsPage            = lazy(() => import('./pages/TermsPage'))
 const ContactPage          = lazy(() => import('./pages/ContactPage'))
@@ -148,6 +152,7 @@ export default function App() {
               <Route path="/analytics"     element={<AnalyticsPage />} />
               <Route path="/prediction"    element={<PredictionSummaryPage />} />
               <Route path="/member/profile" element={<MemberProfilePage />} />
+              <Route path="/betting"        element={<BettingPage />} />
             </Route>
           </Route>
 
@@ -165,10 +170,13 @@ export default function App() {
               <Route path="/admin/contacts"  element={<AdminContacts />} />
               <Route path="/admin/profile"   element={<ProfilePage />} />
               <Route path="/admin/happy545"  element={<AdminHappy545 />} />
+              <Route path="/admin/betting"   element={<AdminBettingRounds />} />
 
               {/* Admin-only */}
               <Route element={<ProtectedRoute allowedRoles={['admin']} redirectTo="/unauthorized" />}>
                 <Route path="/admin/logs" element={<UserLogsPage />} />
+                <Route path="/admin/betting/rates"   element={<AdminBettingRates />} />
+                <Route path="/admin/betting/wallets" element={<AdminWallets />} />
               </Route>
             </Route>
           </Route>

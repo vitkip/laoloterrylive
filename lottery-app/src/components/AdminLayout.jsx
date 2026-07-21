@@ -14,12 +14,15 @@ function getNavItems(role) {
     { path: '/admin/draws',    icon: 'add_circle',        label: 'ປ້ອນຜົນຫວຍ',   badge: null },
     { path: '/admin/types',    icon: 'category',          label: 'ປະເພດຫວຍ',     badge: null },
     { path: '/admin/happy545', icon: 'casino',            label: 'Happy 545',     badge: null },
+    { path: '/admin/betting',  icon: 'casino',            label: 'ຮອບແທງຫວຍ',    badge: null },
   ];
   const adminOnly = [
     { path: '/admin/animals',  icon: 'image',            label: 'ຮູບນາມສັດ',     badge: null },
     { path: '/admin/users',    icon: 'manage_accounts',  label: 'ຈັດການຜູ້ໃຊ້',  badge: null },
     { path: '/admin/banners',  icon: 'view_carousel',    label: 'Banner ເລື່ອນ', badge: null },
     { path: '/admin/contacts', icon: 'mail',             label: 'ຂໍ້ຄວາມຕິດຕໍ່',  badge: null },
+    { path: '/admin/betting/rates',   icon: 'payments',          label: 'ອັດຕາຈ່າຍພະນັນ', badge: null },
+    { path: '/admin/betting/wallets', icon: 'account_balance_wallet', label: 'ກະເປົາເງິນຈຳລອງ', badge: null },
     { path: '/admin/logs',     icon: 'history',          label: 'Audit Logs',    badge: null },
   ];
   const staffOnly = [
