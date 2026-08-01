@@ -4,6 +4,7 @@ import {
 } from 'recharts'
 import { AlertCircle, Trophy, Calendar, Hash, TrendingDown, RefreshCw, Crown, Star, Flame, Snowflake, Zap, Target, CheckCircle, XCircle, ClipboardList, Layers, Link2 } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
+import AiSummaryCard from '../components/AiSummaryCard'
 
 const API = `${API_BASE}/happy545.php`
 
@@ -1503,6 +1504,22 @@ export default function Happy545Page() {
   const activePosData = posStats[`pos${activePos}`] ?? []
   const paginatedStats = activePosData.slice((statPage - 1) * statPageSize, statPage * statPageSize)
 
+  const aiStatsPayload = useMemo(() => {
+    if (!stats?.length) return null
+    const p5Hot  = stats.slice(0, 5)
+    const p5Cold = stats.slice(-5)
+    const p5Overdue = [...stats].sort((a, b) => (b.gap ?? 0) - (a.gap ?? 0)).slice(0, 5)
+    const regCombined = {}
+    ;['pos1', 'pos2', 'pos3', 'pos4'].forEach(p => {
+      (posStats[p] ?? []).forEach(r => { regCombined[r.number] = (regCombined[r.number] || 0) + r.count })
+    })
+    const regHot = Object.entries(regCombined)
+      .map(([number, count]) => ({ number: +number, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+    return { totalDraws, p5Hot, p5Cold, p5Overdue, regHot }
+  }, [stats, posStats, totalDraws])
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-5">
@@ -1619,6 +1636,17 @@ export default function Happy545Page() {
               value={`${neverOut} ເລກ`}
               color="#6366f1" />
           </div>
+        )}
+
+        {/* ── AI Summary ── */}
+        {!loading && aiStatsPayload && (
+          <AiSummaryCard
+            context="h545stats"
+            title="ສະຫຼຸບພາບລວມສະຖິຕິ Happy 545"
+            hint="ໃຫ້ AI ອ່ານເລກ P5★ ຮ້ອນ/ຄ້າງ ແລະ ເລກ P1-P4 ອອກຫຼາຍ ແລ້ວສະຫຼຸບເປັນຄວາມຮຽງເຂົ້າໃຈງ່າຍ"
+            disabled={!aiStatsPayload.p5Hot?.length}
+            payload={aiStatsPayload}
+          />
         )}
 
         {/* ── Analysis Tab Bar ── */}

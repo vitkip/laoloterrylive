@@ -514,6 +514,22 @@ export default function MemberProfilePage() {
   const [passForm, setPassForm]       = useState({ current_password: '', new_password: '', confirm_password: '' });
   const [showPass, setShowPass]       = useState({ cur: false, new: false, con: false });
 
+  // AI betting insights
+  const [aiInsight, setAiInsight] = useState(null); // { insight, stats }
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError]     = useState('');
+  const [aiFetched, setAiFetched] = useState(false);
+
+  const loadAiInsight = async () => {
+    setAiLoading(true);
+    setAiError('');
+    const { ok, data } = await authFetch(`${API}/ai-betting-insights.php`);
+    setAiLoading(false);
+    setAiFetched(true);
+    if (ok) setAiInsight(data);
+    else setAiError(data?.error || 'ບໍ່ສາມາດເຊື່ອມຕໍ່ AI ໄດ້');
+  };
+
   useEffect(() => {
     setLoadingProfile(true);
     authFetch(`${API}/index.php?action=get_profile`)
@@ -586,6 +602,7 @@ export default function MemberProfilePage() {
     { key: 'profile',  label: 'ຂໍ້ມູນສ່ວນຕົວ', icon: 'person'  },
     { key: 'password', label: 'ລະຫັດຜ່ານ',     icon: 'lock'    },
     { key: 'activity', label: 'ກິດຈະກຳ',        icon: 'history' },
+    { key: 'ai-insights', label: 'AI ວິເຄາະການແທງ', icon: 'smart_toy' },
   ];
 
   const PASS_FIELDS = [
@@ -658,7 +675,10 @@ export default function MemberProfilePage() {
             <button
               key={t.key}
               className={`mp-tab${activeTab === t.key ? ' active' : ''}`}
-              onClick={() => setActiveTab(t.key)}
+              onClick={() => {
+                setActiveTab(t.key);
+                if (t.key === 'ai-insights' && !aiFetched && !aiLoading) loadAiInsight();
+              }}
             >
               <span className="material-symbols-outlined mp-tab-icon" style={{ fontVariationSettings: "'FILL' 1" }}>
                 {t.icon}
@@ -818,6 +838,77 @@ export default function MemberProfilePage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── AI Betting Insights Panel ── */}
+        {activeTab === 'ai-insights' && (
+          <div className="mp-panel mp-fade">
+            <div className="mp-section-head">AI ວິເຄາະຮູບແບບການແທງຂອງທ່ານ</div>
+
+            {aiLoading && (
+              <div className="mp-loading" style={{ minHeight: 160 }}>
+                <div className="mp-load-ring" />
+                <p className="mp-load-txt">AI ກຳລັງວິເຄາະ...</p>
+              </div>
+            )}
+
+            {!aiLoading && aiError && (
+              <div className="mp-empty">
+                <span className="material-symbols-outlined mp-empty-icon">
+                  {aiError.includes('ປະຫວັດ') ? 'casino' : 'error'}
+                </span>
+                <p className="mp-empty-txt">{aiError}</p>
+                {!aiError.includes('ປະຫວັດ') && (
+                  <button
+                    onClick={loadAiInsight}
+                    className="mp-submit"
+                    style={{ marginTop: 16, maxWidth: 220 }}
+                  >
+                    ລອງໃໝ່
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!aiLoading && !aiError && aiInsight && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {/* Stat grid */}
+                <div className="mp-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
+                  {[
+                    { label: 'ບິນທັງໝົດ', val: aiInsight.stats.total_bets },
+                    { label: 'ອັດຕາຊະນະ', val: `${aiInsight.stats.win_rate}%` },
+                    { label: 'ຊະນະ / ແພ້', val: `${aiInsight.stats.won} / ${aiInsight.stats.lost}` },
+                    { label: 'ກຳໄລ/ຂາດທຶນສຸດທິ', val: `${Number(aiInsight.stats.net_result).toLocaleString()} ກີບ` },
+                  ].map(s => (
+                    <div key={s.label} style={{
+                      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.15)',
+                      borderRadius: 14, padding: '12px 14px', textAlign: 'center',
+                    }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(212,175,55,0.6)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{s.label}</p>
+                      <p style={{ fontSize: 18, fontWeight: 900, color: '#f5f0e0' }}>{s.val}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* AI narrative */}
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(124,58,237,0.10), rgba(124,58,237,0.03))',
+                  border: '1px solid rgba(167,139,250,0.22)', borderRadius: 16, padding: '16px 18px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#a78bfa' }}>smart_toy</span>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: '#c4b5fd' }}>ບົດວິເຄາະຈາກ AI</span>
+                  </div>
+                  <p style={{ fontSize: 12.5, lineHeight: 1.75, color: 'rgba(196,181,253,0.75)' }}>{aiInsight.insight}</p>
+                </div>
+
+                <button onClick={loadAiInsight} className="mp-submit" style={{ maxWidth: 220 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 17 }}>refresh</span>
+                  ວິເຄາະຄືນໃໝ່
+                </button>
               </div>
             )}
           </div>

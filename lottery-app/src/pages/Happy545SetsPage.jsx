@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { AlertCircle, Target, RefreshCw, Crown, Star, TrendingUp, Layers, Info } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
+import AiSummaryCard from '../components/AiSummaryCard'
 
 const API = `${API_BASE}/happy545.php`
 
@@ -302,6 +303,16 @@ export default function Happy545SetsPage() {
           <p><strong style={{ color: '#3b82f6' }}>Pool P1-P4</strong> — 10 ເລກທີ່ໄດ້ຄະແນນລວມສູງສຸດຈາກ (1) ຄວາມຖີ່ 20 ງວດຫຼ້າສຸດ (2) ຄວາມຖີ່ອອກຄູ່ນຳກັນ (co-occurrence) (3) ຄວາມຖີ່ <strong>ຊຸດ 4 ເລກ (ເຕັມ)</strong> ທີ່ອອກຊ້ຳກັນທັງໝົດ. ໃຊ້ pool ດຽວກັນທຸກຊຸດ ແຕກຕ່າງກັນສະເພາະ P5 ★.</p>
         </div>
       </div>
+
+      {/* ── AI Insight ── */}
+      {!loading && result?.sets?.length > 0 && (
+        <AiSummaryCard
+          context="h545sets"
+          title="ເປັນຫຍັງຊຸດເຫຼົ່ານີ້ຈຶ່ງຖືກແນະນຳ?"
+          hint="ໃຫ້ AI ອ່ານຜົນ backtest ຂອງແຕ່ລະຊຸດ ແລ້ວອະທິບາຍເປັນພາສາລາວ"
+          payload={{ totalDraws: result.totalDraws, sets: result.sets }}
+        />
+      )}
 
       {/* ── Sets ── */}
       {loading ? (

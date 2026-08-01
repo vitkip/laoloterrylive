@@ -1,6 +1,7 @@
 import { Database, TrendingUp, Film, Trophy, Clock } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import ArchiveTable from '../components/ArchiveTable'
+import AiSummaryCard from '../components/AiSummaryCard'
 import SEO from '../components/SEO'
 import { webPageSchema, lotteryListSchema, breadcrumbSchema } from '../components/schemas'
 
@@ -409,6 +410,25 @@ export default function HistoryPage() {
           style={{ background: 'linear-gradient(90deg, rgba(245,158,11,0.05), rgba(245,158,11,0.25))' }}
         />
       </div>
+
+      {/* ─── AI Summary ──────────────────────────────────────────────── */}
+      <AiSummaryCard
+        context="history"
+        title="ສະຫຼຸບຮູບແບບຜົນຫວຍລ່າສຸດ"
+        hint="ໃຫ້ AI ອ່ານຜົນຫວຍ 12 ງວດຫຼ້າສຸດ ແລ້ວສະຫຼຸບຮູບແບບທີ່ສັງເກດເຫັນ"
+        disabled={!draws?.length}
+        payload={{
+          total,
+          latestNum,
+          firstYear,
+          latestYear,
+          recentDraws: (draws ?? []).slice(0, 12).map(d => ({
+            drawNumber: d.draw_number,
+            date: d.draw_date,
+            result: d.full_result,
+          })),
+        }}
+      />
 
       {/* ─── Archive Table ────────────────────────────────────────────── */}
       <ArchiveTable />

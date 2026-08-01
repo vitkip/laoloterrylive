@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import ChatBot from './components/ChatBot'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useVisitorTrack } from './hooks/useVisitorTrack'
 
@@ -93,6 +94,7 @@ function PublicLayout() {
         </Suspense>
       </main>
       <Footer />
+      <ChatBot />
     </div>
   );
 }

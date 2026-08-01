@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useStatistics } from '../hooks/useStatistics'
 import { useData } from '../context/DataContext'
+import AiSummaryCard from '../components/AiSummaryCard'
 import SEO from '../components/SEO'
 import { webPageSchema, faqSchema, breadcrumbSchema } from '../components/schemas'
 import HotNumbers from '../components/HotNumbers'
@@ -386,6 +387,24 @@ export default function DashboardPage() {
       ══════════════════════════════════════════════ */}
       {stats && (
         <div className="space-y-8">
+
+          {/* ── AI Summary ── */}
+          <AiSummaryCard
+            context="dashboard"
+            title="ສະຫຼຸບພາບລວມສະຖິຕິ"
+            hint="ໃຫ້ AI ອ່ານເລກຮ້ອນ, ເລກຄ້າງ, ຄູ່ເລກ ແລະ ແນວໂນ້ມ ແລ້ວສະຫຼຸບເປັນຄວາມຮຽງເຂົ້າໃຈງ່າຍ"
+            disabled={!stats?.hotNumbers?.length}
+            payload={{
+              totalDraws,
+              typeName,
+              timeframeLabel: TIMEFRAMES.find(t => t.value === timeframe)?.label ?? 'ທັງໝົດ',
+              hot: stats.hotNumbers,
+              cold: stats.coldNumbers,
+              pairs: stats.hotPairs,
+              rising: stats.trendMomentum?.rising,
+              doubles: stats.repeatPatterns?.doubles?.filter(d => d.count > 0),
+            }}
+          />
 
           {/* 01 — Hot & Cold */}
           <SectionCard cfg={SECTION_CONFIGS[0]}>
