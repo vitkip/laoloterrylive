@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useData } from '../context/DataContext'
 import { computeAnalytics, computeCombinedTop10, COMBINED_SIGNALS, LDATE, buildArticle, computeEnhancedPrediction, computeEnhancedBacktest, ENHANCED_SIGNALS } from '../utils/analytics'
 import SEO from '../components/SEO'
+import AiExplainPredictionCard from '../components/AiExplainPredictionCard'
 import { webPageSchema, breadcrumbSchema } from '../components/schemas'
 import {
   LineChart, Line, BarChart, Bar,
@@ -224,7 +225,7 @@ function TrendList({ title, accent, data, field, fieldLabel }) {
 // NEWS ARTICLE PANEL  (LDATE, buildArticle, COMBINED_SIGNALS from utils/analytics)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function NewsPanel({ analytics, draws, n, selectedType, types }) {
+function NewsPanel({ analytics, draws, n, selectedType, types, enhancedPrediction }) {
   const [copied, setCopied] = useState(false)
 
   const top10 = useMemo(() => computeCombinedTop10(analytics), [analytics])
@@ -358,6 +359,16 @@ function NewsPanel({ analytics, draws, n, selectedType, types }) {
           </div>
         ))}
       </div>
+
+      {/* ── AI-written analysis (real Claude, grounded in the 8-signal engine) ── */}
+      {enhancedPrediction?.top10?.length > 0 && (
+        <AiExplainPredictionCard
+          enhanced={enhancedPrediction}
+          drawNum={latestDraw?.draw_number ?? '?'}
+          dateStr={LDATE(latestDraw?.draw_date)}
+          n={n}
+        />
+      )}
 
       {/* ── Auto-generated news article ─────────────────────────────────────── */}
       <div className="bg-zinc-950/95 backdrop-blur-2xl rounded-2xl border border-white/[0.09] shadow-2xl shadow-black/50 overflow-hidden">
@@ -1583,7 +1594,7 @@ export default function AnalyticsPage() {
 
       {/* ── NEWS ─────────────────────────────────────────────────────────────── */}
       {mode === 'news' && (
-        <NewsPanel analytics={analytics} draws={filteredDraws} n={n} selectedType={selectedType} types={types} />
+        <NewsPanel analytics={analytics} draws={filteredDraws} n={n} selectedType={selectedType} types={types} enhancedPrediction={enhancedPrediction} />
       )}
 
       {/* ── DS BACKTEST ──────────────────────────────────────────────────────── */}
