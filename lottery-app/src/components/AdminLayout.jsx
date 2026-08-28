@@ -14,6 +14,7 @@ function getNavItems(role) {
     { path: '/admin/draws', icon: 'add_circle', label: 'ປ້ອນຜົນຫວຍ', badge: null },
     { path: '/admin/types', icon: 'category', label: 'ປະເພດຫວຍ', badge: null },
     { path: '/admin/happy545', icon: 'casino', label: 'Happy 545', badge: null },
+    { path: '/admin/puplatao', icon: 'casino', label: 'ຫວຍປູປາເຕົ້າ', badge: null },
     { path: '/admin/betting', icon: 'casino', label: 'ຮອບແທງຫວຍ', badge: null },
   ];
   const adminOnly = [
@@ -611,6 +612,7 @@ function Breadcrumb({ location }) {
     '/admin/logs': 'Audit Logs',
     '/admin/profile': 'Profile ຂອງຂ້ອຍ',
     '/admin/happy545': 'Happy 545',
+    '/admin/puplatao': 'ຫວຍປູປາເຕົ້າ',
   };
   const label = LABELS[location.pathname] || location.pathname.split('/').pop();
   return (

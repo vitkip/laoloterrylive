@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { AlertCircle, Trophy, Calendar, Hash, TrendingDown, RefreshCw, Crown, Star, Flame, Snowflake, Zap, Target, CheckCircle, XCircle, ClipboardList, Layers, Link2 } from 'lucide-react'
+import { AlertCircle, Trophy, Calendar, Hash, TrendingDown, RefreshCw, Crown, Star, Flame, Snowflake, Zap, Target, CheckCircle, XCircle, ClipboardList, Layers, Link2, Repeat } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
 import AiSummaryCard from '../components/AiSummaryCard'
 
@@ -1449,6 +1449,110 @@ function ComboFreqPanel({ draws }) {
   )
 }
 
+// ── Analysis Panel 8: Repeat Numbers (P5 ★ ອອກຊ້ຳ ≥N ຄັ້ງ) ──────
+function RepeatPanel({ draws }) {
+  const [range, setRange] = useState('all')
+  const [minTimes, setMinTimes] = useState(2)
+  const RANGES = [{ v: '20', l: '20 ງວດ' }, { v: '50', l: '50 ງວດ' }, { v: '100', l: '100 ງວດ' }, { v: 'all', l: 'ທັງໝົດ' }]
+  const MIN_OPTIONS = [2, 3, 4, 5]
+
+  const data = useMemo(() => {
+    if (!draws?.length) return null
+    const n = range === 'all' ? draws.length : Math.min(parseInt(range), draws.length)
+    const recent = draws.slice(0, n)
+
+    const byNum = {}
+    recent.forEach(d => {
+      const p5 = +d.pos5
+      if (!p5) return
+      ;(byNum[p5] ??= []).push(d.draw_date)
+    })
+
+    const list = Object.entries(byNum)
+      .map(([num, dates]) => ({ num: +num, count: dates.length, dates: [...dates].sort() }))
+      .filter(row => row.count >= minTimes)
+      .sort((a, b) => b.count - a.count || a.num - b.num)
+
+    return { list, n }
+  }, [draws, range, minTimes])
+
+  if (!data) return null
+  const maxCount = data.list[0]?.count || 1
+
+  return (
+    <div className="space-y-5">
+      <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-4">
+        <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
+          ຄົ້ນຫາເລກ <strong>P5 ★</strong> ທີ່ອອກຊ້ຳກັນຫຼາຍຄັ້ງໃນຊ່ວງທີ່ເລືອກ — ຊ່ວຍເບິ່ງວ່າເລກໃດ "ມັກອອກຊ້ຳ"
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="flex gap-2 flex-wrap items-center">
+          <span className="text-xs font-bold text-[#94a3b8]">ຊ່ວງ:</span>
+          {RANGES.map(({ v, l }) => (
+            <button key={v} onClick={() => setRange(v)}
+              className="h-8 px-4 rounded-xl text-xs font-bold border transition-all cursor-pointer"
+              style={range === v ? {
+                background: 'linear-gradient(135deg,#d4af37,#fbbf24)', borderColor: '#d4af37', color: '#060b1a',
+              } : { background: 'transparent', borderColor: 'rgba(148,163,184,0.25)', color: '#64748b' }}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 flex-wrap items-center">
+          <span className="text-xs font-bold text-[#94a3b8]">ຊ້ຳຢ່າງໜ້ອຍ:</span>
+          {MIN_OPTIONS.map(v => (
+            <button key={v} onClick={() => setMinTimes(v)}
+              className="h-8 px-4 rounded-xl text-xs font-bold border transition-all cursor-pointer"
+              style={minTimes === v ? {
+                background: 'linear-gradient(135deg,#3b82f6,#60a5fa)', borderColor: '#3b82f6', color: '#fff',
+              } : { background: 'transparent', borderColor: 'rgba(148,163,184,0.25)', color: '#64748b' }}>
+              {v} ຄັ້ງ
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-[#0c1426] border border-[#e8edf8] dark:border-white/5 rounded-2xl p-5">
+        <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
+          <Repeat size={14} style={{ color: '#d4af37' }} />
+          ເລກ P5 ★ ອອກຊ້ຳ ≥{minTimes} ຄັ້ງ ({data.n} ງວດ) — {data.list.length} ເລກ
+        </h3>
+        {data.list.length === 0 ? (
+          <p className="text-xs text-[#94a3b8] py-6 text-center">ບໍ່ພົບເລກທີ່ຊ້ຳ ≥{minTimes} ຄັ້ງ ໃນຊ່ວງນີ້</p>
+        ) : (
+          <div className="space-y-3">
+            {data.list.map((row, i) => (
+              <div key={row.num} className="flex items-start gap-3">
+                <span className="w-5 text-[10px] text-[#94a3b8] text-right shrink-0 mt-2.5">{i + 1}</span>
+                <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-sm font-extrabold shrink-0"
+                  style={i < 3 ? {
+                    background: 'linear-gradient(135deg,#d4af37,#fbbf24,#b8860b)', color: '#060b1a',
+                    boxShadow: '0 2px 12px rgba(212,175,55,0.4)',
+                  } : { background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }}>
+                  {String(row.num).padStart(2, '0')}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex-1 h-2 bg-[#f1f5f9] dark:bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all"
+                        style={{ width: `${(row.count / maxCount) * 100}%`, background: i < 3 ? 'linear-gradient(90deg,#d4af37,#f59e0b)' : '#3b82f6' }} />
+                    </div>
+                    <span className="text-xs font-bold text-[#374151] dark:text-[#94a3b8] w-14 text-right shrink-0">{row.count}x</span>
+                  </div>
+                  <p className="text-[10px] text-[#94a3b8] leading-relaxed">{row.dates.join(', ')}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ────────────────────────────────────────────────────
 const ANALYSIS_TABS = [
   { id: 'stats',     label: 'ສະຖິຕິ',         icon: Hash },
@@ -1457,6 +1561,7 @@ const ANALYSIS_TABS = [
   { id: 'smartpick', label: 'ຊ່ວຍເລືອກ',      icon: Target },
   { id: 'dayfreq',   label: 'ຄວາມຖີ່ຕາມວັນ',  icon: Calendar },
   { id: 'combo',     label: 'ຊຸດເລກຮ່ວມ',      icon: Link2 },
+  { id: 'repeat',    label: 'ເລກຊ້ຳ',          icon: Repeat },
   { id: 'ticket',    label: 'ທົດສອບ Ticket',   icon: ClipboardList },
   { id: 'wheel',     label: 'ລະບົບ Wheel',      icon: Layers },
 ]
@@ -1689,6 +1794,11 @@ export default function Happy545Page() {
         {/* ── Tab: Combo Frequency ── */}
         {tab === 'combo' && !loading && (
           <ComboFreqPanel draws={draws} />
+        )}
+
+        {/* ── Tab: Repeat Numbers ── */}
+        {tab === 'repeat' && !loading && (
+          <RepeatPanel draws={draws} />
         )}
 
         {/* ── Tab: Ticket Checker ── */}

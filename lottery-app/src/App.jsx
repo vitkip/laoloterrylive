@@ -46,6 +46,8 @@ const ContactPage          = lazy(() => import('./pages/ContactPage'))
 const Happy545Page         = lazy(() => import('./pages/Happy545Page'))
 const Happy545SetsPage     = lazy(() => import('./pages/Happy545SetsPage'))
 const AdminHappy545        = lazy(() => import('./pages/AdminHappy545'))
+const PuplataoPage         = lazy(() => import('./pages/PuplataoPage'))
+const AdminPuplatao        = lazy(() => import('./pages/AdminPuplatao'))
 
 // ── Error pages ───────────────────────────────────────────────────
 const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'))
@@ -137,6 +139,7 @@ export default function App() {
             <Route path="/contact"     element={<ContactPage />} />
             <Route path="/happy545"    element={<Happy545Page />} />
             <Route path="/happy545/sets" element={<Happy545SetsPage />} />
+            <Route path="/puplatao"    element={<PuplataoPage />} />
           </Route>
 
           {/* ══ TIER 1b: Full-screen standalone pages (no Navbar/Footer) */}
@@ -172,6 +175,7 @@ export default function App() {
               <Route path="/admin/contacts"  element={<AdminContacts />} />
               <Route path="/admin/profile"   element={<ProfilePage />} />
               <Route path="/admin/happy545"  element={<AdminHappy545 />} />
+              <Route path="/admin/puplatao"  element={<AdminPuplatao />} />
               <Route path="/admin/betting"   element={<AdminBettingRounds />} />
 
               {/* Admin-only */}
