@@ -2,7 +2,7 @@
 /**
  * ai-summarize-stats.php — AI ສະຫຼຸບສະຖິຕິເປັນພາສາທຳມະດາ ດ້ວຍ Claude
  * POST /api/ai-summarize-stats.php  (ຕ້ອງ login)
- * Body: { "context": "dashboard" | "history" | "h545stats" | "h545sets", "payload": {...pre-computed stats...} }
+ * Body: { "context": "dashboard" | "history" | "h545stats" | "h545sets" | "puplatao", "payload": {...pre-computed stats...} }
  *
  * Claude only narrates numbers we already computed client-side (analytics.js /
  * useStatistics.jsx / Happy545 pages) — it never invents frequencies or dates itself.
@@ -35,7 +35,7 @@ $body    = json_decode(file_get_contents('php://input'), true);
 $context = trim((string) ($body['context'] ?? ''));
 $payload = is_array($body['payload'] ?? null) ? $body['payload'] : [];
 
-if (!in_array($context, ['dashboard', 'history', 'h545stats', 'h545sets'], true)) {
+if (!in_array($context, ['dashboard', 'history', 'h545stats', 'h545sets', 'puplatao'], true)) {
     http_response_code(400);
     echo json_encode(['error' => 'context ບໍ່ຖືກຕ້ອງ']);
     exit();
@@ -141,6 +141,56 @@ if ($context === 'dashboard') {
         . "\nຕອບເປັນຂໍ້ຄວາມທຳມະດາເທົ່ານັ້ນ ບໍ່ຕ້ອງມີ JSON, markdown, ຫົວຂໍ້, ຫຼື bullet list.";
 
     $userMsg = "Happy 545 — ຄິດໄລ່ຈາກ {$totalDraws} ງວດ, backtest ຫຼ້າສຸດ 100 ງວດ\n\n{$setsTxt}";
+} elseif ($context === 'puplatao') {
+    $clean = fn($s) => trim(preg_replace('/[\x00-\x1F<>]/u', '', (string) $s));
+
+    $totalDraws = $intOnly($payload['totalDraws'] ?? 0);
+    $freq       = array_slice((array) ($payload['frequency'] ?? []), 0, 6);
+    $gap        = array_slice((array) ($payload['gap'] ?? []), 0, 6);
+    $byPos      = array_slice((array) ($payload['byPosition'] ?? []), 0, 6);
+    $pairs      = array_slice((array) ($payload['pairs'] ?? []), 0, 5);
+    $pairTriple = array_slice((array) ($payload['pairTriple'] ?? []), 0, 6);
+
+    $freqTxt = implode(', ', array_map(
+        fn($f) => $clean($f['name_lo'] ?? '') . ' (' . $intOnly($f['total_hits'] ?? 0) . ' ຄັ້ງ, ' . $clean($f['pct_of_all'] ?? 0) . '%)',
+        $freq
+    ));
+    $gapTxt = implode(', ', array_map(
+        fn($g) => $clean($g['name_lo'] ?? '') . ' (ຄ້າງ ' . $intOnly($g['draws_since'] ?? 0) . ' ງວດ)',
+        $gap
+    ));
+    $posTxt = implode('; ', array_map(
+        fn($p) => $clean($p['name_lo'] ?? '') . ' → ໜ່ວຍ1:' . $intOnly($p['pos1'] ?? 0) . ' ໜ່ວຍ2:' . $intOnly($p['pos2'] ?? 0) . ' ໜ່ວຍ3:' . $intOnly($p['pos3'] ?? 0),
+        $byPos
+    ));
+    $pairTxt = implode(', ', array_map(
+        fn($p) => $clean($p['s1'] ?? '') . '+' . $clean($p['s2'] ?? '') . ' (' . $intOnly($p['times'] ?? 0) . ' ຄັ້ງ)',
+        $pairs
+    ));
+    $ptTxt = implode(', ', array_map(
+        fn($p) => $clean($p['name_lo'] ?? '') . ' (ຄູ່ ' . $intOnly($p['times_pair'] ?? 0) . '×, ຕອງ ' . $intOnly($p['times_triple'] ?? 0) . '×)',
+        $pairTriple
+    ));
+
+    if ($freqTxt === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'ຂໍ້ມູນສະຖິຕິບໍ່ພຽງພໍ']);
+        exit();
+    }
+
+    $systemPrompt = "ທ່ານແມ່ນນັກວິເຄາະສະຖິຕິຫວຍປູປາເຕົ້າມະຫາໂຊກ (Hoo Hey How) ທີ່ມີໝາກ 6 ໜ່ວຍ: ນ້ຳເຕົ້າ, ປູ, ປາ, ກຸ້ງ, ໄກ່, ເສືອ — ແຕ່ລະງວດອອກ 3 ໜ່ວຍ."
+        . "\nຫ້າມແຕ່ງໝາກ ຫຼື ຈຳນວນຄັ້ງຂຶ້ນເອງ — ໃຊ້ສະເພາະຂໍ້ມູນທີ່ໃຫ້ມາ."
+        . "\nຂຽນເປັນຄວາມຮຽງພາສາລາວ 1 ຫຍໍ້ໜ້າ (100-150 ຄຳ) ສະຫຼຸບພາບລວມສະຖິຕິແບບເຂົ້າໃຈງ່າຍ ບໍ່ໃຊ້ສັບເຕັກນິກ"
+        . " ໂດຍກ່າວເຖິງໝາກທີ່ອອກຫຼາຍ, ໝາກທີ່ຄ້າງນານ, ໝາກທີ່ມັກອອກຄູ່ນຳກັນ, ແລະ ຂໍ້ສັງເກດເລື່ອງຕຳແໜ່ງ ຖ້າມີ."
+        . "\nປິດທ້າຍດ້ວຍປະໂຫຍກເຕືອນສັ້ນໆວ່ານີ້ແມ່ນສະຖິຕິຍ້ອນຫຼັງ ແຕ່ລະງວດເປັນເອກະລາດ ບໍ່ແມ່ນການຮັບປະກັນຜົນ."
+        . "\nຕອບເປັນຂໍ້ຄວາມທຳມະດາເທົ່ານັ້ນ ບໍ່ຕ້ອງມີ JSON, markdown, ຫົວຂໍ້, ຫຼື bullet list.";
+
+    $userMsg = "ຫວຍປູປາເຕົ້າ — ວິເຄາະຈາກ {$totalDraws} ງວດ\n"
+        . "ຄວາມຖີ່ໝາກ (ອອກຫຼາຍ→ໜ້ອຍ): {$freqTxt}\n"
+        . ($gapTxt !== '' ? "ໝາກຄ້າງ (ບໍ່ອອກດົນສຸດ): {$gapTxt}\n" : '')
+        . ($posTxt !== '' ? "ແຍກຕາມຕຳແໜ່ງ: {$posTxt}\n" : '')
+        . ($pairTxt !== '' ? "ຄູ່ໝາກທີ່ອອກພ້ອມກັນເລື້ອຍ: {$pairTxt}\n" : '')
+        . ($ptTxt !== '' ? "ນັບ ຄູ່/ຕອງ ຕໍ່ໝາກ: {$ptTxt}\n" : '');
 } else {
     // context === 'history'
     $recent = array_slice((array) ($payload['recentDraws'] ?? []), 0, 12);
