@@ -47,6 +47,7 @@ const Happy545Page         = lazy(() => import('./pages/Happy545Page'))
 const Happy545SetsPage     = lazy(() => import('./pages/Happy545SetsPage'))
 const AdminHappy545        = lazy(() => import('./pages/AdminHappy545'))
 const PuplataoPage         = lazy(() => import('./pages/PuplataoPage'))
+const PuplataoPredictPage  = lazy(() => import('./pages/PuplataoPredictPage'))
 const AdminPuplatao        = lazy(() => import('./pages/AdminPuplatao'))
 
 // ── Error pages ───────────────────────────────────────────────────
@@ -140,6 +141,7 @@ export default function App() {
             <Route path="/happy545"    element={<Happy545Page />} />
             <Route path="/happy545/sets" element={<Happy545SetsPage />} />
             <Route path="/puplatao"    element={<PuplataoPage />} />
+            <Route path="/puplatao/next" element={<PuplataoPredictPage />} />
           </Route>
 
           {/* ══ TIER 1b: Full-screen standalone pages (no Navbar/Footer) */}

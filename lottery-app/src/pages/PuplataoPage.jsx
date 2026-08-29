@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import {
-  AlertCircle, RefreshCw, Dices, TrendingUp, Timer, Layers, Crown,
+  AlertCircle, RefreshCw, Dices, TrendingUp, Timer, Layers, Crown, Target, ArrowRight,
 } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
 import AiSummaryCard from '../components/AiSummaryCard'
@@ -160,6 +161,23 @@ export default function PuplataoPage() {
           <strong>ໝາຍເຫດ:</strong> ສະຖິຕິໃຊ້ເບິ່ງຂໍ້ມູນອະດີດເທົ່ານັ້ນ — ການອອກໝາກແຕ່ລະຄັ້ງເປັນເອກະລາດ ບໍ່ສາມາດ<strong>ທຳນາຍ</strong>ອະນາຄົດໄດ້.
         </p>
       </div>
+
+      {/* ── CTA → prediction page ── */}
+      <Link
+        to="/puplatao/next"
+        className="flex items-center justify-between gap-3 rounded-2xl p-4 transition-transform hover:-translate-y-0.5"
+        style={{ background: 'linear-gradient(135deg,#ef444422,#f9731618)', border: '1px solid #f9731644' }}
+      >
+        <span className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#f9731626' }}>
+            <Target size={17} className="text-[#f97316]" />
+          </span>
+          <span className="text-sm font-bold text-[#334155] dark:text-[#e2e8f0]">
+            ສູດຄິດ 3 ຄູ່ໝາກ ງວດຖັດໄປ + AI ວິເຄາະ
+          </span>
+        </span>
+        <ArrowRight size={16} className="text-[#f97316] shrink-0" />
+      </Link>
 
       {/* ── AI Insight ── */}
       {!loading && freq.length > 0 && (

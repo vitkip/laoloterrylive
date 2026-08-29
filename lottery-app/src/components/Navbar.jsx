@@ -21,6 +21,7 @@ const GUEST_LINKS = [
   { label: 'Happy 545', href: '/happy545', Icon: Dices },
   { label: 'ຊຸດຫວຍ 545', href: '/happy545/sets', Icon: Target },
   { label: 'ປູປາເຕົ້າ', href: '/puplatao', Icon: Fish },
+  { label: 'ຄູ່ປູປາເຕົ້າ', href: '/puplatao/next', Icon: Target },
   { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search', Icon: Search },
 ]
 const MEMBER_LINKS = [
@@ -30,6 +31,7 @@ const MEMBER_LINKS = [
   { label: 'Happy 545', href: '/happy545', Icon: Dices },
   { label: 'ຊຸດຫວຍ 545', href: '/happy545/sets', Icon: Target },
   { label: 'ປູປາເຕົ້າ', href: '/puplatao', Icon: Fish },
+  { label: 'ຄູ່ປູປາເຕົ້າ', href: '/puplatao/next', Icon: Target },
   { label: 'AI Analytics', href: '/analytics', Icon: TrendingUp },
   { label: 'ເລກໜ້າຈະອອກ', href: '/prediction', Icon: Sparkles },
   { label: 'ແທງຫວຍ (Demo)', href: '/betting', Icon: Coins },

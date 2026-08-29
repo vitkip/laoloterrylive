@@ -2,7 +2,7 @@
 /**
  * ai-summarize-stats.php — AI ສະຫຼຸບສະຖິຕິເປັນພາສາທຳມະດາ ດ້ວຍ Claude
  * POST /api/ai-summarize-stats.php  (ຕ້ອງ login)
- * Body: { "context": "dashboard" | "history" | "h545stats" | "h545sets" | "puplatao", "payload": {...pre-computed stats...} }
+ * Body: { "context": "dashboard" | "history" | "h545stats" | "h545sets" | "puplatao" | "puplataopredict", "payload": {...pre-computed stats...} }
  *
  * Claude only narrates numbers we already computed client-side (analytics.js /
  * useStatistics.jsx / Happy545 pages) — it never invents frequencies or dates itself.
@@ -35,7 +35,7 @@ $body    = json_decode(file_get_contents('php://input'), true);
 $context = trim((string) ($body['context'] ?? ''));
 $payload = is_array($body['payload'] ?? null) ? $body['payload'] : [];
 
-if (!in_array($context, ['dashboard', 'history', 'h545stats', 'h545sets', 'puplatao'], true)) {
+if (!in_array($context, ['dashboard', 'history', 'h545stats', 'h545sets', 'puplatao', 'puplataopredict'], true)) {
     http_response_code(400);
     echo json_encode(['error' => 'context ບໍ່ຖືກຕ້ອງ']);
     exit();
@@ -191,6 +191,49 @@ if ($context === 'dashboard') {
         . ($posTxt !== '' ? "ແຍກຕາມຕຳແໜ່ງ: {$posTxt}\n" : '')
         . ($pairTxt !== '' ? "ຄູ່ໝາກທີ່ອອກພ້ອມກັນເລື້ອຍ: {$pairTxt}\n" : '')
         . ($ptTxt !== '' ? "ນັບ ຄູ່/ຕອງ ຕໍ່ໝາກ: {$ptTxt}\n" : '');
+} elseif ($context === 'puplataopredict') {
+    $clean = fn($s) => trim(preg_replace('/[\x00-\x1F<>]/u', '', (string) $s));
+
+    $totalDraws = $intOnly($payload['totalDraws'] ?? 0);
+    $btN        = $intOnly($payload['backtestN'] ?? 0);
+    $pairs      = array_slice((array) ($payload['pairs'] ?? []), 0, 3);
+    $ranked     = array_slice((array) ($payload['symbolRanked'] ?? []), 0, 6);
+
+    $pairLines = [];
+    foreach ($pairs as $p) {
+        $a = $clean($p['a'] ?? '');
+        $b = $clean($p['b'] ?? '');
+        if ($a === '' || $b === '') continue;
+        $third = $clean($p['third'] ?? '');
+        $bt = (array) ($p['backtest'] ?? []);
+        $pairLines[] = sprintf(
+            "ຄູ່ທີ %s: %s + %s (ໝາກທີ 3 ແນະນຳ: %s) — ຄະແນນ %s%% | ຍ້ອນຫຼັງ %s ງວດ: ອອກພ້ອມກັນ %s ຄັ້ງ (%s%%), ອອກຢ່າງໜ້ອຍ 1 ໜ່ວຍ %s ຄັ້ງ (%s%%)",
+            $intOnly($p['rank'] ?? 0), $a, $b, $third,
+            $intOnly($p['scorePct'] ?? 0), $intOnly($bt['n'] ?? 0),
+            $intOnly($bt['both'] ?? 0), $intOnly($bt['pctBoth'] ?? 0),
+            $intOnly($bt['either'] ?? 0), $intOnly($bt['pctEither'] ?? 0)
+        );
+    }
+    if (empty($pairLines)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'ຂໍ້ມູນຄູ່ໝາກບໍ່ພຽງພໍ']);
+        exit();
+    }
+    $rankTxt = implode(', ', array_map(
+        fn($r) => $clean($r['name'] ?? '') . ' (' . $intOnly($r['scorePct'] ?? 0) . '%)',
+        $ranked
+    ));
+
+    $systemPrompt = "ທ່ານແມ່ນນັກວິເຄາະຫວຍປູປາເຕົ້າມະຫາໂຊກ (6 ໝາກ: ນ້ຳເຕົ້າ, ປູ, ປາ, ກຸ້ງ, ໄກ່, ເສືອ; ອອກ 3 ໜ່ວຍ/ງວດ) ອະທິບາຍ 3 ຄູ່ໝາກທີ່ລະບົບຄິດໄລ່ໄວ້ວ່າໜ້າຈະອອກໃນງວດຖັດໄປ."
+        . "\nສູດຄິດຈາກ: ຄວາມຖີ່ 20 ງວດຫຼ້າສຸດ + ໝາກຄ້າງ (overdue) + ຄວາມຖີ່ອອກຄູ່ນຳກັນ (co-occurrence)."
+        . "\nຫ້າມແຕ່ງໝາກ ຫຼື ຈຳນວນຄັ້ງຂຶ້ນເອງ — ໃຊ້ສະເພາະຂໍ້ມູນທີ່ໃຫ້ມາ."
+        . "\nຂຽນເປັນຄວາມຮຽງພາສາລາວ 1 ຫຍໍ້ໜ້າ (110-160 ຄຳ) ອະທິບາຍວ່າແຕ່ລະຄູ່ເດັ່ນຍ້ອນຫຍັງ ໂດຍອ້າງອີງຜົນ backtest (ອັດຕາອອກພ້ອມກັນ) ຂອງແຕ່ລະຄູ່."
+        . "\nປິດທ້າຍດ້ວຍປະໂຫຍກເຕືອນສັ້ນໆວ່າແຕ່ລະງວດເປັນເອກະລາດ backtest ອີງອະດີດເທົ່ານັ້ນ ບໍ່ຮັບປະກັນຜົນອະນາຄົດ."
+        . "\nຕອບເປັນຂໍ້ຄວາມທຳມະດາເທົ່ານັ້ນ ບໍ່ຕ້ອງມີ JSON, markdown, ຫົວຂໍ້, ຫຼື bullet list.";
+
+    $userMsg = "ຫວຍປູປາເຕົ້າ — ຄິດໄລ່ຈາກ {$totalDraws} ງວດ, backtest ຫຼ້າສຸດ {$btN} ງວດ\n"
+        . "ອັນດັບຄວາມແຮງຂອງໝາກ (ຄະແນນລວມ): {$rankTxt}\n\n"
+        . implode("\n", $pairLines);
 } else {
     // context === 'history'
     $recent = array_slice((array) ($payload['recentDraws'] ?? []), 0, 12);
