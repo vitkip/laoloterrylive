@@ -17,7 +17,7 @@ const RANK_META = [
   { bg: 'linear-gradient(135deg,#eab308 0%,#facc15 50%,#ca8a04 100%)', color: '#1a1205', shadow: 'rgba(234,179,8,0.35)' },
 ]
 
-// ເສັ້ນຖານ "ທາຍມົ້ວ" (ໝາກ 6 · 3 ໜ່ວຍ/ງວດ)
+// ເສັ້ນຖານ "ທາຍມົ້ວ" (ລູກ 6 · 3 ໜ່ວຍ/ງວດ)
 const BASE_BOTH_PCT   = Math.round((1 - 2 * Math.pow(5 / 6, 3) + Math.pow(4 / 6, 3)) * 100) // ≈ 14
 const BASE_EITHER_PCT = Math.round((1 - Math.pow(4 / 6, 3)) * 100)                           // ≈ 70
 
@@ -28,13 +28,13 @@ function normalize(obj) {
   return out
 }
 
-// ── ສູດຄິດ 3 ຄູ່ໝາກ ສຳລັບງວດຖັດໄປ ────────────────────────────────
-// S(ໝາກ)  = 0.55 · ຄວາມຖີ່ 20 ງວດຫຼ້າສຸດ (recency-weighted)
+// ── ສູດຄິດ 3 ຄູ່ລູກ ສຳລັບງວດຖັດໄປ ────────────────────────────────
+// S(ລູກ)  = 0.55 · ຄວາມຖີ່ 20 ງວດຫຼ້າສຸດ (recency-weighted)
 //         + 0.45 · overdue (ຄ້າງມາແລ້ວກີ່ງວດ / ຄ້າງຫຼາຍສຸດ)
-// P(a,b)  = 0.40 · ຄວາມແຮງໝາກສະເລ່ຍ (S)
+// P(a,b)  = 0.40 · ຄວາມແຮງລູກສະເລ່ຍ (S)
 //         + 0.35 · ຄວາມຖີ່ອອກຄູ່ນຳກັນ (ທັງໝົດ)
 //         + 0.25 · ຄວາມຖີ່ອອກຄູ່ນຳກັນ (15 ງວດຫຼ້າສຸດ)
-// backtest: ນັບຍ້ອນຫຼັງ 60 ງວດ ວ່າ 2 ໝາກນີ້ອອກພ້ອມກັນ / ຢ່າງໜ້ອຍ 1 ໜ່ວຍ ຈັກງວດ
+// backtest: ນັບຍ້ອນຫຼັງ 60 ງວດ ວ່າ 2 ລູກນີ້ອອກພ້ອມກັນ / ຢ່າງໜ້ອຍ 1 ໜ່ວຍ ຈັກງວດ
 function buildPairPredictions(draws, symbols) {
   const n = draws.length
   if (n === 0 || symbols.length === 0) return null
@@ -72,7 +72,7 @@ function buildPairPredictions(draws, symbols) {
   const normS = normalize(S)
 
   // #9 ແປງຄະແນນ S → ຄວາມໜ້າຈະເປັນ % ຈິງ
-  // q = ສ່ວນແບ່ງການເລືອກ ຕໍ່ 1 ໜ່ວຍ ( Σq = 1); ໝາກ 3 ໜ່ວຍ/ງວດ
+  // q = ສ່ວນແບ່ງການເລືອກ ຕໍ່ 1 ໜ່ວຍ ( Σq = 1); ລູກ 3 ໜ່ວຍ/ງວດ
   const sumS = ID.reduce((s, i) => s + S[i], 0)
   const q = {}
   ID.forEach(i => { q[i] = sumS > 0 ? S[i] / sumS : 1 / ID.length })
@@ -220,7 +220,7 @@ function PairCard({ pair, symOf }) {
         <SymBall sym={symOf[pair.b]} />
         <div className="flex items-center gap-2 pl-3 ml-1 border-l border-[#e8edf8] dark:border-white/10">
           <div className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] leading-tight">
-            ໝາກທີ 3<br />ແນະນຳ
+            ລູກທີ 3<br />ແນະນຳ
           </div>
           <SymBall sym={symOf[pair.third]} size={40} />
         </div>
@@ -231,7 +231,7 @@ function PairCard({ pair, symOf }) {
           className="inline-block text-[11px] font-bold px-2.5 py-1 rounded-lg"
           style={{ background: '#f9731614', color: '#f97316' }}
         >
-          ໂອກາດອອກທັງຄູ່ (ຈາກຄວາມແຮງໝາກ) ≈ {Math.round(pair.pairProb * 100)}%
+          ໂອກາດອອກທັງຄູ່ (ຈາກຄວາມແຮງລູກ) ≈ {Math.round(pair.pairProb * 100)}%
         </span>
         <span
           className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-lg"
@@ -239,9 +239,9 @@ function PairCard({ pair, symOf }) {
             background: bothUp ? '#22c55e1f' : '#64748b14',
             color: bothUp ? '#16a34a' : '#64748b',
           }}
-          title={`ອອກຄູ່ນີ້ພ້ອມກັນ ${backtest.pctBoth}% ທຽບກັບ ໂອກາດມົ້ວ ${BASE_BOTH_PCT}% (${backtest.n} ງວດຫຼ້າສຸດ)`}
+          title={`ອອກຄູ່ນີ້ພ້ອມກັນ ${backtest.pctBoth}% ທຽບກັບ ຄ່າສະເລ່ຍ ${BASE_BOTH_PCT}% (${backtest.n} ງວດຫຼ້າສຸດ)`}
         >
-          {bothUp ? '▲ ຄູ່ນີ້ ຖີ່ກວ່າ ໂອກາດມົ້ວ' : '▼ ຄູ່ນີ້ ບໍ່ຖີ່ກວ່າ ໂອກາດມົ້ວ'}
+          {bothUp ? '▲ ອອກຄູ່ນີ້ ສູງກວ່າຄ່າສະເລ່ຍ' : '▼ ອອກຄູ່ນີ້ ຕ່ຳກວ່າຄ່າສະເລ່ຍ'}
         </span>
       </div>
 
@@ -250,14 +250,14 @@ function PairCard({ pair, symOf }) {
           <p className="text-xl font-black text-[#ef4444] tabular-nums">{backtest.both}<span className="text-xs text-[#ef4444]/60">/{backtest.n}</span></p>
           <p className="text-[9px] font-bold text-[#ef4444]/80 mt-0.5">ອອກພ້ອມກັນ · {backtest.pctBoth}%</p>
           <p className="text-[9px] font-black mt-0.5" style={{ color: bothUp ? '#16a34a' : '#94a3b8' }}>
-            {bothUp ? '▲' : '▼'} ມົ້ວ ~{BASE_BOTH_PCT}%
+            {bothUp ? '▲' : '▼'} ສະເລ່ຍ ~{BASE_BOTH_PCT}%
           </p>
         </div>
         <div className="rounded-xl p-2.5 text-center" style={{ background: '#f9731610', border: '1px solid #f9731630' }}>
           <p className="text-xl font-black text-[#f97316] tabular-nums">{backtest.either}<span className="text-xs text-[#f97316]/60">/{backtest.n}</span></p>
           <p className="text-[9px] font-bold text-[#f97316]/80 mt-0.5">ຢ່າງໜ້ອຍ 1 ໜ່ວຍ · {backtest.pctEither}%</p>
           <p className="text-[9px] font-black mt-0.5" style={{ color: eitherUp ? '#16a34a' : '#94a3b8' }}>
-            {eitherUp ? '▲' : '▼'} ມົ້ວ ~{BASE_EITHER_PCT}%
+            {eitherUp ? '▲' : '▼'} ສະເລ່ຍ ~{BASE_EITHER_PCT}%
           </p>
         </div>
       </div>
@@ -372,9 +372,9 @@ export default function PuplataoPredictPage() {
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}
           >
-            ຄູ່ໝາກ ງວດຖັດໄປ
+            ຄູ່ລູກ ງວດຖັດໄປ
           </h1>
-          <p className="text-sm text-[#94a3b8]">ສູດຄິດ 3 ຄູ່ໝາກ ໂດຍປະມານ ຈາກສະຖິຕິ {draws.length} ງວດ</p>
+          <p className="text-sm text-[#94a3b8]">ສູດຄິດ 3 ຄູ່ລູກ ໂດຍປະມານ ຈາກສະຖິຕິ {draws.length} ງວດ</p>
         </div>
       </div>
 
@@ -382,7 +382,7 @@ export default function PuplataoPredictPage() {
       <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-4">
         <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
         <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
-          <strong>ໝາຍເຫດ:</strong> ຄູ່ໝາກຂ້າງລຸ່ມນີ້ຄິດຈາກສະຖິຕິຍ້ອນຫຼັງເທົ່ານັ້ນ — ການອອກໝາກແຕ່ລະງວດເປັນເອກະລາດ <strong>ບໍ່ສາມາດທຳນາຍ</strong>ໄດ້ ແລະ ບໍ່ຮັບປະກັນຜົນ.
+          <strong>ໝາຍເຫດ:</strong> ຄູ່ລູກຂ້າງລຸ່ມນີ້ຄິດຈາກສະຖິຕິຍ້ອນຫຼັງເທົ່ານັ້ນ — ການອອກລູກແຕ່ລະງວດເປັນເອກະລາດ <strong>ບໍ່ສາມາດທຳນາຍ</strong>ໄດ້ ແລະ ບໍ່ຮັບປະກັນຜົນ.
         </p>
       </div>
 
@@ -391,7 +391,7 @@ export default function PuplataoPredictPage() {
         <div className="flex gap-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-700/30 rounded-2xl p-4">
           <Info size={16} className="text-red-500 shrink-0 mt-0.5" />
           <p className="text-xs text-red-800 dark:text-red-400 leading-relaxed">
-            ຂໍ້ມູນປະຫວັດຍັງໜ້ອຍ ({result.totalDraws} ງວດ) — ຄູ່ໝາກທີ່ແນະນຳອາດປ່ຽນແປງໄວເມື່ອມີຂໍ້ມູນເພີ່ມ.
+            ຂໍ້ມູນປະຫວັດຍັງໜ້ອຍ ({result.totalDraws} ງວດ) — ຄູ່ລູກທີ່ແນະນຳອາດປ່ຽນແປງໄວເມື່ອມີຂໍ້ມູນເພີ່ມ.
           </p>
         </div>
       )}
@@ -402,10 +402,10 @@ export default function PuplataoPredictPage() {
           <Layers size={14} className="text-[#f97316]" /> ວິທີຄິດໄລ່
         </h3>
         <div className="space-y-1.5 text-xs text-[#64748b] leading-relaxed">
-          <p><strong style={{ color: '#f97316' }}>ຄວາມແຮງໝາກ S</strong> = 55% ຄວາມຖີ່ 20 ງວດຫຼ້າສຸດ (ໃຫ້ນ້ຳໜັກງວດໃໝ່ຫຼາຍກວ່າ) + 45% ໝາກຄ້າງ (overdue).</p>
-          <p><strong style={{ color: '#ef4444' }}>ຄະແນນຄູ່ P(a,b)</strong> = 40% ຄວາມແຮງໝາກສະເລ່ຍ + 35% ຄວາມຖີ່ອອກຄູ່ນຳກັນ (ທັງໝົດ) + 25% ຄວາມຖີ່ອອກຄູ່ນຳກັນ (15 ງວດຫຼ້າສຸດ). ຈັດອັນດັບ 15 ຄູ່ → ເອົາ 3 ຄູ່ເທິງສຸດ.</p>
-          <p><strong>ໝາກທີ 3 ແນະນຳ</strong> = ໝາກທີ່ຄວາມແຮງ S ສູງສຸດ ໃນ 4 ໝາກທີ່ເຫຼືອ (ເຜື່ອຢາກທາຍຄົບ 3 ໜ່ວຍ).</p>
-          <p><strong style={{ color: '#22c55e' }}>ໂອກາດ %</strong> = ແປງ S ເປັນສ່ວນແບ່ງການເລືອກຕໍ່ໜ່ວຍ (q, ລວມ = 100%) → P(ອອກຢ່າງໜ້ອຍ 1 ໃນ 3 ໜ່ວຍ) = 1 − (1 − q)³. ຄູ່ = 1 − (1−qₐ)³ − (1−q_b)³ + (1−qₐ−q_b)³. ເສັ້ນຖານສະເໝີພາບ ≈ 42% (ໝາກດຽວ) / 14% (ຄູ່).</p>
+          <p><strong style={{ color: '#f97316' }}>ຄວາມແຮງລູກ S</strong> = 55% ຄວາມຖີ່ 20 ງວດຫຼ້າສຸດ (ໃຫ້ນ້ຳໜັກງວດໃໝ່ຫຼາຍກວ່າ) + 45% ລູກຄ້າງ (overdue).</p>
+          <p><strong style={{ color: '#ef4444' }}>ຄະແນນຄູ່ P(a,b)</strong> = 40% ຄວາມແຮງລູກສະເລ່ຍ + 35% ຄວາມຖີ່ອອກຄູ່ນຳກັນ (ທັງໝົດ) + 25% ຄວາມຖີ່ອອກຄູ່ນຳກັນ (15 ງວດຫຼ້າສຸດ). ຈັດອັນດັບ 15 ຄູ່ → ເອົາ 3 ຄູ່ເທິງສຸດ.</p>
+          <p><strong>ລູກທີ 3 ແນະນຳ</strong> = ລູກທີ່ຄວາມແຮງ S ສູງສຸດ ໃນ 4 ລູກທີ່ເຫຼືອ (ເຜື່ອຢາກທາຍຄົບ 3 ໜ່ວຍ).</p>
+          <p><strong style={{ color: '#22c55e' }}>ໂອກາດ %</strong> = ແປງ S ເປັນສ່ວນແບ່ງການເລືອກຕໍ່ໜ່ວຍ (q, ລວມ = 100%) → P(ອອກຢ່າງໜ້ອຍ 1 ໃນ 3 ໜ່ວຍ) = 1 − (1 − q)³. ຄູ່ = 1 − (1−qₐ)³ − (1−q_b)³ + (1−qₐ−q_b)³. ເສັ້ນຖານສະເໝີພາບ ≈ 42% (ລູກດຽວ) / 14% (ຄູ່).</p>
         </div>
       </div>
 
@@ -413,7 +413,7 @@ export default function PuplataoPredictPage() {
       {!loading && aiPayload && (
         <AiSummaryCard
           context="puplataopredict"
-          title="AI ອະທິບາຍ 3 ຄູ່ໝາກ ງວດຖັດໄປ"
+          title="AI ອະທິບາຍ 3 ຄູ່ລູກ ງວດຖັດໄປ"
           hint="ໃຫ້ Claude AI ອ່ານສູດ + ຜົນ backtest ຂອງແຕ່ລະຄູ່ ແລ້ວອະທິບາຍເປັນພາສາລາວ"
           payload={aiPayload}
         />
@@ -528,7 +528,7 @@ export default function PuplataoPredictPage() {
           {/* Symbol strength ranking */}
           <div className={CARD}>
             <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
-              <TrendingUp size={14} className="text-[#f97316]" /> ອັນດັບໝາກ · ໂອກາດອອກງວດຖັດໄປ
+              <TrendingUp size={14} className="text-[#f97316]" /> ອັນດັບລູກ · ໂອກາດອອກງວດຖັດໄປ
             </h3>
             <div className="space-y-2">
               {result.symbolRanked.map((r, i) => {
@@ -547,7 +547,7 @@ export default function PuplataoPredictPage() {
                 )
               })}
             </div>
-            <p className="mt-3 text-[11px] text-[#94a3b8]">ເສັ້ນຖານສະເໝີພາບ ≈ 42% ຕໍ່ໝາກ · ແຖບ = ທຽບກັບໝາກທີ່ແຮງສຸດ</p>
+            <p className="mt-3 text-[11px] text-[#94a3b8]">ເສັ້ນຖານສະເໝີພາບ ≈ 42% ຕໍ່ລູກ · ແຖບ = ທຽບກັບລູກທີ່ແຮງສຸດ</p>
           </div>
 
           <div className="flex items-center gap-2 text-xs text-[#94a3b8]">

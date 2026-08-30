@@ -227,7 +227,7 @@ export default function AdminPuplatao() {
           </div>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: '#E8E6F0', margin: 0 }}>ຈັດການ ຫວຍປູປາເຕົ້າ</h1>
-            <p style={{ fontSize: 11, color: 'rgba(232,230,240,0.4)', margin: 0 }}>ບັນທຶກ · ລຶບ · ວິເຄາະຄວາມຖີ່ໝາກ 6 ໜ່ວຍ</p>
+            <p style={{ fontSize: 11, color: 'rgba(232,230,240,0.4)', margin: 0 }}>ບັນທຶກ · ລຶບ · ວິເຄາະຄວາມຖີ່ລູກ 6 ໜ່ວຍ</p>
           </div>
         </div>
       </div>
@@ -235,8 +235,8 @@ export default function AdminPuplatao() {
       {/* Stat cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
         <StatCard icon="calendar_month" title="ທັງໝົດງວດ" value={`${totalDraws} ງວດ`} accent="#f97316" />
-        <StatCard icon="local_fire_department" title="ໝາກອອກຫຼາຍສຸດ" value={topSym ? `${topSym.emoji} ${topSym.name_lo}` : '—'} sub={topSym ? `${topSym.total_hits}× · ${topSym.pct_of_all}%` : ''} accent="#ef4444" />
-        <StatCard icon="ac_unit" title="ໝາກອອກໜ້ອຍສຸດ" value={coldSym ? `${coldSym.emoji} ${coldSym.name_lo}` : '—'} sub={coldSym ? `${coldSym.total_hits}× · ${coldSym.pct_of_all}%` : ''} accent="#3b82f6" />
+        <StatCard icon="local_fire_department" title="ລູກອອກຫຼາຍສຸດ" value={topSym ? `${topSym.emoji} ${topSym.name_lo}` : '—'} sub={topSym ? `${topSym.total_hits}× · ${topSym.pct_of_all}%` : ''} accent="#ef4444" />
+        <StatCard icon="ac_unit" title="ລູກອອກໜ້ອຍສຸດ" value={coldSym ? `${coldSym.emoji} ${coldSym.name_lo}` : '—'} sub={coldSym ? `${coldSym.total_hits}× · ${coldSym.pct_of_all}%` : ''} accent="#3b82f6" />
       </div>
 
       {/* Add draw form */}
@@ -334,7 +334,7 @@ export default function AdminPuplatao() {
       {/* Bar chart */}
       <div style={CARD_STYLE}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(249,115,22,0.08)' }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#E8E6F0', margin: 0 }}>ຄວາມຖີ່ໝາກ (ລວມທຸກຕຳແໜ່ງ)</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#E8E6F0', margin: 0 }}>ຄວາມຖີ່ລູກ (ລວມທຸກຕຳແໜ່ງ)</p>
           <p style={{ fontSize: 11, color: 'rgba(249,115,22,0.55)', margin: '2px 0 0' }}>ລຽງຈາກຫຼາຍ → ໜ້ອຍ</p>
         </div>
         <div style={{ padding: '16px 8px 8px' }}>
@@ -366,7 +366,7 @@ export default function AdminPuplatao() {
         <AiSummaryCard
           context="puplatao"
           title="AI ວິເຄາະ ຫວຍປູປາເຕົ້າ"
-          hint="ໃຫ້ Claude AI ອ່ານຄວາມຖີ່ໝາກ 6 ໜ່ວຍ ແລ້ວສະຫຼຸບພາບລວມເປັນພາສາລາວ"
+          hint="ໃຫ້ Claude AI ອ່ານຄວາມຖີ່ລູກ 6 ໜ່ວຍ ແລ້ວສະຫຼຸບພາບລວມເປັນພາສາລາວ"
           payload={{
             totalDraws: draws.length,
             frequency: freq.map(f => ({

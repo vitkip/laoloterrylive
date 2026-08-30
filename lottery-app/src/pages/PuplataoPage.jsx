@@ -11,7 +11,7 @@ const API = `${API_BASE}/puplatao.php`
 
 // ── ຄ່າຄົງທີ່ ສຳລັບການວິເຄາະ ─────────────────────────────────────────
 const WINDOWS   = [5, 10, 20, 50]          // ช่วงงวดสำหรับ hot/cold
-const SLOT_BASE = 1 / 6                     // ໂອກາດຖານ ຕໍ່ 1 ໜ່ວຍ ຕໍ່ 1 ໝາກ
+const SLOT_BASE = 1 / 6                     // ໂອກາດຖານ ຕໍ່ 1 ໜ່ວຍ ຕໍ່ 1 ລູກ
 const DOW_LO    = ['ອາທິດ', 'ຈັນ', 'ອັງຄານ', 'ພຸດ', 'ພະຫັດ', 'ສຸກ', 'ເສົາ']
 
 // ຄ່າວິກິດ χ² ທີ່ p = 0.05 (ຂ້າງດຽວ) — ໂດຍປະມານ Wilson–Hilferty
@@ -133,7 +133,7 @@ export default function PuplataoPage() {
     }).sort((a, b) => b.p10 - a.p10)
   }, [draws, symbols])
 
-  // ── #7 Markov: ໝາກງວດກ່ອນ → ໝາກງວດຖັດໄປ ─────────────────────────
+  // ── #7 Markov: ລູກງວດກ່ອນ → ລູກງວດຖັດໄປ ─────────────────────────
   const markov = useMemo(() => {
     if (draws.length < 6 || !symbols.length) return null
     const ID = symbols.map(s => s.symbol_id)
@@ -185,30 +185,47 @@ export default function PuplataoPage() {
       draws.forEach(d => {
         const k = keyOf(d)
         if (k === null) return
-        if (!map[k]) map[k] = { key: k, draws: 0, hits: {} }
+        if (!map[k]) map[k] = { key: k, draws: 0, hits: {}, pairCount: {} }
         map[k].draws++
         ;[d.pos1, d.pos2, d.pos3].forEach(v => {
           if (v) map[k].hits[v] = (map[k].hits[v] || 0) + 1
         })
+        // ຄູ່ລູກ ທີ່ອອກພ້ອມກັນ ໃນງວດດຽວກັນ (ນັບ 1 ຄັ້ງ/ງວດ)
+        const uniq = [...new Set([d.pos1, d.pos2, d.pos3].filter(Boolean))]
+        for (let i = 0; i < uniq.length; i++) {
+          for (let j = i + 1; j < uniq.length; j++) {
+            const pk = `${Math.min(uniq[i], uniq[j])}-${Math.max(uniq[i], uniq[j])}`
+            map[k].pairCount[pk] = (map[k].pairCount[pk] || 0) + 1
+          }
+        }
       })
       return Object.values(map).map(b => {
         const ranked = ID
           .map(i => ({ symbol_id: i, hits: b.hits[i] || 0 }))
           .sort((x, y) => y.hits - x.hits)
         const tot = b.draws * 3
+        const repeatPairs = Object.entries(b.pairCount)
+          .map(([pk, times]) => {
+            const [a, bb] = pk.split('-').map(Number)
+            return { a, b: bb, times, pct: b.draws ? Math.round((times / b.draws) * 100) : 0 }
+          })
+          .filter(p => p.times >= 2)
+          .sort((x, y) => y.times - x.times)
+          .slice(0, 3)
         return {
           key: b.key,
           draws: b.draws,
           top: ranked[0],
           topPct: tot ? Math.round((ranked[0].hits / tot) * 100) : 0,
           hits: b.hits,
+          repeatPairs,
         }
       }).sort((a, b) => a.key - b.key)
     }
     const byHour = bucketize(hourOf)
     const byDow  = bucketize(dowOf)
 
-    // χ² independence: ຊົ່ວໂມງ × ໝາກ (ໃຊ້ຈຳນວນ hits)
+    // χ² independence: ຊົ່ວໂມງ × ລູກ (ໃຊ້ຈຳນວນ hits)
     let hourChi2 = 0
     let hourDf = 0
     let hourSignificant = false
@@ -265,6 +282,15 @@ export default function PuplataoPage() {
       hourChi2: Math.round(timePattern.hourChi2 * 10) / 10,
       hourDf: timePattern.hourDf,
       hourSignificant: timePattern.hourSignificant,
+      hourRepeatPairs: timePattern.byHour
+        .filter(h => h.repeatPairs.length > 0)
+        .map(h => ({
+          hour: h.key,
+          draws: h.draws,
+          pairs: h.repeatPairs.map(p => ({
+            a: symById[p.a]?.name_lo, b: symById[p.b]?.name_lo, times: p.times, pct: p.pct,
+          })),
+        })),
     } : null,
   }), [draws.length, freq, gap, byPos, pairs, rolling, markov, timePattern, symById])
 
@@ -311,7 +337,7 @@ export default function PuplataoPage() {
           >
             ຫວຍປູປາເຕົ້າມະຫາໂຊກ
           </h1>
-          <p className="text-sm text-[#94a3b8]">ໝາກ 6 ໜ່ວຍ · 3 ໜ່ວຍ / ງວດ · ສະຖິຕິ {draws.length} ງວດ</p>
+          <p className="text-sm text-[#94a3b8]">ລູກ 6 ໜ່ວຍ · 3 ໜ່ວຍ / ງວດ · ສະຖິຕິ {draws.length} ງວດ</p>
         </div>
       </div>
 
@@ -319,7 +345,7 @@ export default function PuplataoPage() {
       <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-4">
         <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
         <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
-          <strong>ໝາຍເຫດ:</strong> ສະຖິຕິໃຊ້ເບິ່ງຂໍ້ມູນອະດີດເທົ່ານັ້ນ — ການອອກໝາກແຕ່ລະຄັ້ງເປັນເອກະລາດ ບໍ່ສາມາດ<strong>ທຳນາຍ</strong>ອະນາຄົດໄດ້.
+          <strong>ໝາຍເຫດ:</strong> ສະຖິຕິໃຊ້ເບິ່ງຂໍ້ມູນອະດີດເທົ່ານັ້ນ — ການອອກລູກແຕ່ລະຄັ້ງເປັນເອກະລາດ ບໍ່ສາມາດ<strong>ທຳນາຍ</strong>ອະນາຄົດໄດ້.
         </p>
       </div>
 
@@ -334,7 +360,7 @@ export default function PuplataoPage() {
             <Target size={17} className="text-[#f97316]" />
           </span>
           <span className="text-sm font-bold text-[#334155] dark:text-[#e2e8f0]">
-            ສູດຄິດ 3 ຄູ່ໝາກ ງວດຖັດໄປ + AI ວິເຄາະ
+            ສູດຄິດ 3 ຄູ່ລູກ ງວດຖັດໄປ + AI ວິເຄາະ
           </span>
         </span>
         <ArrowRight size={16} className="text-[#f97316] shrink-0" />
@@ -345,7 +371,7 @@ export default function PuplataoPage() {
         <AiSummaryCard
           context="puplatao"
           title="AI ວິເຄາະ ຫວຍປູປາເຕົ້າ"
-          hint="ໃຫ້ Claude AI ອ່ານສະຖິຕິໝາກ 6 ໜ່ວຍ (ຄວາມຖີ່ · ໝາກຄ້າງ · ຄູ່ໝາກ) ແລ້ວສະຫຼຸບເປັນພາສາລາວແບບເຂົ້າໃຈງ່າຍ"
+          hint="ໃຫ້ Claude AI ອ່ານສະຖິຕິລູກ 6 ໜ່ວຍ (ຄວາມຖີ່ · ລູກຄ້າງ · ຄູ່ລູກ) ແລ້ວສະຫຼຸບເປັນພາສາລາວແບບເຂົ້າໃຈງ່າຍ"
           payload={aiPayload}
         />
       )}
@@ -353,7 +379,7 @@ export default function PuplataoPage() {
       {/* ── Symbol legend ── */}
       <div className={CARD}>
         <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-3 flex items-center gap-2">
-          <Layers size={14} className="text-[#f97316]" /> ໝາກທັງ 6 ໜ່ວຍ
+          <Layers size={14} className="text-[#f97316]" /> ລູກທັງ 6 ໜ່ວຍ
         </h3>
         <div className="flex flex-wrap gap-3">
           {symbols.map(s => (
@@ -376,7 +402,7 @@ export default function PuplataoPage() {
           {/* ── Frequency ── */}
           <div className={CARD}>
             <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
-              <TrendingUp size={14} className="text-[#f97316]" /> ຄວາມຖີ່ລວມ ຂອງແຕ່ລະໝາກ
+              <TrendingUp size={14} className="text-[#f97316]" /> ຄວາມຖີ່ລວມ ຂອງແຕ່ລະລູກ
             </h3>
             <div className="space-y-3">
               {freq.map((f, i) => {
@@ -411,7 +437,7 @@ export default function PuplataoPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8]">
-                    <th className="text-left py-2">ໝາກ</th>
+                    <th className="text-left py-2">ລູກ</th>
                     <th className="text-center py-2">ໜ່ວຍ 1</th>
                     <th className="text-center py-2">ໜ່ວຍ 2</th>
                     <th className="text-center py-2">ໜ່ວຍ 3</th>
@@ -440,7 +466,7 @@ export default function PuplataoPage() {
           {/* ── Gap ── */}
           <div className={CARD}>
             <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
-              <Timer size={14} className="text-[#f97316]" /> ໝາກໃດຫາຍໄປດົນສຸດ (gap)
+              <Timer size={14} className="text-[#f97316]" /> ລູກໃດຫາຍໄປດົນສຸດ (gap)
             </h3>
             <div className="space-y-2">
               {gap.map(g => (
@@ -467,7 +493,7 @@ export default function PuplataoPage() {
           {/* ── Top pairs ── */}
           <div className={CARD}>
             <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
-              <TrendingUp size={14} className="text-[#f97316]" /> ຄູ່ໝາກທີ່ອອກພ້ອມກັນເລື້ອຍໆ
+              <TrendingUp size={14} className="text-[#f97316]" /> ຄູ່ລູກທີ່ອອກພ້ອມກັນເລື້ອຍໆ
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {pairs.pairs.slice(0, 8).map((p, i) => (
@@ -498,7 +524,7 @@ export default function PuplataoPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8]">
-                      <th className="text-left py-2">ໝາກ</th>
+                      <th className="text-left py-2">ລູກ</th>
                       {WINDOWS.map(w => <th key={w} className="text-center py-2">{w} ງວດ</th>)}
                       <th className="text-right py-2">ເທຣນ</th>
                     </tr>
@@ -538,7 +564,7 @@ export default function PuplataoPage() {
                 </table>
               </div>
               <p className="mt-3 text-[11px] text-[#94a3b8] leading-relaxed">
-                ເສັ້ນຖານ ≈ 16.7% ຕໍ່ໝາກ · <span style={{ color: '#16a34a' }}>ຂຽວ</span> = ຖີ່ກວ່າຄາດ ·{' '}
+                ເສັ້ນຖານ ≈ 16.7% ຕໍ່ລູກ · <span style={{ color: '#16a34a' }}>ຂຽວ</span> = ຖີ່ກວ່າຄາດ ·{' '}
                 <span style={{ color: '#dc2626' }}>ແດງ</span> = ໜ້ອຍກວ່າຄາດ · ເທຣນ = freq 10 ງວດ ລົບ freq 30 ງວດ (ບວກ = ກຳລັງມາແຮງ)
               </p>
             </div>
@@ -548,7 +574,7 @@ export default function PuplataoPage() {
           {markov && (
             <div className={CARD}>
               <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
-                <Grid3x3 size={14} className="text-[#f97316]" /> ໝາກງວດກ່ອນ → ໝາກງວດຖັດໄປ (Markov)
+                <Grid3x3 size={14} className="text-[#f97316]" /> ລູກງວດກ່ອນ → ລູກງວດຖັດໄປ (Markov)
               </h3>
               <div className="overflow-x-auto">
                 <div style={{ minWidth: 420 }}>
@@ -587,8 +613,8 @@ export default function PuplataoPage() {
                 </div>
               </div>
               <p className="mt-3 text-[11px] text-[#94a3b8] leading-relaxed">
-                ຕົວເລກ = % ທີ່ໝາກ (ແຖວ) ຕາມດ້ວຍ ໝາກ (ຖັນ) ໃນງວດຖັດໄປ · ເສັ້ນຖານ ≈ {Math.round(markov.baseline * 100)}% ·{' '}
-                <span style={{ color: '#f97316' }}>ຂອບສົ້ມ</span> = ໝາກຊ້ຳຕົວເອງ · ຄິດຈາກ {markov.pairs} ຄູ່ງວດຕິດກັນ
+                ຕົວເລກ = % ທີ່ລູກ (ແຖວ) ຕາມດ້ວຍ ລູກ (ຖັນ) ໃນງວດຖັດໄປ · ເສັ້ນຖານ ≈ {Math.round(markov.baseline * 100)}% ·{' '}
+                <span style={{ color: '#f97316' }}>ຂອບສົ້ມ</span> = ລູກຊ້ຳຕົວເອງ · ຄິດຈາກ {markov.pairs} ຄູ່ງວດຕິດກັນ
               </p>
             </div>
           )}
@@ -609,8 +635,8 @@ export default function PuplataoPage() {
                 >
                   χ² = {timePattern.hourChi2.toFixed(1)} · df {timePattern.hourDf} —{' '}
                   {timePattern.hourSignificant
-                    ? 'ຊົ່ວໂມງ ມີຜົນຕໍ່ໝາກທີ່ອອກ (p < 0.05)'
-                    : 'ບໍ່ມີໄນຍະ — ໝາກທີ່ອອກ ບໍ່ຂຶ້ນກັບຊົ່ວໂມງ'}
+                    ? 'ຊົ່ວໂມງ ມີຜົນຕໍ່ລູກທີ່ອອກ (p < 0.05)'
+                    : 'ບໍ່ມີໄນຍະ — ລູກທີ່ອອກ ບໍ່ຂຶ້ນກັບຊົ່ວໂມງ'}
                 </div>
               )}
               <div className="grid sm:grid-cols-2 gap-5">
@@ -647,6 +673,33 @@ export default function PuplataoPage() {
                   </div>
                 )}
               </div>
+
+              {/* ── ຄູ່ລູກ ທີ່ອອກຊ້ຳ ໃນຊົ່ວໂມງດຽວກັນ ── */}
+              {timePattern.hasHour && timePattern.byHour.some(h => h.repeatPairs.length > 0) && (
+                <div className="mt-5 pt-4 border-t border-[#eef2f9] dark:border-white/5">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] mb-2">
+                    ຄູ່ລູກ ທີ່ອອກຊ້ຳ ໃນຊົ່ວໂມງດຽວກັນ (≥ 2 ຄັ້ງ)
+                  </p>
+                  <div className="space-y-2">
+                    {timePattern.byHour.filter(h => h.repeatPairs.length > 0).map(h => (
+                      <div key={h.key} className="flex items-start gap-2 flex-wrap text-sm">
+                        <span className="w-12 tabular-nums text-[#64748b] shrink-0 pt-1.5">{String(h.key).padStart(2, '0')}:00</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {h.repeatPairs.map((p, i) => (
+                            <span key={i} className="inline-flex items-center gap-1 bg-[#f8fafc] dark:bg-white/5 rounded-lg px-2 py-1">
+                              <SymbolChip sym={symById[p.a]} size={22} />
+                              <SymbolChip sym={symById[p.b]} size={22} />
+                              <span className="text-xs font-bold tabular-nums text-[#f97316]">{p.times}×</span>
+                              <span className="text-[10px] text-[#94a3b8]">({p.pct}%)</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[11px] text-[#94a3b8]">% = ອອກຊ້ຳ ຄິດເປັນ ຈຳນວນງວດ ໃນຊົ່ວໂມງນັ້ນ</p>
+                </div>
+              )}
             </div>
           )}
 
