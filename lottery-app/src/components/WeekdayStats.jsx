@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, useCallback, forwardRef } from 'react';
 import { toPng } from 'html-to-image';
 import { useData } from '../context/DataContext';
+import logoImg from '../assets/logo.png'
 
 /* ── Day palette ─────────────────────────────────────────────────── */
 const DAY_CONFIG = {
@@ -280,37 +281,8 @@ const ShareCaptureCard = forwardRef(function ShareCaptureCard(
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'18px', marginBottom:'18px' }}>
           {/* Logo SVG matching Navbar/Footer flag */}
           <div style={{ width:'66px', height:'66px', borderRadius:'50%', background:'linear-gradient(90deg, #d4af37, #FFF5C0, #B8860B)', padding:'2px', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 14px rgba(0,0,0,0.4)' }}>
-            <div style={{ width:'100%', height:'100%', borderRadius:'50%', background:'#0d0e1c', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
-              {/* Glass shine */}
-              <div style={{ position:'absolute', top:2, left:4, width:6, height:4, background:'rgba(255,255,255,0.4)', borderRadius:'50%', transform:'rotate(-28deg)' }} />
-              <svg viewBox="0 0 38 38" style={{ width:'100%', height:'100%', display:'block' }}>
-                <defs>
-                  <clipPath id="circleClipWeekdayShare">
-                    <circle cx="19" cy="19" r="17" />
-                  </clipPath>
-                  <linearGradient id="goldStripeWeekdayShare" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#A67C1E" />
-                    <stop offset="50%" stopColor="#F5D77F" />
-                    <stop offset="100%" stopColor="#A67C1E" />
-                  </linearGradient>
-                  <linearGradient id="darkStripeWeekdayShare" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#0F1326" />
-                    <stop offset="50%" stopColor="#1E2548" />
-                    <stop offset="100%" stopColor="#0F1326" />
-                  </linearGradient>
-                  <radialGradient id="goldCircleWeekdayShare" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#FFFDF5" />
-                    <stop offset="70%" stopColor="#F3D072" />
-                    <stop offset="100%" stopColor="#C99E32" />
-                  </radialGradient>
-                </defs>
-                <g clipPath="url(#circleClipWeekdayShare)">
-                  <rect x="0" y="0" width="38" height="9.5" fill="url(#goldStripeWeekdayShare)" />
-                  <rect x="0" y="9.5" width="38" height="19" fill="url(#darkStripeWeekdayShare)" />
-                  <rect x="0" y="28.5" width="38" height="9.5" fill="url(#goldStripeWeekdayShare)" />
-                  <circle cx="19" cy="19" r="6.5" fill="url(#goldCircleWeekdayShare)" />
-                </g>
-              </svg>
+            <div style={{ width:'100%', height:'100%', borderRadius:'50%', background:'#fff', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', position:'relative', padding:6 }}>
+              <img src={logoImg} alt="LAOLOTS" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
             </div>
           </div>
           <span style={{ fontSize:'54px', fontWeight:900, fontFamily:"'Inter',sans-serif", letterSpacing:'-0.02em', background:'linear-gradient(90deg, #D4AF37, #FFD54F)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>LAOLOTS.COM</span>

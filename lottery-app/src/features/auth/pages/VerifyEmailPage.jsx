@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
+import logoImg from '../../../assets/logo.png'
 
 const STATE = { LOADING: 'loading', SUCCESS: 'success', ERROR: 'error', EXPIRED: 'expired' };
 
@@ -160,10 +161,11 @@ const CSS = `
   position: absolute;
   inset: 2.5px;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #1e0f38, #0b0520);
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 9px;
 }
 .ll-logo-icon {
   font-size: 2.1rem;
@@ -461,34 +463,7 @@ export default function VerifyEmailPage() {
           <div className="ll-ring-outer" />
           <div className="ll-ring-inner">
             <span className="ll-logo-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38 }}>
-              <svg viewBox="0 0 38 38" style={{ width: '100%', height: '100%', display: 'block' }}>
-                <defs>
-                  <clipPath id="circleClipVerifyEmail">
-                    <circle cx="19" cy="19" r="17" />
-                  </clipPath>
-                  <linearGradient id="goldStripeVerifyEmail" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#A67C1E" />
-                    <stop offset="50%" stopColor="#F5D77F" />
-                    <stop offset="100%" stopColor="#A67C1E" />
-                  </linearGradient>
-                  <linearGradient id="darkStripeVerifyEmail" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#0F1326" />
-                    <stop offset="50%" stopColor="#1E2548" />
-                    <stop offset="100%" stopColor="#0F1326" />
-                  </linearGradient>
-                  <radialGradient id="goldCircleVerifyEmail" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#FFFDF5" />
-                    <stop offset="70%" stopColor="#F3D072" />
-                    <stop offset="100%" stopColor="#C99E32" />
-                  </radialGradient>
-                </defs>
-                <g clipPath="url(#circleClipVerifyEmail)">
-                  <rect x="0" y="0" width="38" height="9.5" fill="url(#goldStripeVerifyEmail)" />
-                  <rect x="0" y="9.5" width="38" height="19" fill="url(#darkStripeVerifyEmail)" />
-                  <rect x="0" y="28.5" width="38" height="9.5" fill="url(#goldStripeVerifyEmail)" />
-                  <circle cx="19" cy="19" r="6.5" fill="url(#goldCircleVerifyEmail)" />
-                </g>
-              </svg>
+              <img src={logoImg} alt="LAOLOTS" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
             </span>
           </div>
         </div>

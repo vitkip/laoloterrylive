@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { authService } from '../services/authService';
 import OTPInput from '../components/OTPInput';
 import CountdownTimer from '../components/CountdownTimer';
+import logoImg from '../../../assets/logo.png'
 
 const OTP_DURATION  = 600; // 10 minutes
 const MAX_ATTEMPTS  = 5;
@@ -164,10 +165,11 @@ const CSS = `
   position: absolute;
   inset: 2.5px;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #1e0f38, #0b0520);
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 9px;
 }
 .ll-logo-icon {
   font-size: 2.1rem;
@@ -405,34 +407,7 @@ export default function VerifyOTPPage() {
             <div className="ll-ring-outer" />
             <div className="ll-ring-inner">
               <span className="ll-logo-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38 }}>
-                <svg viewBox="0 0 38 38" style={{ width: '100%', height: '100%', display: 'block' }}>
-                  <defs>
-                    <clipPath id="circleClipVerifyOTP1">
-                      <circle cx="19" cy="19" r="17" />
-                    </clipPath>
-                    <linearGradient id="goldStripeVerifyOTP1" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#A67C1E" />
-                      <stop offset="50%" stopColor="#F5D77F" />
-                      <stop offset="100%" stopColor="#A67C1E" />
-                    </linearGradient>
-                    <linearGradient id="darkStripeVerifyOTP1" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#0F1326" />
-                      <stop offset="50%" stopColor="#1E2548" />
-                      <stop offset="100%" stopColor="#0F1326" />
-                    </linearGradient>
-                    <radialGradient id="goldCircleVerifyOTP1" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#FFFDF5" />
-                      <stop offset="70%" stopColor="#F3D072" />
-                      <stop offset="100%" stopColor="#C99E32" />
-                    </radialGradient>
-                  </defs>
-                  <g clipPath="url(#circleClipVerifyOTP1)">
-                    <rect x="0" y="0" width="38" height="9.5" fill="url(#goldStripeVerifyOTP1)" />
-                    <rect x="0" y="9.5" width="38" height="19" fill="url(#darkStripeVerifyOTP1)" />
-                    <rect x="0" y="28.5" width="38" height="9.5" fill="url(#goldStripeVerifyOTP1)" />
-                    <circle cx="19" cy="19" r="6.5" fill="url(#goldCircleVerifyOTP1)" />
-                  </g>
-                </svg>
+                <img src={logoImg} alt="LAOLOTS" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
               </span>
             </div>
           </div>
@@ -541,34 +516,7 @@ export default function VerifyOTPPage() {
           <div className="ll-ring-outer" />
           <div className="ll-ring-inner">
             <span className="ll-logo-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38 }}>
-              <svg viewBox="0 0 38 38" style={{ width: '100%', height: '100%', display: 'block' }}>
-                <defs>
-                  <clipPath id="circleClipVerifyOTP2">
-                    <circle cx="19" cy="19" r="17" />
-                  </clipPath>
-                  <linearGradient id="goldStripeVerifyOTP2" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#A67C1E" />
-                    <stop offset="50%" stopColor="#F5D77F" />
-                    <stop offset="100%" stopColor="#A67C1E" />
-                  </linearGradient>
-                  <linearGradient id="darkStripeVerifyOTP2" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#0F1326" />
-                    <stop offset="50%" stopColor="#1E2548" />
-                    <stop offset="100%" stopColor="#0F1326" />
-                  </linearGradient>
-                  <radialGradient id="goldCircleVerifyOTP2" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#FFFDF5" />
-                    <stop offset="70%" stopColor="#F3D072" />
-                    <stop offset="100%" stopColor="#C99E32" />
-                  </radialGradient>
-                </defs>
-                <g clipPath="url(#circleClipVerifyOTP2)">
-                  <rect x="0" y="0" width="38" height="9.5" fill="url(#goldStripeVerifyOTP2)" />
-                  <rect x="0" y="9.5" width="38" height="19" fill="url(#darkStripeVerifyOTP2)" />
-                  <rect x="0" y="28.5" width="38" height="9.5" fill="url(#goldStripeVerifyOTP2)" />
-                  <circle cx="19" cy="19" r="6.5" fill="url(#goldCircleVerifyOTP2)" />
-                </g>
-              </svg>
+              <img src={logoImg} alt="LAOLOTS" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
             </span>
           </div>
         </div>

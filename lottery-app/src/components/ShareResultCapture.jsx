@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { formatLaoDate } from '../utils/date';
 import { prizeLabels } from '../data/draws';
+import logoImg from '../assets/logo.png'
 
 const ShareResultCapture = forwardRef(({ draw, animal, animalDisplayUrl, lotteryType }, ref) => {
   if (!draw) return null;
@@ -35,37 +36,8 @@ const ShareResultCapture = forwardRef(({ draw, animal, animalDisplayUrl, lottery
         <div className="flex items-center gap-3 mb-3">
           {/* Logo SVG matching Navbar/Footer flag */}
           <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#d4af37] via-[#FFF5C0] to-[#B8860B] p-[2px] flex items-center justify-center shadow-lg">
-            <div className="w-full h-full rounded-full bg-[#0d0e1c] overflow-hidden flex items-center justify-center relative">
-              {/* Glass shine */}
-              <div style={{ position: 'absolute', top: 2, left: 4, width: 6, height: 4, background: 'rgba(255,255,255,0.4)', borderRadius: '50%', transform: 'rotate(-28deg)' }} />
-              <svg viewBox="0 0 38 38" style={{ width: '100%', height: '100%', display: 'block' }}>
-                <defs>
-                  <clipPath id="circleClipShare">
-                    <circle cx="19" cy="19" r="17" />
-                  </clipPath>
-                  <linearGradient id="goldStripeShare" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#A67C1E" />
-                    <stop offset="50%" stopColor="#F5D77F" />
-                    <stop offset="100%" stopColor="#A67C1E" />
-                  </linearGradient>
-                  <linearGradient id="darkStripeShare" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#0F1326" />
-                    <stop offset="50%" stopColor="#1E2548" />
-                    <stop offset="100%" stopColor="#0F1326" />
-                  </linearGradient>
-                  <radialGradient id="goldCircleShare" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#FFFDF5" />
-                    <stop offset="70%" stopColor="#F3D072" />
-                    <stop offset="100%" stopColor="#C99E32" />
-                  </radialGradient>
-                </defs>
-                <g clipPath="url(#circleClipShare)">
-                  <rect x="0" y="0" width="38" height="9.5" fill="url(#goldStripeShare)" />
-                  <rect x="0" y="9.5" width="38" height="19" fill="url(#darkStripeShare)" />
-                  <rect x="0" y="28.5" width="38" height="9.5" fill="url(#goldStripeShare)" />
-                  <circle cx="19" cy="19" r="6.5" fill="url(#goldCircleShare)" />
-                </g>
-              </svg>
+            <div className="w-full h-full rounded-full bg-white overflow-hidden flex items-center justify-center relative" style={{ padding: 3 }}>
+              <img src={logoImg} alt="LAOLOTS" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
             </div>
           </div>
           <h1 className="text-3xl font-black tracking-tight" style={{ fontFamily: "'Inter', sans-serif", background: 'linear-gradient(90deg, #D4AF37, #FFD54F)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>LAOLOTS.COM</h1>

@@ -1,0 +1,1 @@
+var e=`/lottery-app/dist/assets/logo-C_m0EzbV.png`;export{e as t};

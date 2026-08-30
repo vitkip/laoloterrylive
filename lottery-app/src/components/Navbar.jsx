@@ -11,6 +11,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import logoImg from '../assets/logo.png'
 
 // ── Nav links ──────────────────────────────────────────────────────
 
@@ -74,22 +75,12 @@ const STYLE = `
 
   /* ── Logo ── */
   .nb-ball {
-    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-    background: conic-gradient(from 0deg, #D4AF37, #FFF5C0, #B8860B, #8B6914, #D4AF37);
-    box-shadow: 0 2px 14px rgba(212,175,55,0.35), inset 0 1px 3px rgba(255,255,255,0.35);
+    width: 36px; height: 36px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    position: relative; overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    transition: transform 0.2s;
   }
-  .nb-ball::after {
-    content: '';
-    position: absolute; top: 4px; left: 7px;
-    width: 10px; height: 6px;
-    background: rgba(255,255,255,0.45);
-    border-radius: 50%; transform: rotate(-28deg);
-    z-index: 2; pointer-events: none;
-  }
-  .nb-logo:hover .nb-ball { transform: scale(1.08) rotate(-6deg); box-shadow: 0 4px 20px rgba(212,175,55,0.5); }
+  .nb-logo:hover .nb-ball { transform: scale(1.08) rotate(-6deg); }
   .nb-logo-name {
     font-size: 16px; font-weight: 900; color: #fff;
     letter-spacing: 0.01em; line-height: 1;
@@ -391,34 +382,7 @@ function RolePill({ role }) {
 function LotteryBall() {
   return (
     <div className="nb-ball">
-      <svg viewBox="0 0 38 38" style={{ width: '100%', height: '100%', display: 'block', zIndex: 1 }}>
-        <defs>
-          <clipPath id="circleClipNav">
-            <circle cx="19" cy="19" r="17" />
-          </clipPath>
-          <linearGradient id="goldStripeNav" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#A67C1E" />
-            <stop offset="50%" stopColor="#F5D77F" />
-            <stop offset="100%" stopColor="#A67C1E" />
-          </linearGradient>
-          <linearGradient id="darkStripeNav" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0F1326" />
-            <stop offset="50%" stopColor="#1E2548" />
-            <stop offset="100%" stopColor="#0F1326" />
-          </linearGradient>
-          <radialGradient id="goldCircleNav" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#FFFDF5" />
-            <stop offset="70%" stopColor="#F3D072" />
-            <stop offset="100%" stopColor="#C99E32" />
-          </radialGradient>
-        </defs>
-        <g clipPath="url(#circleClipNav)">
-          <rect x="0" y="0" width="38" height="9.5" fill="url(#goldStripeNav)" />
-          <rect x="0" y="9.5" width="38" height="19" fill="url(#darkStripeNav)" />
-          <rect x="0" y="28.5" width="38" height="9.5" fill="url(#goldStripeNav)" />
-          <circle cx="19" cy="19" r="6.5" fill="url(#goldCircleNav)" />
-        </g>
-      </svg>
+      <img src={logoImg} alt="LAOLOTS" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
     </div>
   )
 }

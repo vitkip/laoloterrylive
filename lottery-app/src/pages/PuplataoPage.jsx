@@ -2,11 +2,25 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle, RefreshCw, Dices, TrendingUp, Timer, Layers, Crown, Target, ArrowRight,
+  Flame, ArrowUp, ArrowDown, Minus, Grid3x3, Clock,
 } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
 import AiSummaryCard from '../components/AiSummaryCard'
 
 const API = `${API_BASE}/puplatao.php`
+
+// ── ຄ່າຄົງທີ່ ສຳລັບການວິເຄາະ ─────────────────────────────────────────
+const WINDOWS   = [5, 10, 20, 50]          // ช่วงงวดสำหรับ hot/cold
+const SLOT_BASE = 1 / 6                     // ໂອກາດຖານ ຕໍ່ 1 ໜ່ວຍ ຕໍ່ 1 ໝາກ
+const DOW_LO    = ['ອາທິດ', 'ຈັນ', 'ອັງຄານ', 'ພຸດ', 'ພະຫັດ', 'ສຸກ', 'ເສົາ']
+
+// ຄ່າວິກິດ χ² ທີ່ p = 0.05 (ຂ້າງດຽວ) — ໂດຍປະມານ Wilson–Hilferty
+function chi2Critical05(df) {
+  if (df <= 0) return Infinity
+  const z = 1.6448536269514722 // Φ⁻¹(0.95)
+  const t = 1 - 2 / (9 * df) + z * Math.sqrt(2 / (9 * df))
+  return df * t * t * t
+}
 
 // ── Per-symbol accent colours (by symbol_id 1–6) ────────────────────
 const SYM_COLOR = {
@@ -89,6 +103,136 @@ export default function PuplataoPage() {
   const maxHits = useMemo(() => Math.max(...freq.map(f => f.total_hits), 1), [freq])
   const recentDraws = useMemo(() => draws.slice(0, 15), [draws])
 
+  // ── #6 ຮ້ອນ / ເຢັນ ຕາມช่วง 5 / 10 / 20 / 50 ງວດ + ເທຣນ ─────────────
+  const rolling = useMemo(() => {
+    if (!draws.length || !symbols.length) return []
+    const ID = symbols.map(s => s.symbol_id)
+    const hitsIn = (w) => {
+      const c = {}
+      ID.forEach(i => { c[i] = 0 })
+      draws.slice(0, w).forEach(d => {
+        ;[d.pos1, d.pos2, d.pos3].forEach(v => { if (v) c[v]++ })
+      })
+      return c
+    }
+    const wc = {}
+    WINDOWS.forEach(w => { wc[w] = hitsIn(Math.min(w, draws.length)) })
+    const f10 = hitsIn(Math.min(10, draws.length))
+    const f30 = hitsIn(Math.min(30, draws.length))
+    const n10 = Math.min(10, draws.length) * 3
+    const n30 = Math.min(30, draws.length) * 3
+    return ID.map(i => {
+      const row = { symbol_id: i }
+      WINDOWS.forEach(w => {
+        const nn = Math.min(w, draws.length) * 3
+        row[`w${w}`] = wc[w][i]
+        row[`p${w}`] = nn ? wc[w][i] / nn : 0
+      })
+      row.trend = (n10 ? f10[i] / n10 : 0) - (n30 ? f30[i] / n30 : 0)
+      return row
+    }).sort((a, b) => b.p10 - a.p10)
+  }, [draws, symbols])
+
+  // ── #7 Markov: ໝາກງວດກ່ອນ → ໝາກງວດຖັດໄປ ─────────────────────────
+  const markov = useMemo(() => {
+    if (draws.length < 6 || !symbols.length) return null
+    const ID = symbols.map(s => s.symbol_id)
+    const prevCount = {}
+    const trans = {}
+    ID.forEach(a => {
+      prevCount[a] = 0
+      trans[a] = {}
+      ID.forEach(b => { trans[a][b] = 0 })
+    })
+    // draws[idx] ໃໝ່ກວ່າ draws[idx+1] → (ກ່ອນ = draws[idx+1], ຖັດໄປ = draws[idx])
+    for (let idx = 0; idx < draws.length - 1; idx++) {
+      const prev = new Set([draws[idx + 1].pos1, draws[idx + 1].pos2, draws[idx + 1].pos3].filter(Boolean))
+      const next = new Set([draws[idx].pos1, draws[idx].pos2, draws[idx].pos3].filter(Boolean))
+      prev.forEach(a => {
+        prevCount[a]++
+        next.forEach(b => { trans[a][b]++ })
+      })
+    }
+    const rows = ID.map(a => ({
+      symbol_id: a,
+      total: prevCount[a],
+      to: ID.map(b => ({
+        symbol_id: b,
+        self: a === b,
+        pct: prevCount[a] ? trans[a][b] / prevCount[a] : 0,
+      })),
+    }))
+    return { rows, pairs: draws.length - 1, baseline: 1 - Math.pow(5 / 6, 3) }
+  }, [draws, symbols])
+
+  // ── #8 ຮູບແບບ ຕາມຊົ່ວໂມງ / ວັນ (+ χ² ເຊັກ "ຊົ່ວໂມງມີຜົນບໍ່") ──────
+  const timePattern = useMemo(() => {
+    if (draws.length < 10 || !symbols.length) return null
+    const ID = symbols.map(s => s.symbol_id)
+    const hourOf = (d) => {
+      if (d.draw_hour !== null && d.draw_hour !== undefined) return d.draw_hour
+      const m = /[ T](\d{2}):/.exec(d.draw_at || '')
+      return m ? parseInt(m[1], 10) : null
+    }
+    const dowOf = (d) => {
+      const s = d.draw_date || (d.draw_at || '').slice(0, 10)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null
+      const dt = new Date(`${s}T00:00:00`)
+      return Number.isNaN(dt.getTime()) ? null : dt.getDay()
+    }
+    const bucketize = (keyOf) => {
+      const map = {}
+      draws.forEach(d => {
+        const k = keyOf(d)
+        if (k === null) return
+        if (!map[k]) map[k] = { key: k, draws: 0, hits: {} }
+        map[k].draws++
+        ;[d.pos1, d.pos2, d.pos3].forEach(v => {
+          if (v) map[k].hits[v] = (map[k].hits[v] || 0) + 1
+        })
+      })
+      return Object.values(map).map(b => {
+        const ranked = ID
+          .map(i => ({ symbol_id: i, hits: b.hits[i] || 0 }))
+          .sort((x, y) => y.hits - x.hits)
+        const tot = b.draws * 3
+        return {
+          key: b.key,
+          draws: b.draws,
+          top: ranked[0],
+          topPct: tot ? Math.round((ranked[0].hits / tot) * 100) : 0,
+          hits: b.hits,
+        }
+      }).sort((a, b) => a.key - b.key)
+    }
+    const byHour = bucketize(hourOf)
+    const byDow  = bucketize(dowOf)
+
+    // χ² independence: ຊົ່ວໂມງ × ໝາກ (ໃຊ້ຈຳນວນ hits)
+    let hourChi2 = 0
+    let hourDf = 0
+    let hourSignificant = false
+    if (byHour.length >= 2) {
+      const rowTot = byHour.map(h => ID.reduce((s, i) => s + (h.hits[i] || 0), 0))
+      const colTot = ID.map(i => byHour.reduce((s, h) => s + (h.hits[i] || 0), 0))
+      const grand  = rowTot.reduce((s, v) => s + v, 0)
+      if (grand > 0) {
+        byHour.forEach((h, r) => {
+          ID.forEach((i, c) => {
+            const e = (rowTot[r] * colTot[c]) / grand
+            if (e > 0) hourChi2 += Math.pow((h.hits[i] || 0) - e, 2) / e
+          })
+        })
+        hourDf = (byHour.length - 1) * (ID.length - 1)
+        hourSignificant = hourChi2 > chi2Critical05(hourDf)
+      }
+    }
+    return {
+      byHour, byDow, hourChi2, hourDf, hourSignificant,
+      hasHour: byHour.length >= 2, hasDow: byDow.length >= 2,
+    }
+  }, [draws, symbols])
+
   const aiPayload = useMemo(() => ({
     totalDraws: draws.length,
     frequency: freq.map(f => ({
@@ -105,7 +249,24 @@ export default function PuplataoPage() {
     pairTriple: (pairs.per_symbol || []).map(s => ({
       name_lo: s.name_lo, times_pair: s.times_pair, times_triple: s.times_triple,
     })),
-  }), [draws.length, freq, gap, byPos, pairs])
+    rolling: rolling.map(r => ({
+      name_lo: symById[r.symbol_id]?.name_lo,
+      last10Pct: Math.round(r.p10 * 100),
+      last20Pct: Math.round(r.p20 * 100),
+      trendPP: Math.round(r.trend * 1000) / 10,
+    })),
+    markov: markov ? markov.rows.map(row => ({
+      from: symById[row.symbol_id]?.name_lo,
+      repeatPct: Math.round((row.to.find(t => t.self)?.pct || 0) * 100),
+      topNext: row.to.filter(t => !t.self).sort((a, b) => b.pct - a.pct).slice(0, 2)
+        .map(t => ({ name_lo: symById[t.symbol_id]?.name_lo, pct: Math.round(t.pct * 100) })),
+    })) : null,
+    timePattern: timePattern ? {
+      hourChi2: Math.round(timePattern.hourChi2 * 10) / 10,
+      hourDf: timePattern.hourDf,
+      hourSignificant: timePattern.hourSignificant,
+    } : null,
+  }), [draws.length, freq, gap, byPos, pairs, rolling, markov, timePattern, symById])
 
   if (error) {
     return (
@@ -326,6 +487,168 @@ export default function PuplataoPage() {
               ))}
             </div>
           </div>
+
+          {/* ── #6 ຮ້ອນ / ເຢັນ ຕາມช່วง ── */}
+          {rolling.length > 0 && (
+            <div className={CARD}>
+              <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
+                <Flame size={14} className="text-[#f97316]" /> ຮ້ອນ / ເຢັນ ຕາມช່วง (5 / 10 / 20 / 50 ງວດ)
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8]">
+                      <th className="text-left py-2">ໝາກ</th>
+                      {WINDOWS.map(w => <th key={w} className="text-center py-2">{w} ງວດ</th>)}
+                      <th className="text-right py-2">ເທຣນ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rolling.map(r => (
+                      <tr key={r.symbol_id} className="border-t border-[#eef2f9] dark:border-white/5">
+                        <td className="py-2.5">
+                          <span className="flex items-center gap-2 font-semibold text-[#334155] dark:text-[#cbd5e1]">
+                            <SymbolChip sym={symById[r.symbol_id]} size={30} /> {symById[r.symbol_id]?.name_lo}
+                          </span>
+                        </td>
+                        {WINDOWS.map(w => {
+                          const p = r[`p${w}`]
+                          return (
+                            <td key={w} className="text-center tabular-nums">
+                              <span className="font-bold" style={{ color: p > SLOT_BASE ? '#16a34a' : '#dc2626' }}>{r[`w${w}`]}</span>
+                              <span className="block text-[10px] text-[#94a3b8]">{Math.round(p * 100)}%</span>
+                            </td>
+                          )
+                        })}
+                        <td className="text-right tabular-nums">
+                          {(() => {
+                            const t = r.trend
+                            const Icon = t > 0.005 ? ArrowUp : t < -0.005 ? ArrowDown : Minus
+                            const c = t > 0.005 ? '#16a34a' : t < -0.005 ? '#dc2626' : '#94a3b8'
+                            return (
+                              <span className="inline-flex items-center gap-1 font-bold" style={{ color: c }}>
+                                <Icon size={13} />{(t * 100).toFixed(1)}
+                              </span>
+                            )
+                          })()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-[11px] text-[#94a3b8] leading-relaxed">
+                ເສັ້ນຖານ ≈ 16.7% ຕໍ່ໝາກ · <span style={{ color: '#16a34a' }}>ຂຽວ</span> = ຖີ່ກວ່າຄາດ ·{' '}
+                <span style={{ color: '#dc2626' }}>ແດງ</span> = ໜ້ອຍກວ່າຄາດ · ເທຣນ = freq 10 ງວດ ລົບ freq 30 ງວດ (ບວກ = ກຳລັງມາແຮງ)
+              </p>
+            </div>
+          )}
+
+          {/* ── #7 Markov transition ── */}
+          {markov && (
+            <div className={CARD}>
+              <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
+                <Grid3x3 size={14} className="text-[#f97316]" /> ໝາກງວດກ່ອນ → ໝາກງວດຖັດໄປ (Markov)
+              </h3>
+              <div className="overflow-x-auto">
+                <div style={{ minWidth: 420 }}>
+                  <div className="grid gap-1" style={{ gridTemplateColumns: '72px repeat(6, 1fr)' }}>
+                    <div />
+                    {markov.rows.map(row => (
+                      <div key={row.symbol_id} className="flex items-center justify-center pb-1">
+                        <SymbolChip sym={symById[row.symbol_id]} size={26} />
+                      </div>
+                    ))}
+                  </div>
+                  {markov.rows.map(row => (
+                    <div key={row.symbol_id} className="grid gap-1 mb-1" style={{ gridTemplateColumns: '72px repeat(6, 1fr)' }}>
+                      <div className="flex items-center gap-1">
+                        <SymbolChip sym={symById[row.symbol_id]} size={26} />
+                        <ArrowRight size={11} className="text-[#94a3b8]" />
+                      </div>
+                      {row.to.map(cell => {
+                        const d = cell.pct - markov.baseline
+                        const mag = Math.min(Math.abs(d) / markov.baseline, 1)
+                        const a = (0.08 + mag * 0.42).toFixed(3)
+                        const bg = d >= 0 ? `rgba(34,197,94,${a})` : `rgba(239,68,68,${a})`
+                        return (
+                          <div
+                            key={cell.symbol_id}
+                            className="rounded-lg py-2 text-center text-xs font-bold tabular-nums text-[#334155] dark:text-[#e2e8f0]"
+                            style={{ background: bg, outline: cell.self ? '2px solid #f97316' : 'none', outlineOffset: '-2px' }}
+                            title={`${symById[row.symbol_id]?.name_lo} → ${symById[cell.symbol_id]?.name_lo}: ${Math.round(cell.pct * 100)}%`}
+                          >
+                            {row.total ? Math.round(cell.pct * 100) : '–'}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="mt-3 text-[11px] text-[#94a3b8] leading-relaxed">
+                ຕົວເລກ = % ທີ່ໝາກ (ແຖວ) ຕາມດ້ວຍ ໝາກ (ຖັນ) ໃນງວດຖັດໄປ · ເສັ້ນຖານ ≈ {Math.round(markov.baseline * 100)}% ·{' '}
+                <span style={{ color: '#f97316' }}>ຂອບສົ້ມ</span> = ໝາກຊ້ຳຕົວເອງ · ຄິດຈາກ {markov.pairs} ຄູ່ງວດຕິດກັນ
+              </p>
+            </div>
+          )}
+
+          {/* ── #8 ຮູບແບບ ຕາມຊົ່ວໂມງ / ວັນ ── */}
+          {timePattern && (timePattern.hasHour || timePattern.hasDow) && (
+            <div className={CARD}>
+              <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
+                <Clock size={14} className="text-[#f97316]" /> ຮູບແບບ ຕາມຊົ່ວໂມງ / ວັນ
+              </h3>
+              {timePattern.hasHour && timePattern.hourDf > 0 && (
+                <div
+                  className="mb-4 rounded-xl px-3 py-2 text-xs font-semibold"
+                  style={{
+                    background: timePattern.hourSignificant ? '#ef444414' : '#22c55e14',
+                    color: timePattern.hourSignificant ? '#dc2626' : '#16a34a',
+                  }}
+                >
+                  χ² = {timePattern.hourChi2.toFixed(1)} · df {timePattern.hourDf} —{' '}
+                  {timePattern.hourSignificant
+                    ? 'ຊົ່ວໂມງ ມີຜົນຕໍ່ໝາກທີ່ອອກ (p < 0.05)'
+                    : 'ບໍ່ມີໄນຍະ — ໝາກທີ່ອອກ ບໍ່ຂຶ້ນກັບຊົ່ວໂມງ'}
+                </div>
+              )}
+              <div className="grid sm:grid-cols-2 gap-5">
+                {timePattern.hasHour && (
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] mb-2">ຕາມຊົ່ວໂມງ</p>
+                    <div className="space-y-2">
+                      {timePattern.byHour.map(h => (
+                        <div key={h.key} className="flex items-center gap-2 text-sm">
+                          <span className="w-12 tabular-nums text-[#64748b]">{String(h.key).padStart(2, '0')}:00</span>
+                          <span className="text-xs text-[#94a3b8] w-12">{h.draws} ງວດ</span>
+                          <SymbolChip sym={symById[h.top.symbol_id]} size={26} />
+                          <span className="text-xs font-bold text-[#334155] dark:text-[#cbd5e1]">{symById[h.top.symbol_id]?.name_lo}</span>
+                          <span className="ml-auto text-xs font-bold tabular-nums text-[#f97316]">{h.topPct}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {timePattern.hasDow && (
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] mb-2">ຕາມວັນ</p>
+                    <div className="space-y-2">
+                      {timePattern.byDow.map(d => (
+                        <div key={d.key} className="flex items-center gap-2 text-sm">
+                          <span className="w-12 text-[#64748b]">{DOW_LO[d.key]}</span>
+                          <span className="text-xs text-[#94a3b8] w-12">{d.draws} ງວດ</span>
+                          <SymbolChip sym={symById[d.top.symbol_id]} size={26} />
+                          <span className="text-xs font-bold text-[#334155] dark:text-[#cbd5e1]">{symById[d.top.symbol_id]?.name_lo}</span>
+                          <span className="ml-auto text-xs font-bold tabular-nums text-[#f97316]">{d.topPct}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* ── Recent draws ── */}
           <div className={CARD}>
