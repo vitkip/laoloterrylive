@@ -61,7 +61,7 @@ function respond(int $code, mixed $data): void {
 function validateSymbol(mixed $v, string $field): int {
     $n = filter_var($v, FILTER_VALIDATE_INT);
     if ($n === false || $n < 1 || $n > 6) {
-        respond(422, ['error' => "$field ຕ້ອງເປັນລະຫັດໝາກ 1–6"]);
+        respond(422, ['error' => "$field ຕ້ອງເປັນລະຫັດລູກ 1–6"]);
     }
     return (int)$n;
 }
