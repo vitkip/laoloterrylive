@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle, RefreshCw, Dices, TrendingUp, Timer, Layers, Crown, Target, ArrowRight,
-  Flame, ArrowUp, ArrowDown, Minus, Grid3x3, Clock,
+  Flame, ArrowUp, ArrowDown, Minus, Grid3x3, Clock, TrendingDown,
 } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
 import AiSummaryCard from '../components/AiSummaryCard'
@@ -13,6 +13,10 @@ const API = `${API_BASE}/puplatao.php`
 const WINDOWS   = [5, 10, 20, 50]          // ช่วงงวดสำหรับ hot/cold
 const SLOT_BASE = 1 / 6                     // ໂອກາດຖານ ຕໍ່ 1 ໜ່ວຍ ຕໍ່ 1 ລູກ
 const DOW_LO    = ['ອາທິດ', 'ຈັນ', 'ອັງຄານ', 'ພຸດ', 'ພະຫັດ', 'ສຸກ', 'ເສົາ']
+const PAIRS_SHOWN = 8                       // ຈຳນວນຄູ່ທີ່ສະແດງ ຕໍ່ບັດ (ຮ້ອນ / ເຢັນ)
+
+// ເສັ້ນຖານສະເໝີພາບ: P(ລູກ a ແລະ b ອອກພ້ອມກັນ ໃນ 3 ໜ່ວຍ) = 1 − 2(5/6)³ + (4/6)³ ≈ 13.9%
+const PAIR_BASE_PCT = (1 - 2 * Math.pow(5 / 6, 3) + Math.pow(4 / 6, 3)) * 100
 
 // ຄ່າວິກິດ χ² ທີ່ p = 0.05 (ຂ້າງດຽວ) — ໂດຍປະມານ Wilson–Hilferty
 function chi2Critical05(df) {
@@ -102,6 +106,44 @@ export default function PuplataoPage() {
 
   const maxHits = useMemo(() => Math.max(...freq.map(f => f.total_hits), 1), [freq])
   const recentDraws = useMemo(() => draws.slice(0, 15), [draws])
+
+  // ── ຄູ່ລູກ: ນັບການອອກພ້ອມກັນ ຄົບທຸກຄູ່ (C(6,2) = 15) ────────────────
+  // ນັບ 1 ຄັ້ງ/ງວດ (ງວດທີ່ມີລູກຊ້ຳ ບໍ່ນັບຊ້ຳ) ແລະ ໃສ່ 0 ໃຫ້ຄູ່ທີ່ຍັງບໍ່ເຄີຍອອກພ້ອມກັນ
+  // — ຈຳເປັນສຳລັບບັດ "ຄູ່ອອກໜ້ອຍສຸດ" ເພາະ API stats/pairs ຄືນສະເພາະຄູ່ທີ່ times ≥ 1
+  const pairStats = useMemo(() => {
+    if (!symbols.length) return []
+    const ID = symbols.map(s => s.symbol_id)
+    const cnt = {}
+    for (let i = 0; i < ID.length; i++) {
+      for (let j = i + 1; j < ID.length; j++) {
+        cnt[`${Math.min(ID[i], ID[j])}-${Math.max(ID[i], ID[j])}`] = 0
+      }
+    }
+    draws.forEach(d => {
+      const uniq = [...new Set([d.pos1, d.pos2, d.pos3].filter(Boolean))]
+      for (let i = 0; i < uniq.length; i++) {
+        for (let j = i + 1; j < uniq.length; j++) {
+          const k = `${Math.min(uniq[i], uniq[j])}-${Math.max(uniq[i], uniq[j])}`
+          if (k in cnt) cnt[k]++
+        }
+      }
+    })
+    const n = draws.length
+    return Object.entries(cnt)
+      .map(([k, times]) => {
+        const [a, b] = k.split('-').map(Number)
+        return { a, b, times, pct: n ? (times / n) * 100 : 0 }
+      })
+      .sort((x, y) => y.times - x.times || x.a - y.a || x.b - y.b)
+  }, [draws, symbols])
+
+  // ຈຳກັດຄ່າ ບໍ່ໃຫ້ 2 ບັດ (ຮ້ອນ/ເຢັນ) ສະແດງຄູ່ດຽວກັນຊ້ຳ — 15 ຄູ່ ⇒ 7 ຕໍ່ບັດ
+  const pairsPerCard = Math.min(PAIRS_SHOWN, Math.floor(pairStats.length / 2))
+  const topPairs  = useMemo(() => pairStats.slice(0, pairsPerCard), [pairStats, pairsPerCard])
+  const rarePairs = useMemo(
+    () => pairStats.slice().reverse().slice(0, pairsPerCard),
+    [pairStats, pairsPerCard]
+  )
 
   // ── #6 ຮ້ອນ / ເຢັນ ຕາມช่วง 5 / 10 / 20 / 50 ງວດ + ເທຣນ ─────────────
   const rolling = useMemo(() => {
@@ -262,7 +304,12 @@ export default function PuplataoPage() {
     byPosition: byPos.map(p => ({
       name_lo: p.name_lo, pos1: p.pos1, pos2: p.pos2, pos3: p.pos3,
     })),
-    pairs: (pairs.pairs || []).slice(0, 6).map(p => ({ s1: p.s1, s2: p.s2, times: p.times })),
+    pairs: topPairs.slice(0, 6).map(p => ({
+      s1: symById[p.a]?.name_lo, s2: symById[p.b]?.name_lo, times: p.times,
+    })),
+    rarePairs: rarePairs.slice(0, 5).map(p => ({
+      s1: symById[p.a]?.name_lo, s2: symById[p.b]?.name_lo, times: p.times,
+    })),
     pairTriple: (pairs.per_symbol || []).map(s => ({
       name_lo: s.name_lo, times_pair: s.times_pair, times_triple: s.times_triple,
     })),
@@ -292,7 +339,7 @@ export default function PuplataoPage() {
           })),
         })),
     } : null,
-  }), [draws.length, freq, gap, byPos, pairs, rolling, markov, timePattern, symById])
+  }), [draws.length, freq, gap, byPos, pairs, topPairs, rarePairs, rolling, markov, timePattern, symById])
 
   if (error) {
     return (
@@ -490,20 +537,40 @@ export default function PuplataoPage() {
             </div>
           </div>
 
-          {/* ── Top pairs ── */}
+          {/* ── Top pairs (ຮ້ອນ) ── */}
           <div className={CARD}>
-            <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-4 flex items-center gap-2">
+            <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-1 flex items-center gap-2">
               <TrendingUp size={14} className="text-[#f97316]" /> ຄູ່ລູກທີ່ອອກພ້ອມກັນເລື້ອຍໆ
             </h3>
+            <p className="text-xs text-[#94a3b8] mb-4">
+              ນັບ 1 ຄັ້ງ/ງວດ · ຈາກ {draws.length} ງວດ · ເສັ້ນຖານສະເໝີພາບ ≈ {PAIR_BASE_PCT.toFixed(1)}% ຂອງງວດ
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {pairs.pairs.slice(0, 8).map((p, i) => (
-                <div key={i} className="flex items-center justify-between bg-[#f8fafc] dark:bg-white/5 rounded-xl px-3 py-2">
-                  <span className="text-sm font-semibold text-[#334155] dark:text-[#cbd5e1]">
-                    {p.e1} {p.s1} <span className="text-[#94a3b8]">+</span> {p.e2} {p.s2}
-                  </span>
-                  <span className="text-xs font-bold tabular-nums text-[#f97316]">{p.times}×</span>
-                </div>
-              ))}
+              {topPairs.map(p => {
+                const up = p.pct >= PAIR_BASE_PCT
+                return (
+                  <div
+                    key={`${p.a}-${p.b}`}
+                    className="flex items-center justify-between rounded-xl px-3 py-2"
+                    style={{ background: '#f9731610', border: '1px solid #f9731626' }}
+                  >
+                    <span className="text-sm font-semibold text-[#334155] dark:text-[#cbd5e1]">
+                      {symById[p.a]?.emoji} {symById[p.a]?.name_lo}{' '}
+                      <span className="text-[#94a3b8]">+</span>{' '}
+                      {symById[p.b]?.emoji} {symById[p.b]?.name_lo}
+                    </span>
+                    <span className="text-right shrink-0 pl-2">
+                      <span className="text-xs font-bold tabular-nums text-[#f97316]">{p.times}×</span>
+                      <span
+                        className="block text-[10px] tabular-nums"
+                        style={{ color: up ? '#16a34a' : '#94a3b8' }}
+                      >
+                        {up ? '▲' : '▼'} {p.pct.toFixed(1)}%
+                      </span>
+                    </span>
+                  </div>
+                )
+              })}
             </div>
             <div className="mt-4 flex flex-wrap gap-2 text-xs text-[#94a3b8]">
               {pairs.per_symbol.map(s => (
@@ -512,6 +579,55 @@ export default function PuplataoPage() {
                 </span>
               ))}
             </div>
+          </div>
+
+          {/* ── Rare pairs (ເຢັນ — ກົງກັນຂ້າມກັບບັດເທິງ) ── */}
+          <div className={CARD}>
+            <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-1 flex items-center gap-2">
+              <TrendingDown size={14} className="text-[#3b82f6]" /> ຄູ່ລູກທີ່ອອກພ້ອມກັນໜ້ອຍສຸດ
+            </h3>
+            <p className="text-xs text-[#94a3b8] mb-4">
+              ຄິດຄົບທັງ {pairStats.length} ຄູ່ ລວມຄູ່ທີ່ຍັງບໍ່ເຄີຍອອກພ້ອມກັນ (0 ຄັ້ງ)
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {rarePairs.map(p => {
+                const never = p.times === 0
+                return (
+                  <div
+                    key={`${p.a}-${p.b}`}
+                    className="flex items-center justify-between rounded-xl px-3 py-2"
+                    style={{
+                      background: never ? '#ef444410' : '#3b82f60f',
+                      border: `1px solid ${never ? '#ef444433' : '#3b82f626'}`,
+                    }}
+                  >
+                    <span className="text-sm font-semibold text-[#334155] dark:text-[#cbd5e1]">
+                      {symById[p.a]?.emoji} {symById[p.a]?.name_lo}{' '}
+                      <span className="text-[#94a3b8]">+</span>{' '}
+                      {symById[p.b]?.emoji} {symById[p.b]?.name_lo}
+                    </span>
+                    <span className="text-right shrink-0 pl-2">
+                      {never ? (
+                        <span className="text-[10px] font-bold text-[#dc2626] leading-tight">
+                          ຍັງບໍ່ເຄີຍ<br />ອອກພ້ອມກັນ
+                        </span>
+                      ) : (
+                        <>
+                          <span className="text-xs font-bold tabular-nums text-[#3b82f6]">{p.times}×</span>
+                          <span className="block text-[10px] tabular-nums text-[#94a3b8]">
+                            ▼ {p.pct.toFixed(1)}%
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <p className="mt-4 text-[11px] text-[#94a3b8] leading-relaxed">
+              ຄູ່ທີ່ອອກໜ້ອຍກວ່າເສັ້ນຖານ {PAIR_BASE_PCT.toFixed(1)}% ຫຼາຍ ອາດພຽງແຕ່ຍັງເກັບຂໍ້ມູນບໍ່ພໍ —
+              ບໍ່ໄດ້ໝາຍຄວາມວ່າ “ຮອດຄິວ” ຈະອອກ.
+            </p>
           </div>
 
           {/* ── #6 ຮ້ອນ / ເຢັນ ຕາມช່วง ── */}
