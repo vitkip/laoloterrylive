@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, Clock, BarChart2, TrendingUp, Search,
   Moon, Sun, Menu, User, Shield, LogOut, Lock,
-  ChevronDown, Dices, Sparkles, Target, Coins, Fish,
+  ChevronDown, Dices, Sparkles, Target, Coins, Fish, ShieldOff,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -23,6 +23,7 @@ const GUEST_LINKS = [
   { label: 'ຊຸດຫວຍ 545', href: '/happy545/sets', Icon: Target },
   { label: 'ປູປາເຕົ້າ', href: '/puplatao', Icon: Fish },
   { label: 'ຄູ່ປູປາເຕົ້າ', href: '/puplatao/next', Icon: Target },
+  { label: 'ຄູ່ຫຼີກປູປາເຕົ້າ', href: '/puplatao/avoid', Icon: ShieldOff },
   { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search', Icon: Search },
 ]
 const MEMBER_LINKS = [
@@ -33,6 +34,7 @@ const MEMBER_LINKS = [
   { label: 'ຊຸດຫວຍ 545', href: '/happy545/sets', Icon: Target },
   { label: 'ປູປາເຕົ້າ', href: '/puplatao', Icon: Fish },
   { label: 'ຄູ່ປູປາເຕົ້າ', href: '/puplatao/next', Icon: Target },
+  { label: 'ຄູ່ຫຼີກປູປາເຕົ້າ', href: '/puplatao/avoid', Icon: ShieldOff },
   { label: 'AI Analytics', href: '/analytics', Icon: TrendingUp },
   { label: 'ເລກໜ້າຈະອອກ', href: '/prediction', Icon: Sparkles },
   { label: 'ແທງຫວຍ (Demo)', href: '/betting', Icon: Coins },

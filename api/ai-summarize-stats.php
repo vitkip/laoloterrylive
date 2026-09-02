@@ -2,7 +2,7 @@
 /**
  * ai-summarize-stats.php — AI ສະຫຼຸບສະຖິຕິເປັນພາສາທຳມະດາ ດ້ວຍ Claude
  * POST /api/ai-summarize-stats.php  (ຕ້ອງ login)
- * Body: { "context": "dashboard" | "history" | "h545stats" | "h545sets" | "puplatao" | "puplataopredict", "payload": {...pre-computed stats...} }
+ * Body: { "context": "dashboard" | "history" | "h545stats" | "h545sets" | "puplatao" | "puplataopredict" | "puplataoavoid", "payload": {...pre-computed stats...} }
  *
  * Claude only narrates numbers we already computed client-side (analytics.js /
  * useStatistics.jsx / Happy545 pages) — it never invents frequencies or dates itself.
@@ -35,7 +35,7 @@ $body    = json_decode(file_get_contents('php://input'), true);
 $context = trim((string) ($body['context'] ?? ''));
 $payload = is_array($body['payload'] ?? null) ? $body['payload'] : [];
 
-if (!in_array($context, ['dashboard', 'history', 'h545stats', 'h545sets', 'puplatao', 'puplataopredict', 'puplataobehavior'], true)) {
+if (!in_array($context, ['dashboard', 'history', 'h545stats', 'h545sets', 'puplatao', 'puplataopredict', 'puplataobehavior', 'puplataoavoid', 'puplataoavoidbehavior'], true)) {
     http_response_code(400);
     echo json_encode(['error' => 'context ບໍ່ຖືກຕ້ອງ']);
     exit();
@@ -167,10 +167,11 @@ if ($context === 'dashboard') {
         fn($p) => $clean($p['name_lo'] ?? '') . ' → ໜ່ວຍ1:' . $intOnly($p['pos1'] ?? 0) . ' ໜ່ວຍ2:' . $intOnly($p['pos2'] ?? 0) . ' ໜ່ວຍ3:' . $intOnly($p['pos3'] ?? 0),
         $byPos
     ));
-    $pairTxt = implode(', ', array_map(
-        fn($p) => $clean($p['s1'] ?? '') . '+' . $clean($p['s2'] ?? '') . ' (' . $intOnly($p['times'] ?? 0) . ' ຄັ້ງ)',
-        $pairs
-    ));
+    $rarePairs = array_slice((array) ($payload['rarePairs'] ?? []), 0, 5);
+
+    $pairFmt = fn($p) => $clean($p['s1'] ?? '') . '+' . $clean($p['s2'] ?? '') . ' (' . $intOnly($p['times'] ?? 0) . ' ຄັ້ງ)';
+    $pairTxt = implode(', ', array_map($pairFmt, $pairs));
+    $rareTxt = implode(', ', array_map($pairFmt, $rarePairs));
     $ptTxt = implode(', ', array_map(
         fn($p) => $clean($p['name_lo'] ?? '') . ' (ຄູ່ ' . $intOnly($p['times_pair'] ?? 0) . '×, ຕອງ ' . $intOnly($p['times_triple'] ?? 0) . '×)',
         $pairTriple
@@ -185,7 +186,7 @@ if ($context === 'dashboard') {
     $systemPrompt = "ທ່ານແມ່ນນັກວິເຄາະສະຖິຕິຫວຍປູປາເຕົ້າມະຫາໂຊກ (Hoo Hey How) ທີ່ມີລູກ 6 ໜ່ວຍ: ນ້ຳເຕົ້າ, ປູ, ປາ, ກຸ້ງ, ໄກ່, ເສືອ — ແຕ່ລະງວດອອກ 3 ໜ່ວຍ."
         . "\nຫ້າມແຕ່ງລູກ ຫຼື ຈຳນວນຄັ້ງຂຶ້ນເອງ — ໃຊ້ສະເພາະຂໍ້ມູນທີ່ໃຫ້ມາ."
         . "\nຂຽນເປັນຄວາມຮຽງພາສາລາວ 1 ຫຍໍ້ໜ້າ (100-150 ຄຳ) ສະຫຼຸບພາບລວມສະຖິຕິແບບເຂົ້າໃຈງ່າຍ ບໍ່ໃຊ້ສັບເຕັກນິກ"
-        . " ໂດຍກ່າວເຖິງລູກທີ່ອອກຫຼາຍ, ລູກທີ່ຄ້າງນານ, ລູກທີ່ມັກອອກຄູ່ນຳກັນ, ແລະ ຂໍ້ສັງເກດເລື່ອງຕຳແໜ່ງ ຖ້າມີ."
+        . " ໂດຍກ່າວເຖິງລູກທີ່ອອກຫຼາຍ, ລູກທີ່ຄ້າງນານ, ຄູ່ລູກທີ່ມັກອອກພ້ອມກັນ, ຄູ່ທີ່ອອກພ້ອມກັນໜ້ອຍສຸດ (ຖ້າມີຄູ່ 0 ຄັ້ງ ໃຫ້ບອກວ່າຍັງບໍ່ເຄີຍອອກພ້ອມກັນ), ແລະ ຂໍ້ສັງເກດເລື່ອງຕຳແໜ່ງ ຖ້າມີ."
         . "\nປິດທ້າຍດ້ວຍປະໂຫຍກເຕືອນສັ້ນໆວ່ານີ້ແມ່ນສະຖິຕິຍ້ອນຫຼັງ ແຕ່ລະງວດເປັນເອກະລາດ ບໍ່ແມ່ນການຮັບປະກັນຜົນ."
         . "\nຕອບເປັນຂໍ້ຄວາມທຳມະດາເທົ່ານັ້ນ ບໍ່ຕ້ອງມີ JSON, markdown, ຫົວຂໍ້, ຫຼື bullet list.";
 
@@ -194,6 +195,7 @@ if ($context === 'dashboard') {
         . ($gapTxt !== '' ? "ລູກຄ້າງ (ບໍ່ອອກດົນສຸດ): {$gapTxt}\n" : '')
         . ($posTxt !== '' ? "ແຍກຕາມຕຳແໜ່ງ: {$posTxt}\n" : '')
         . ($pairTxt !== '' ? "ຄູ່ລູກທີ່ອອກພ້ອມກັນເລື້ອຍ: {$pairTxt}\n" : '')
+        . ($rareTxt !== '' ? "ຄູ່ລູກທີ່ອອກພ້ອມກັນໜ້ອຍສຸດ: {$rareTxt}\n" : '')
         . ($ptTxt !== '' ? "ນັບ ຄູ່/ຕອງ ຕໍ່ລູກ: {$ptTxt}\n" : '');
 } elseif ($context === 'puplataopredict') {
     $clean = fn($s) => trim(preg_replace('/[\x00-\x1F<>]/u', '', (string) $s));
@@ -262,7 +264,75 @@ if ($context === 'dashboard') {
         . "ອັນດັບຄວາມແຮງຂອງລູກ (ຄະແນນລວມ): {$rankTxt}\n\n"
         . implode("\n", $pairLines)
         . $extraTxt;
-} elseif ($context === 'puplataobehavior') {
+} elseif ($context === 'puplataoavoid') {
+    // ສູດກົງກັນຂ້າມ — 3 ຄູ່ລູກ ທີ່ "ຄວນຫຼີກ" (ໂອກາດອອກໜ້ອຍສຸດ)
+    $clean = fn($s) => trim(preg_replace('/[\x00-\x1F<>]/u', '', (string) $s));
+
+    $totalDraws = $intOnly($payload['totalDraws'] ?? 0);
+    $btN        = $intOnly($payload['backtestN'] ?? 0);
+    $pairs      = array_slice((array) ($payload['pairs'] ?? []), 0, 3);
+    $ranked     = array_slice((array) ($payload['symbolRanked'] ?? []), 0, 6);
+
+    $pairLines = [];
+    foreach ($pairs as $p) {
+        $a = $clean($p['a'] ?? '');
+        $b = $clean($p['b'] ?? '');
+        if ($a === '' || $b === '') continue;
+        $third = $clean($p['third'] ?? '');
+        $bt = (array) ($p['backtest'] ?? []);
+        $pairLines[] = sprintf(
+            "ຄູ່ຫຼີກທີ %s: %s + %s (ລູກທີ 3 ຄວນຫຼີກ: %s) — ຄະແນນຄວນຫຼີກ %s%% | ຍ້ອນຫຼັງ %s ງວດ: ບໍ່ອອກເລີຍ %s ຄັ້ງ (%s%%), ບໍ່ອອກພ້ອມກັນ %s ຄັ້ງ (%s%%)",
+            $intOnly($p['rank'] ?? 0), $a, $b, $third,
+            $intOnly($p['scorePct'] ?? 0), $intOnly($bt['n'] ?? 0),
+            $intOnly($bt['none'] ?? 0), $intOnly($bt['pctNone'] ?? 0),
+            $intOnly($bt['notBoth'] ?? 0), $intOnly($bt['pctNotBoth'] ?? 0)
+        );
+    }
+    if (empty($pairLines)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'ຂໍ້ມູນຄູ່ລູກບໍ່ພຽງພໍ']);
+        exit();
+    }
+    $rankTxt = implode(', ', array_map(
+        fn($r) => $clean($r['name'] ?? '') . ' (ໂອກາດບໍ່ອອກ ' . $intOnly($r['absentPct'] ?? 0) . '%)',
+        $ranked
+    ));
+
+    // ── ໂມເດລເສີມ: hazard / Monte-Carlo / Brier (ຖ້າ frontend ສົ່ງມາ) ──
+    $hazard = is_array($payload['hazard'] ?? null) ? $payload['hazard'] : [];
+    $brier  = is_array($payload['brier'] ?? null) ? $payload['brier'] : [];
+    $mc     = is_array($payload['monteCarlo'] ?? null) ? $payload['monteCarlo'] : [];
+    $extraLines = [];
+    if (array_key_exists('informative', $hazard)) {
+        $extraLines[] = $hazard['informative']
+            ? 'ໂມເດລ gap/hazard: ລູກຄ້າງມີສັນຍານ (χ²=' . $intOnly($hazard['chi2'] ?? 0) . ', df ' . $intOnly($hazard['df'] ?? 0) . ') — ລູກທີ່ຄ້າງດົນ ຈຶ່ງ "ບໍ່" ຖືກຈັດເປັນຄູ່ຄວນຫຼີກ'
+            : 'ໂມເດລ gap/hazard: ລູກຄ້າງບໍ່ມີສັນຍານ — ການຄ້າງບໍ່ໄດ້ຫຼຸດ/ເພີ່ມໂອກາດ';
+    }
+    if (!empty($mc['topPairs'])) {
+        $mcTxt = implode(', ', array_map(
+            fn($p) => $clean($p['a'] ?? '') . '+' . $clean($p['b'] ?? '') . ' (ບໍ່ອອກເລີຍ ' . $intOnly($p['pct'] ?? 0) . '%)',
+            array_slice((array) $mc['topPairs'], 0, 3)
+        ));
+        $extraLines[] = 'Monte-Carlo ' . $intOnly($mc['iters'] ?? 0) . ' ຮອບ, ຄູ່ທີ່ມັກບໍ່ໂຜ່ນ: ' . $mcTxt;
+    }
+    if (isset($brier['skillPct'])) {
+        $extraLines[] = 'ຄວາມແມ່ນຍຳ backtest (Brier skill ຂອງໂອກາດ "ບໍ່ອອກ"): ' . $intOnly($brier['skillPct']) . '% (ບວກ = ດີກວ່າການເດົາ)';
+    }
+    $extraTxt = $extraLines ? "\n" . implode("\n", $extraLines) : '';
+
+    $systemPrompt = "ທ່ານແມ່ນນັກວິເຄາະຫວຍປູປາເຕົ້າມະຫາໂຊກ (6 ລູກ: ນ້ຳເຕົ້າ, ປູ, ປາ, ກຸ້ງ, ໄກ່, ເສືອ; ອອກ 3 ໜ່ວຍ/ງວດ) ອະທິບາຍ 3 ຄູ່ລູກທີ່ລະບົບຄິດໄລ່ໄວ້ວ່າ 'ໜ້າຈະບໍ່ອອກ' ໃນງວດຖັດໄປ (ສູດກົງກັນຂ້າມ — ຄູ່ທີ່ຄວນຫຼີກ)."
+        . "\nສູດຄິດແບບກັບຫົວ: ຄວາມເຢັນຂອງລູກ (1 − ຄວາມຖີ່ 20 ງວດຫຼ້າສຸດ ປັບ Bayesian) + (1 − ລູກຄ້າງ/hazard) + ຄູ່ທີ່ບໍ່ຄ່ອຍອອກນຳກັນ (1 − co-occurrence); ມີ Monte-Carlo ແລະ Brier calibration ປະກອບ."
+        . "\nຖ້າມີຂໍ້ມູນ hazard, Monte-Carlo ຫຼື Brier ໃຫ້ກ່າວເຖິງສັ້ນໆ ວ່າມັນໜູນ ຫຼື ຄ້ານ ກັບ 3 ຄູ່ນັ້ນ."
+        . "\nຫ້າມແຕ່ງລູກ ຫຼື ຈຳນວນຄັ້ງຂຶ້ນເອງ — ໃຊ້ສະເພາະຂໍ້ມູນທີ່ໃຫ້ມາ."
+        . "\nຂຽນເປັນຄວາມຮຽງພາສາລາວ 1 ຫຍໍ້ໜ້າ (110-160 ຄຳ) ອະທິບາຍວ່າແຕ່ລະຄູ່ຄວນຫຼີກຍ້ອນຫຍັງ ໂດຍອ້າງອີງຜົນ backtest (ອັດຕາບໍ່ອອກເລີຍ) ຂອງແຕ່ລະຄູ່."
+        . "\nປິດທ້າຍດ້ວຍປະໂຫຍກເຕືອນສັ້ນໆວ່າແຕ່ລະງວດເປັນເອກະລາດ ຄູ່ທີ່ຄວນຫຼີກກໍຍັງອອກໄດ້ backtest ອີງອະດີດເທົ່ານັ້ນ ບໍ່ຮັບປະກັນຜົນອະນາຄົດ."
+        . "\nຕອບເປັນຂໍ້ຄວາມທຳມະດາເທົ່ານັ້ນ ບໍ່ຕ້ອງມີ JSON, markdown, ຫົວຂໍ້, ຫຼື bullet list.";
+
+    $userMsg = "ຫວຍປູປາເຕົ້າ (ສູດກົງກັນຂ້າມ) — ຄິດໄລ່ຈາກ {$totalDraws} ງວດ, backtest ຫຼ້າສຸດ {$btN} ງວດ\n"
+        . "ອັນດັບລູກຕາມໂອກາດ 'ບໍ່ອອກ': {$rankTxt}\n\n"
+        . implode("\n", $pairLines)
+        . $extraTxt;
+} elseif ($context === 'puplataobehavior' || $context === 'puplataoavoidbehavior') {
     // AI ອ່ານ "ລຳດັບຜົນອອກຈິງ" ແລ້ວວິເຄາະພຶດຕິກຳດ້ວຍຕົນເອງ — ບໍ່ສົ່ງສະຖິຕິຄິດໄວ້ໃຫ້
     $clean = fn($s) => trim(preg_replace('/[\x00-\x1F<>]/u', '', (string) $s));
 
@@ -305,6 +375,16 @@ if ($context === 'dashboard') {
     $shown  = count($lines);
     $seqTxt = implode("\n", $lines);
 
+    if ($context === 'puplataoavoidbehavior') {
+        // ດ້ານກົງກັນຂ້າມ — ໃຫ້ AI ອ່ານ "ລູກທີ່ຫາຍ / ຄູ່ທີ່ບໍ່ມາພ້ອມກັນ"
+        $systemPrompt = "ທ່ານແມ່ນນັກວິເຄາະຫວຍປູປາເຕົ້າມະຫາໂຊກ (6 ລູກ: ນ້ຳເຕົ້າ, ປູ, ປາ, ກຸ້ງ, ໄກ່, ເສືອ; ແຕ່ລະງວດອອກ 3 ໜ່ວຍ ຕາມລຳດັບ ໜ່ວຍ1 ໜ່ວຍ2 ໜ່ວຍ3)."
+            . "\nຂ້າງລຸ່ມນີ້ແມ່ນລຳດັບຜົນອອກຈິງ (ໃໝ່→ເກົ່າ). ບໍ່ມີສະຖິຕິຄິດໄວ້ໃຫ້ — ໃຫ້ທ່ານ 'ອ່ານ ແລະ ວິເຄາະດ້ວຍຕົນເອງ'."
+            . "\nຈຸດສຳຄັນ: ໃຫ້ເບິ່ງ 'ດ້ານທີ່ບໍ່ອອກ' — ລູກໃດຫາຍໄປດົນ ຫຼື ໂຜ່ນໜ້ອຍທີ່ສຸດ, ຄູ່ລູກໃດແທບບໍ່ເຄີຍມາພ້ອມກັນ, ຊ່ວງເງົາ (ງວດຕິດຕໍ່ກັນທີ່ລູກໃດລູກໜຶ່ງບໍ່ໂຜ່ນ), ແລະ ຄວາມແຕກຕ່າງລະຫວ່າງ ໜ່ວຍ 1/2/3 ໃນດ້ານການ 'ບໍ່ອອກ'."
+            . "\nຫ້າມແຕ່ງເລກງວດ, ວັນທີ ຫຼື ລູກ ທີ່ບໍ່ມີໃນລາຍການ. ຖ້າບໍ່ພົບຮູບແບບຊັດເຈນ ໃຫ້ບອກກົງໆວ່າ 'ເບິ່ງຄ້າຍການສຸ່ມ ບໍ່ມີຮູບແບບເດັ່ນ'."
+            . "\nຂຽນເປັນພາສາລາວ 2 ຫຍໍ້ໜ້າ (ລວມ 130-200 ຄຳ): ຫຍໍ້ໜ້າ 1 = ລູກ/ຄູ່ ທີ່ຫາຍ ຫຼື ບໍ່ຄ່ອຍມາພ້ອມກັນ ທີ່ສັງເກດເຫັນຈາກລຳດັບ; ຫຍໍ້ໜ້າ 2 = ຄວາມເຫັນສ່ວນຕົວວ່າ ຄູ່ໃດ 'ຄວນຫຼີກ' ໃນງວດຖັດໄປ ພ້ອມບອກລະດັບຄວາມໝັ້ນໃຈ (ຕ່ຳ/ກາງ/ສູງ)."
+            . "\nປິດທ້າຍດ້ວຍປະໂຫຍກເຕືອນສັ້ນໆວ່າ ແຕ່ລະງວດເປັນເອກະລາດ ເປັນການສຸ່ມ ຄູ່ທີ່ຄວນຫຼີກກໍຍັງອອກໄດ້ ການວິເຄາະນີ້ບໍ່ຮັບປະກັນຜົນ."
+            . "\nຕອບເປັນຂໍ້ຄວາມທຳມະດາເທົ່ານັ້ນ ບໍ່ຕ້ອງມີ JSON, markdown, ຫົວຂໍ້, ຫຼື bullet list.";
+    } else {
     $systemPrompt = "ທ່ານແມ່ນນັກວິເຄາະຫວຍປູປາເຕົ້າມະຫາໂຊກ (6 ລູກ: ນ້ຳເຕົ້າ, ປູ, ປາ, ກຸ້ງ, ໄກ່, ເສືອ; ແຕ່ລະງວດອອກ 3 ໜ່ວຍ ຕາມລຳດັບ ໜ່ວຍ1 ໜ່ວຍ2 ໜ່ວຍ3)."
         . "\nຂ້າງລຸ່ມນີ້ແມ່ນລຳດັບຜົນອອກຈິງ (ໃໝ່→ເກົ່າ). ບໍ່ມີສະຖິຕິຄິດໄວ້ໃຫ້ — ໃຫ້ທ່ານ 'ອ່ານ ແລະ ວິເຄາະດ້ວຍຕົນເອງ'."
         . "\nຈົ່ງເບິ່ງພຶດຕິກຳການອອກ ເຊັ່ນ: ລູກທີ່ອອກຕິດຕໍ່ຫຼາຍງວດ (streak) ຫຼື ຫາຍໄປເປັນຊ່ວງ, ການສະຫຼັບໄປມາ, ການຈັບກຸ່ມກັນ, ຄູ່ລູກທີ່ມັກມາພ້ອມກັນ, ຄວາມແຕກຕ່າງລະຫວ່າງ ໜ່ວຍ 1/2/3, ແລະ ຮູບແບບຕາມເວລາ/ວັນ ຖ້າພໍສັງເກດເຫັນ."
@@ -312,14 +392,16 @@ if ($context === 'dashboard') {
         . "\nຂຽນເປັນພາສາລາວ 2 ຫຍໍ້ໜ້າ (ລວມ 130-200 ຄຳ): ຫຍໍ້ໜ້າ 1 = ພຶດຕິກຳ/ຮູບແບບ ທີ່ສັງເກດເຫັນຈາກລຳດັບ; ຫຍໍ້ໜ້າ 2 = ຄວາມເຫັນສ່ວນຕົວຕໍ່ແນວໂນ້ມງວດຖັດໄປ (ລູກ ຫຼື ຄູ່ ທີ່ໜ້າຈັບຕາ) ພ້ອມບອກລະດັບຄວາມໝັ້ນໃຈ (ຕ່ຳ/ກາງ/ສູງ)."
         . "\nປິດທ້າຍດ້ວຍປະໂຫຍກເຕືອນສັ້ນໆວ່າ ແຕ່ລະງວດເປັນເອກະລາດ ເປັນການສຸ່ມ ການວິເຄາະນີ້ບໍ່ຮັບປະກັນຜົນ."
         . "\nຕອບເປັນຂໍ້ຄວາມທຳມະດາເທົ່ານັ້ນ ບໍ່ຕ້ອງມີ JSON, markdown, ຫົວຂໍ້, ຫຼື bullet list.";
+    }
 
     $userMsg = "ລູກທັງ 6: {$legend}\n"
         . "ຂໍ້ມູນທັງໝົດ {$totalDraws} ງວດ · ສະແດງ {$shown} ງວດຫຼ້າສຸດ (ໃໝ່→ເກົ່າ):\n\n"
         . $seqTxt;
 
-    $maxTokens = 900;
-    // ໃຊ້ໂມເດລ default (haiku 4.5). ຢາກໃຫ້ວິເຄາະເລິກຂຶ້ນ ປ່ຽນເປັນ 'claude-sonnet-5' ຫຼື 'claude-opus-5'.
-    $model = 'claude-haiku-4-5';
+    // ໂໝດນີ້ໃຫ້ Claude ວິເຄາະລຳດັບຈິງດ້ວຍຕົນເອງ — ໃຊ້ໂມເດລແຮງກວ່າ context ອື່ນ.
+    // sonnet-5 ມີ adaptive thinking (ນັບເຂົ້າ max_tokens) → ເພີ່ມ budget ກັນ output ຂາດ.
+    $maxTokens = 1400;
+    $model = 'claude-sonnet-5';
 } else {
     // context === 'history'
     $recent = array_slice((array) ($payload['recentDraws'] ?? []), 0, 12);

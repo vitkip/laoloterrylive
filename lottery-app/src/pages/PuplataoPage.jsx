@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle, RefreshCw, Dices, TrendingUp, Timer, Layers, Crown, Target, ArrowRight,
-  Flame, ArrowUp, ArrowDown, Minus, Grid3x3, Clock, TrendingDown,
+  Flame, ArrowUp, ArrowDown, Minus, Grid3x3, Clock, TrendingDown, ShieldOff,
 } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
 import AiSummaryCard from '../components/AiSummaryCard'
@@ -411,6 +411,23 @@ export default function PuplataoPage() {
           </span>
         </span>
         <ArrowRight size={16} className="text-[#f97316] shrink-0" />
+      </Link>
+
+      {/* ── CTA → avoid page (ສູດກົງກັນຂ້າມ) ── */}
+      <Link
+        to="/puplatao/avoid"
+        className="flex items-center justify-between gap-3 rounded-2xl p-4 transition-transform hover:-translate-y-0.5"
+        style={{ background: 'linear-gradient(135deg,#3b82f622,#6366f118)', border: '1px solid #6366f144' }}
+      >
+        <span className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#6366f126' }}>
+            <ShieldOff size={17} className="text-[#6366f1]" />
+          </span>
+          <span className="text-sm font-bold text-[#334155] dark:text-[#e2e8f0]">
+            ສູດກົງກັນຂ້າມ — 3 ຄູ່ລູກ ທີ່ຄວນຫຼີກ + AI ວິເຄາະ
+          </span>
+        </span>
+        <ArrowRight size={16} className="text-[#6366f1] shrink-0" />
       </Link>
 
       {/* ── AI Insight ── */}
