@@ -32,9 +32,16 @@ ALTER TABLE wallet_transactions
 --    ໂອກາດຕາມທິດສະດີ (6 ລູກ · 3 ໜ່ວຍ/ງວດ · ອິດສະຫຼະ):
 --      predict_pair  P(ອອກທັງ a ແລະ b) = 1 − 2(5/6)³ + (4/6)³ ≈ 13.89%  → fair 7.20×
 --      avoid_pair    P(ບໍ່ອອກທັງສອງ)   = (4/6)³            ≈ 29.63%  → fair 3.375×
---    ອັດຕາຈ່າຍຈິງຕັ້ງຕ່ຳກວ່າ fair ຕາມທີ່ເຈົ້າຂອງເກມກຳນົດ:
+--
+--    ອັດຕາຈ່າຍຈິງ = 6× ທັງສອງສູດ ຕາມທີ່ເຈົ້າຂອງເກມກຳນົດ:
 --      predict_pair 6× — ແທງ 1,000 ຖືກແລ້ວໄດ້ຄືນ 6,000 ກີບ (ກຳໄລ 5,000)
---      avoid_pair   3× — ແທງ 1,000 ຖືກແລ້ວໄດ້ຄືນ 3,000 ກີບ (ກຳໄລ 2,000)
+--      avoid_pair   6× — ແທງ 1,000 ຖືກແລ້ວໄດ້ຄືນ 6,000 ກີບ (ກຳໄລ 5,000)
+--
+--    ⚠ ໝາຍເຫດ: predict_pair 6× ຕ່ຳກວ່າ fair 7.20× (ເຈົ້າຂອງເກມໄດ້ປຽບ),
+--    ແຕ່ avoid_pair 6× ສູງກວ່າ fair 3.375× ຫຼາຍ — ຄ່າຄາດຫວັງ = 0.2963 × 6 ≈ 1.78
+--    ຄື ຜູ້ແທງໄດ້ປຽບ +78% ຕໍ່ບິນ ເຖິງແມ່ນແທງມົ້ວກໍ່ຕາມ. ດ້ວຍເຫດນີ້ ເສັ້ນຄຸ້ມທຶນ
+--    ໃນໜ້າ /puplatao/bets ຂອງ avoid_pair (1÷6 ≈ 16.7%) ຈຶ່ງຕ່ຳກວ່າອັດຕາຖືກແບບສຸ່ມ
+--    (29.6%) — ໝາຍຄວາມວ່າ ກຳໄລສະສົມທີ່ເປັນບວກ ບໍ່ໄດ້ພິສູດວ່າ "ສູດດີ" ອີກຕໍ່ໄປ.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS puplatao_bet_rates (
   bet_kind    ENUM('predict_pair','avoid_pair') NOT NULL PRIMARY KEY,
@@ -49,7 +56,7 @@ CREATE TABLE IF NOT EXISTS puplatao_bet_rates (
 
 INSERT INTO puplatao_bet_rates (bet_kind, label_lo, multiplier, fair_prob) VALUES
   ('predict_pair', 'ຄູ່ລູກ ງວດຖັດໄປ — ອອກທັງສອງ',   6.00, 0.1389),
-  ('avoid_pair',   'ຄູ່ລູກ ຄວນຫຼີກ — ບໍ່ອອກທັງສອງ', 3.00, 0.2963)
+  ('avoid_pair',   'ຄູ່ລູກ ຄວນຫຼີກ — ບໍ່ອອກທັງສອງ', 6.00, 0.2963)
 ON DUPLICATE KEY UPDATE
   label_lo = VALUES(label_lo), fair_prob = VALUES(fair_prob), multiplier = VALUES(multiplier);
 

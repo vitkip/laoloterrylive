@@ -12,11 +12,11 @@ const API = `${API_BASE}/puplatao-bets.php`
 const KIND_META = {
   predict_pair: {
     short: 'ຄູ່ແທງ', title: 'ຄູ່ລູກ ງວດຖັດໄປ', win: 'ອອກທັງສອງລູກ',
-    accent: '#f97316', Icon: Target, href: '/puplatao/next', multiplier: '6',
+    accent: '#f97316', Icon: Target, href: '/puplatao/next',
   },
   avoid_pair: {
     short: 'ຄູ່ຫຼີກ', title: 'ຄູ່ລູກ ທີ່ຄວນຫຼີກ', win: 'ບໍ່ອອກທັງສອງລູກ',
-    accent: '#6366f1', Icon: ShieldOff, href: '/puplatao/avoid', multiplier: '3',
+    accent: '#6366f1', Icon: ShieldOff, href: '/puplatao/avoid',
   },
 }
 
@@ -248,6 +248,12 @@ export default function PuplataoBetsPage() {
     return { symEmoji: e, symName: n }
   }, [symbols])
 
+  // ອັດຕາຈ່າຍສົດ ຈາກ DB — ບໍ່ຂຽນຕາຍໄວ້ ເພື່ອບໍ່ໃຫ້ຂໍ້ຄວາມຄ້າງເມື່ອ admin ປັບອັດຕາ
+  const multOf = useMemo(
+    () => Object.fromEntries((pl?.by_kind || []).map(r => [r.bet_kind, r.multiplier])),
+    [pl],
+  )
+
   const fetchAll = useCallback(async () => {
     setLoading(true)
     setError(false)
@@ -324,7 +330,9 @@ export default function PuplataoBetsPage() {
 
       {/* ── ບ່ອນວາງເດີມພັນແມ່ນຢູ່ 2 ໜ້າສູດ — ໜ້ານີ້ສະແດງຜົນຢ່າງດຽວ ຈຶ່ງຕ້ອງມີທາງໄປໃຫ້ຈະແຈ້ງ ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {Object.entries(KIND_META).map(([kind, m]) => (
+        {Object.entries(KIND_META).map(([kind, m]) => {
+          const mult = multOf[kind]
+          return (
           <Link key={kind} to={m.href}
                 className="flex items-center gap-3 rounded-2xl p-4 transition-transform hover:-translate-y-0.5"
                 style={{ background: m.accent + '14', border: `1px solid ${m.accent}44` }}>
@@ -336,11 +344,14 @@ export default function PuplataoBetsPage() {
               <span className="block text-sm font-black text-[#0f172a] dark:text-[#f1f5f9] truncate">
                 ໄປວາງເດີມພັນ · {m.title}
               </span>
-              <span className="block text-[11px] text-[#94a3b8]">ເລືອກ ຄູ່ 1/2/3 ແລ້ວແທງ · ຈ່າຍ {m.multiplier}×</span>
+              <span className="block text-[11px] text-[#94a3b8]">
+                ເລືອກຄູ່ ແລ້ວແທງ{mult ? ` · ຈ່າຍ ${mult}×` : ''}
+              </span>
             </span>
             <ArrowRight size={16} className="ml-auto shrink-0" style={{ color: m.accent }} />
           </Link>
-        ))}
+          )
+        })}
       </div>
 
       <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-4">
