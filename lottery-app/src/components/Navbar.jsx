@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home, Clock, BarChart2, TrendingUp, Search,
   Moon, Sun, Menu, User, Shield, LogOut, Lock,
-  ChevronDown, Dices, Sparkles, Target, Coins, Fish, ShieldOff,
+  ChevronDown, Dices, Sparkles, Target, Coins, Fish, ShieldOff, Wallet,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -38,6 +38,7 @@ const MEMBER_LINKS = [
   { label: 'AI Analytics', href: '/analytics', Icon: TrendingUp },
   { label: 'ເລກໜ້າຈະອອກ', href: '/prediction', Icon: Sparkles },
   { label: 'ແທງຫວຍ (Demo)', href: '/betting', Icon: Coins },
+  { label: 'ຜົນແທງປູປາເຕົ້າ', href: '/puplatao/bets', Icon: Wallet },
   { label: 'ຄົ້ນຫາ & ແປຝັນ', href: '/search', Icon: Search },
 ]
 

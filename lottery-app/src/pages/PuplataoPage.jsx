@@ -2,10 +2,13 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle, RefreshCw, Dices, TrendingUp, Timer, Layers, Crown, Target, ArrowRight,
-  Flame, ArrowUp, ArrowDown, Minus, Grid3x3, Clock, TrendingDown, ShieldOff,
+  Flame, ArrowUp, ArrowDown, Minus, Grid3x3, Clock, TrendingDown, ShieldOff, Sparkles,
 } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
 import AiSummaryCard from '../components/AiSummaryCard'
+import PuplataoBetPanel from '../components/PuplataoBetPanel'
+import { usePuplataoBetting } from '../hooks/usePuplataoBetting'
+import { buildPairSignals, rankCardPairs, pickConfidence } from '../utils/puplataoPairSignal'
 
 const API = `${API_BASE}/puplatao.php`
 
@@ -61,6 +64,52 @@ function Bar({ pct, color }) {
   )
 }
 
+/**
+ * ແຖບ "AI ເລືອກ" ຂອງບັດຄູ່ລູກ — ຄູ່ທີ່ໄດ້ຄະແນນສູງສຸດ ໃນ 7 ຄູ່ຂອງບັດນັ້ນ
+ * ພ້ອມ ໂອກາດງວດຖັດໄປ, ສ່ວນຕ່າງຈາກເສັ້ນຖານ, ຄວາມໝັ້ນໃຈ ແລະ ຄ່າຄາດຫວັງຕາມອັດຕາຈ່າຍ.
+ */
+function AiPickBanner({ pick, conf, accent, symById, outcomeLabel, rate }) {
+  if (!pick) return null
+  const edge = Math.round(pick.edgeVsBase * 100)
+  const ev = rate ? pick.prob * rate.multiplier - 1 : null
+
+  return (
+    <div className="rounded-xl p-3 mb-3" style={{ background: accent + '12', border: `1px solid ${accent}40` }}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
+              style={{ background: accent, color: '#fff' }}>
+          <Sparkles size={10} /> AI ເລືອກ ງວດຖັດໄປ
+        </span>
+        <span className="text-sm font-black text-[#0f172a] dark:text-[#f1f5f9]">
+          {symById[pick.a]?.emoji} {symById[pick.a]?.name_lo}{' '}
+          <span className="text-[#94a3b8]">+</span>{' '}
+          {symById[pick.b]?.emoji} {symById[pick.b]?.name_lo}
+        </span>
+        <span className="ml-auto text-xs font-black tabular-nums" style={{ color: accent }}>
+          {outcomeLabel} ≈ {Math.round(pick.prob * 100)}%
+        </span>
+      </div>
+
+      <div className="flex items-center gap-x-3 gap-y-1 flex-wrap mt-2 text-[10px] font-bold tabular-nums text-[#64748b] dark:text-[#94a3b8]">
+        <span style={{ color: edge >= 0 ? '#16a34a' : '#dc2626' }}>
+          {edge >= 0 ? '▲' : '▼'} {Math.abs(edge)}% ທຽບເສັ້ນຖານ
+        </span>
+        <span style={{ color: conf.color }}>ຄວາມໝັ້ນໃຈ {conf.level}</span>
+        {ev !== null && (
+          <span style={{ color: ev >= 0 ? '#16a34a' : '#dc2626' }}>
+            ຄາດຫວັງ {ev >= 0 ? '+' : '−'}{Math.abs(Math.round(ev * 100))}% ຕໍ່ບິນ (ຈ່າຍ {rate.multiplier}×)
+          </span>
+        )}
+      </div>
+
+      {pick.reason && (
+        <p className="mt-1.5 text-[11px] leading-relaxed text-[#475569] dark:text-[#94a3b8]">{pick.reason}</p>
+      )}
+      <p className="mt-0.5 text-[10px] tabular-nums text-[#94a3b8]">{pick.hint}</p>
+    </div>
+  )
+}
+
 export default function PuplataoPage() {
   const [symbols, setSymbols]   = useState([])
   const [draws, setDraws]       = useState([])
@@ -70,6 +119,9 @@ export default function PuplataoPage() {
   const [pairs, setPairs]       = useState({ per_symbol: [], pairs: [] })
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(false)
+
+  // ກະເປົາ demo + ອັດຕາຈ່າຍ — ໃຊ້ຮ່ວມກັນທັງ 2 ແຜງແທງລຸ່ມບັດຄູ່ລູກ
+  const betting = usePuplataoBetting()
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -144,6 +196,17 @@ export default function PuplataoPage() {
     () => pairStats.slice().reverse().slice(0, pairsPerCard),
     [pairStats, pairsPerCard]
   )
+
+  // ── ອ່ານພຶດຕິກຳຂອງຄູ່ລູກ → ໝາຍວ່າງວດຖັດໄປ ຄູ່ໃດໜ້າຈະອອກ / ບໍ່ອອກ ────
+  // ບັດ "ອອກເລື້ອຍໆ" ຫາຄູ່ທີ່ໜ້າຈະ ອອກທັງສອງລູກ  (ແທງ predict_pair)
+  // ບັດ "ອອກໜ້ອຍສຸດ" ຫາຄູ່ທີ່ໜ້າຈະ ບໍ່ອອກເລີຍ    (ແທງ avoid_pair)
+  const pairSignals = useMemo(() => buildPairSignals(draws, symbols), [draws, symbols])
+  const hotRanked  = useMemo(() => rankCardPairs(pairSignals, topPairs,  'both'), [pairSignals, topPairs])
+  const coldRanked = useMemo(() => rankCardPairs(pairSignals, rarePairs, 'none'), [pairSignals, rarePairs])
+  const hotByKey   = useMemo(() => Object.fromEntries(hotRanked.map(r => [r.key, r])),  [hotRanked])
+  const coldByKey  = useMemo(() => Object.fromEntries(coldRanked.map(r => [r.key, r])), [coldRanked])
+  const hotConf    = useMemo(() => pickConfidence(hotRanked, draws.length),  [hotRanked, draws.length])
+  const coldConf   = useMemo(() => pickConfidence(coldRanked, draws.length), [coldRanked, draws.length])
 
   // ── #6 ຮ້ອນ / ເຢັນ ຕາມช่วง 5 / 10 / 20 / 50 ງວດ + ເທຣນ ─────────────
   const rolling = useMemo(() => {
@@ -559,32 +622,61 @@ export default function PuplataoPage() {
             <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-1 flex items-center gap-2">
               <TrendingUp size={14} className="text-[#f97316]" /> ຄູ່ລູກທີ່ອອກພ້ອມກັນເລື້ອຍໆ
             </h3>
-            <p className="text-xs text-[#94a3b8] mb-4">
+            <p className="text-xs text-[#94a3b8] mb-3">
               ນັບ 1 ຄັ້ງ/ງວດ · ຈາກ {draws.length} ງວດ · ເສັ້ນຖານສະເໝີພາບ ≈ {PAIR_BASE_PCT.toFixed(1)}% ຂອງງວດ
             </p>
+
+            <AiPickBanner
+              pick={hotRanked[0]}
+              conf={hotConf}
+              accent="#f97316"
+              symById={symById}
+              outcomeLabel="ອອກທັງຄູ່"
+              rate={betting.rateOf('predict_pair')}
+            />
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {topPairs.map(p => {
                 const up = p.pct >= PAIR_BASE_PCT
+                const r  = hotByKey[`${p.a}-${p.b}`]
                 return (
                   <div
                     key={`${p.a}-${p.b}`}
-                    className="flex items-center justify-between rounded-xl px-3 py-2"
-                    style={{ background: '#f9731610', border: '1px solid #f9731626' }}
+                    className="rounded-xl px-3 py-2"
+                    style={r?.isPick
+                      ? { background: '#f9731620', border: '1.5px solid #f97316', boxShadow: '0 0 0 3px #f9731618' }
+                      : { background: '#f9731610', border: '1px solid #f9731626' }}
                   >
-                    <span className="text-sm font-semibold text-[#334155] dark:text-[#cbd5e1]">
-                      {symById[p.a]?.emoji} {symById[p.a]?.name_lo}{' '}
-                      <span className="text-[#94a3b8]">+</span>{' '}
-                      {symById[p.b]?.emoji} {symById[p.b]?.name_lo}
-                    </span>
-                    <span className="text-right shrink-0 pl-2">
-                      <span className="text-xs font-bold tabular-nums text-[#f97316]">{p.times}×</span>
-                      <span
-                        className="block text-[10px] tabular-nums"
-                        style={{ color: up ? '#16a34a' : '#94a3b8' }}
-                      >
-                        {up ? '▲' : '▼'} {p.pct.toFixed(1)}%
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-[#334155] dark:text-[#cbd5e1]">
+                        {symById[p.a]?.emoji} {symById[p.a]?.name_lo}{' '}
+                        <span className="text-[#94a3b8]">+</span>{' '}
+                        {symById[p.b]?.emoji} {symById[p.b]?.name_lo}
                       </span>
-                    </span>
+                      <span className="text-right shrink-0 pl-2">
+                        <span className="text-xs font-bold tabular-nums text-[#f97316]">{p.times}×</span>
+                        <span
+                          className="block text-[10px] tabular-nums"
+                          style={{ color: up ? '#16a34a' : '#94a3b8' }}
+                        >
+                          {up ? '▲' : '▼'} {p.pct.toFixed(1)}%
+                        </span>
+                      </span>
+                    </div>
+                    {r && (
+                      <div className="flex items-center justify-between gap-2 mt-1.5 pt-1.5 border-t border-black/5 dark:border-white/8">
+                        <span className="flex items-center gap-1 text-[10px] font-black"
+                              style={{ color: r.isPick ? '#f97316' : '#94a3b8' }}>
+                          {r.isPick
+                            ? <><Sparkles size={10} /> AI ເລືອກ ງວດຖັດໄປ</>
+                            : `ອັນດັບ ${r.rank}`}
+                        </span>
+                        <span className="text-[10px] font-black tabular-nums"
+                              style={{ color: r.isPick ? '#f97316' : '#94a3b8' }}>
+                          ອອກທັງຄູ່ ≈ {Math.round(r.prob * 100)}%
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -598,54 +690,106 @@ export default function PuplataoPage() {
             </div>
           </div>
 
+          {/* ── ແທງຄູ່ທີ່ AI ເລືອກ (ຫຼື ຄູ່ອື່ນໃນ 7 ຄູ່ນີ້) ໄດ້ເລີຍ ── */}
+          <PuplataoBetPanel
+            betting={betting}
+            betKind="predict_pair"
+            accent="#f97316"
+            title="ແທງຄູ່ທີ່ອອກພ້ອມກັນເລື້ອຍໆ — ງວດຖັດໄປ"
+            winLabel="ອອກທັງສອງລູກ"
+            pairs={hotRanked}
+            symOf={symById}
+          />
+
           {/* ── Rare pairs (ເຢັນ — ກົງກັນຂ້າມກັບບັດເທິງ) ── */}
           <div className={CARD}>
             <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9] mb-1 flex items-center gap-2">
               <TrendingDown size={14} className="text-[#3b82f6]" /> ຄູ່ລູກທີ່ອອກພ້ອມກັນໜ້ອຍສຸດ
             </h3>
-            <p className="text-xs text-[#94a3b8] mb-4">
+            <p className="text-xs text-[#94a3b8] mb-3">
               ຄິດຄົບທັງ {pairStats.length} ຄູ່ ລວມຄູ່ທີ່ຍັງບໍ່ເຄີຍອອກພ້ອມກັນ (0 ຄັ້ງ)
             </p>
+
+            <AiPickBanner
+              pick={coldRanked[0]}
+              conf={coldConf}
+              accent="#3b82f6"
+              symById={symById}
+              outcomeLabel="ບໍ່ອອກທັງຄູ່"
+              rate={betting.rateOf('avoid_pair')}
+            />
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {rarePairs.map(p => {
                 const never = p.times === 0
+                const r = coldByKey[`${p.a}-${p.b}`]
                 return (
                   <div
                     key={`${p.a}-${p.b}`}
-                    className="flex items-center justify-between rounded-xl px-3 py-2"
-                    style={{
-                      background: never ? '#ef444410' : '#3b82f60f',
-                      border: `1px solid ${never ? '#ef444433' : '#3b82f626'}`,
-                    }}
+                    className="rounded-xl px-3 py-2"
+                    style={r?.isPick
+                      ? { background: '#3b82f620', border: '1.5px solid #3b82f6', boxShadow: '0 0 0 3px #3b82f618' }
+                      : {
+                          background: never ? '#ef444410' : '#3b82f60f',
+                          border: `1px solid ${never ? '#ef444433' : '#3b82f626'}`,
+                        }}
                   >
-                    <span className="text-sm font-semibold text-[#334155] dark:text-[#cbd5e1]">
-                      {symById[p.a]?.emoji} {symById[p.a]?.name_lo}{' '}
-                      <span className="text-[#94a3b8]">+</span>{' '}
-                      {symById[p.b]?.emoji} {symById[p.b]?.name_lo}
-                    </span>
-                    <span className="text-right shrink-0 pl-2">
-                      {never ? (
-                        <span className="text-[10px] font-bold text-[#dc2626] leading-tight">
-                          ຍັງບໍ່ເຄີຍ<br />ອອກພ້ອມກັນ
-                        </span>
-                      ) : (
-                        <>
-                          <span className="text-xs font-bold tabular-nums text-[#3b82f6]">{p.times}×</span>
-                          <span className="block text-[10px] tabular-nums text-[#94a3b8]">
-                            ▼ {p.pct.toFixed(1)}%
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-[#334155] dark:text-[#cbd5e1]">
+                        {symById[p.a]?.emoji} {symById[p.a]?.name_lo}{' '}
+                        <span className="text-[#94a3b8]">+</span>{' '}
+                        {symById[p.b]?.emoji} {symById[p.b]?.name_lo}
+                      </span>
+                      <span className="text-right shrink-0 pl-2">
+                        {never ? (
+                          <span className="text-[10px] font-bold text-[#dc2626] leading-tight">
+                            ຍັງບໍ່ເຄີຍ<br />ອອກພ້ອມກັນ
                           </span>
-                        </>
-                      )}
-                    </span>
+                        ) : (
+                          <>
+                            <span className="text-xs font-bold tabular-nums text-[#3b82f6]">{p.times}×</span>
+                            <span className="block text-[10px] tabular-nums text-[#94a3b8]">
+                              ▼ {p.pct.toFixed(1)}%
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+                    {r && (
+                      <div className="flex items-center justify-between gap-2 mt-1.5 pt-1.5 border-t border-black/5 dark:border-white/8">
+                        <span className="flex items-center gap-1 text-[10px] font-black"
+                              style={{ color: r.isPick ? '#3b82f6' : '#94a3b8' }}>
+                          {r.isPick
+                            ? <><Sparkles size={10} /> AI ເລືອກ ງວດຖັດໄປ</>
+                            : `ອັນດັບ ${r.rank}`}
+                        </span>
+                        <span className="text-[10px] font-black tabular-nums"
+                              style={{ color: r.isPick ? '#3b82f6' : '#94a3b8' }}>
+                          ບໍ່ອອກທັງຄູ່ ≈ {Math.round(r.prob * 100)}%
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )
               })}
             </div>
             <p className="mt-4 text-[11px] text-[#94a3b8] leading-relaxed">
               ຄູ່ທີ່ອອກໜ້ອຍກວ່າເສັ້ນຖານ {PAIR_BASE_PCT.toFixed(1)}% ຫຼາຍ ອາດພຽງແຕ່ຍັງເກັບຂໍ້ມູນບໍ່ພໍ —
-              ບໍ່ໄດ້ໝາຍຄວາມວ່າ “ຮອດຄິວ” ຈະອອກ.
+              ບໍ່ໄດ້ໝາຍຄວາມວ່າ “ຮອດຄິວ” ຈະອອກ. ສະນັ້ນ AI ຈຶ່ງເລືອກຈາກ<b>ຟອມປັດຈຸບັນ</b>ຂອງ 2 ລູກ
+              ບໍ່ແມ່ນຈາກ “ຄູ່ທີ່ຫາຍໄປດົນສຸດ”.
             </p>
           </div>
+
+          {/* ── ແທງຄູ່ທີ່ AI ເລືອກ (ຫຼື ຄູ່ອື່ນໃນ 7 ຄູ່ນີ້) ໄດ້ເລີຍ ── */}
+          <PuplataoBetPanel
+            betting={betting}
+            betKind="avoid_pair"
+            accent="#3b82f6"
+            title="ແທງຄູ່ທີ່ອອກພ້ອມກັນໜ້ອຍສຸດ — ງວດຖັດໄປ"
+            winLabel="ບໍ່ອອກທັງສອງລູກ"
+            pairs={coldRanked}
+            symOf={symById}
+          />
 
           {/* ── #6 ຮ້ອນ / ເຢັນ ຕາມช່วง ── */}
           {rolling.length > 0 && (

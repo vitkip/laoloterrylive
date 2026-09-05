@@ -144,6 +144,15 @@ export default function AdminPuplatao() {
       const data = await res.json()
       if (res.ok) {
         toast.success(`ບັນທຶກງວດ ${data.draw_no} ສຳເລັດ`)
+        // ບິນເດີມພັນ demo ຂອງງວດນີ້ຖືກຄິດຜົນອັດຕະໂນມັດຢູ່ຝັ່ງ server
+        const settled = data.bets_settled
+        if (settled && (settled.settled > 0 || settled.voided > 0)) {
+          toast.success(
+            `ຄິດຜົນເດີມພັນ ${settled.settled} ບິນ · ຖືກ ${settled.won} · ຈ່າຍ ${Number(settled.paid).toLocaleString('en-US')} ກີບ`
+              + (settled.voided > 0 ? ` · ຍົກເລີກ ${settled.voided}` : ''),
+            { duration: 6000 },
+          )
+        }
         setForm({ draw_no: '', draw_at: '', pos1: '', pos2: '', pos3: '' })
         setAutoNo(true)
         setDrawPage(1)

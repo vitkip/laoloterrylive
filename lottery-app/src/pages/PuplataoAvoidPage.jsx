@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle, RefreshCw, ShieldOff, TrendingDown, Layers, Ban, Info, X, History,
-  Shuffle, Target, ArrowRight,
+  Shuffle, Target, ArrowRight, Wallet,
 } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
 import AiSummaryCard from '../components/AiSummaryCard'
+import PuplataoBetPanel from '../components/PuplataoBetPanel'
+import { usePuplataoBetting } from '../hooks/usePuplataoBetting'
 
 const API = `${API_BASE}/puplatao.php`
 
@@ -524,6 +526,7 @@ export default function PuplataoAvoidPage() {
   const [symbols, setSymbols] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
+  const betting = usePuplataoBetting()
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -696,6 +699,23 @@ export default function PuplataoAvoidPage() {
         <ArrowRight size={16} className="text-[#f97316] shrink-0" />
       </Link>
 
+      {/* ── ຕິດຕາມຜົນການແທງ ── */}
+      <Link
+        to="/puplatao/bets"
+        className="flex items-center justify-between gap-3 rounded-2xl p-4 transition-transform hover:-translate-y-0.5"
+        style={{ background: 'linear-gradient(135deg,#16a34a1f,#22c55e14)', border: '1px solid #16a34a44' }}
+      >
+        <span className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#16a34a26' }}>
+            <Wallet size={17} className="text-[#16a34a]" />
+          </span>
+          <span className="text-sm font-bold text-[#334155] dark:text-[#e2e8f0]">
+            ກຳໄລ-ຂາດທຶນສະສົມ — ສູດຫຼີກນີ້ແທງແລ້ວໄດ້ ຫຼື ເສຍ
+          </span>
+        </span>
+        <ArrowRight size={16} className="text-[#16a34a] shrink-0" />
+      </Link>
+
       {/* ── Disclaimer ── */}
       <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-4">
         <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
@@ -761,6 +781,19 @@ export default function PuplataoAvoidPage() {
               <AvoidPairCard key={`${p.a}-${p.b}`} pair={{ ...p, rank: i + 1 }} symOf={result.symOf} />
             ))}
           </div>
+
+          {/* ── ວາງເດີມພັນ: ເລືອກຄູ່ຫຼີກ 1/2/3 ແລ້ວແທງໄດ້ເລີຍ ── */}
+          <PuplataoBetPanel
+            betting={betting}
+            betKind="avoid_pair"
+            accent={ACCENT}
+            winLabel="ບໍ່ອອກທັງສອງລູກ"
+            symOf={result.symOf}
+            pairs={result.top.map((p, i) => ({
+              a: p.a, b: p.b, rank: i + 1, score: p.score, prob: p.noneProb,
+              hint: `ຍ້ອນຫຼັງ ${p.backtest.n} ງວດ — ບໍ່ອອກເລີຍ ${p.backtest.none} ຄັ້ງ (${p.backtest.pctNone}%)`,
+            }))}
+          />
 
           {/* ── ຍ້ອນເບິ່ງ: ສູດຫຼີກນີ້ ຫຼີກຖືກຈັກຄັ້ງ ── */}
           {backtest && backtest.n > 0 && (

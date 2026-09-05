@@ -14,9 +14,13 @@
  *   GET  ?r=stats/gap            — last-seen + draws-since (gap) per symbol
  *   GET  ?r=stats/pairs          — pair / triple counts per symbol + co-occurrence pairs
  *   GET  ?r=stats/daily          — draws per day
+ *
+ * ໝາຍເຫດ: ການແທງເດີມພັນ demo ຕາມສູດຄູ່ລູກ ຢູ່ໃນ puplatao-bets.php —
+ *          ໄຟລ໌ນີ້ພຽງແຕ່ເອີ້ນ puplatao_settle_pending() ຫຼັງເພີ່ມຜົນງວດ.
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/puplatao_bets.php';
 
 // ── CORS ──────────────────────────────────────────────────────────────
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -191,7 +195,15 @@ if ($resource === 'draws' && $method === 'POST') {
                 $ins->execute([':n' => $drawNo, ':p' => $p, ':s' => $s]);
             }
             $pdo->commit();
-            respond(201, ['draw_no' => $drawNo, 'message' => 'ເພີ່ມຜົນງວດສຳເລັດ']);
+
+            // ຜົນງວດເຂົ້າມາແລ້ວ → ຄິດຜົນບິນເດີມພັນທີ່ຄ້າງໄວ້ ແລະ ຈ່າຍເງິນ demo
+            $settled = puplatao_settle_pending($pdo);
+
+            respond(201, [
+                'draw_no' => $drawNo,
+                'message' => 'ເພີ່ມຜົນງວດສຳເລັດ',
+                'bets_settled' => $settled,
+            ]);
         } catch (PDOException $e) {
             if ($pdo->inTransaction()) { $pdo->rollBack(); }
             $dup = str_contains($e->getMessage(), 'Duplicate') || str_contains($e->getMessage(), '1062');

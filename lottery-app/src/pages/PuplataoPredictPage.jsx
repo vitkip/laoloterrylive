@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle, RefreshCw, Target, TrendingUp, Layers, Crown, Info, Plus, History,
-  Shuffle, ShieldOff, ArrowRight,
+  Shuffle, ShieldOff, ArrowRight, Wallet,
 } from 'lucide-react'
 import { API as API_BASE } from '../utils/api'
 import AiSummaryCard from '../components/AiSummaryCard'
+import PuplataoBetPanel from '../components/PuplataoBetPanel'
+import { usePuplataoBetting } from '../hooks/usePuplataoBetting'
 
 const API = `${API_BASE}/puplatao.php`
 
@@ -510,6 +512,7 @@ export default function PuplataoPredictPage() {
   const [symbols, setSymbols] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
+  const betting = usePuplataoBetting()
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -682,6 +685,23 @@ export default function PuplataoPredictPage() {
         <ArrowRight size={16} className="text-[#6366f1] shrink-0" />
       </Link>
 
+      {/* ── ຕິດຕາມຜົນການແທງ ── */}
+      <Link
+        to="/puplatao/bets"
+        className="flex items-center justify-between gap-3 rounded-2xl p-4 transition-transform hover:-translate-y-0.5"
+        style={{ background: 'linear-gradient(135deg,#16a34a1f,#22c55e14)', border: '1px solid #16a34a44' }}
+      >
+        <span className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#16a34a26' }}>
+            <Wallet size={17} className="text-[#16a34a]" />
+          </span>
+          <span className="text-sm font-bold text-[#334155] dark:text-[#e2e8f0]">
+            ກຳໄລ-ຂາດທຶນສະສົມ — ສູດນີ້ແທງແລ້ວໄດ້ ຫຼື ເສຍ
+          </span>
+        </span>
+        <ArrowRight size={16} className="text-[#16a34a] shrink-0" />
+      </Link>
+
       {/* ── Disclaimer ── */}
       <div className="flex gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-4">
         <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
@@ -747,6 +767,19 @@ export default function PuplataoPredictPage() {
               <PairCard key={`${p.a}-${p.b}`} pair={{ ...p, rank: i + 1 }} symOf={result.symOf} />
             ))}
           </div>
+
+          {/* ── ວາງເດີມພັນ: ເລືອກຄູ່ 1/2/3 ແລ້ວແທງໄດ້ເລີຍ ── */}
+          <PuplataoBetPanel
+            betting={betting}
+            betKind="predict_pair"
+            accent="#f97316"
+            winLabel="ອອກທັງສອງລູກ"
+            symOf={result.symOf}
+            pairs={result.top.map((p, i) => ({
+              a: p.a, b: p.b, rank: i + 1, score: p.score, prob: p.pairProb,
+              hint: `ຍ້ອນຫຼັງ ${p.backtest.n} ງວດ — ອອກພ້ອມກັນ ${p.backtest.both} ຄັ້ງ (${p.backtest.pctBoth}%)`,
+            }))}
+          />
 
           {/* ── ຍ້ອນເບິ່ງ: ສູດນີ້ທາຍຖືກຈັກຄັ້ງ ── */}
           {backtest && backtest.n > 0 && (

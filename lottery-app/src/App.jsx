@@ -50,6 +50,7 @@ const PuplataoPage         = lazy(() => import('./pages/PuplataoPage'))
 const PuplataoPredictPage  = lazy(() => import('./pages/PuplataoPredictPage'))
 const PuplataoAvoidPage    = lazy(() => import('./pages/PuplataoAvoidPage'))
 const AdminPuplatao        = lazy(() => import('./pages/AdminPuplatao'))
+const PuplataoBetsPage     = lazy(() => import('./pages/PuplataoBetsPage'))
 
 // ── Error pages ───────────────────────────────────────────────────
 const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'))
@@ -162,6 +163,7 @@ export default function App() {
               <Route path="/prediction"    element={<PredictionSummaryPage />} />
               <Route path="/member/profile" element={<MemberProfilePage />} />
               <Route path="/betting"        element={<BettingPage />} />
+              <Route path="/puplatao/bets"  element={<PuplataoBetsPage />} />
             </Route>
           </Route>
 
