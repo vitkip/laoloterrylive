@@ -74,12 +74,16 @@ function generateToken($user)
 
 /**
  * Issue a refresh token, store its hash in refresh_tokens, return raw token.
+ *
+ * $sessionEndsAt — unix timestamp the *session* dies at. Omit on a fresh login
+ * (JWT_REFRESH_TTL from now); on rotation pass the deadline of the token being
+ * rotated so the session stays a hard 24h cap instead of sliding forever.
  */
-function issueRefreshToken($conn, int $userId): string
+function issueRefreshToken($conn, int $userId, ?int $sessionEndsAt = null): string
 {
     $raw    = bin2hex(random_bytes(32));  // 64-char hex — sent to client
     $hashed = hash('sha256', $raw);       // stored in DB
-    $expiry = date('Y-m-d H:i:s', time() + JWT_REFRESH_TTL);
+    $expiry = date('Y-m-d H:i:s', $sessionEndsAt ?? (time() + JWT_REFRESH_TTL));
     $ip     = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
     $ua     = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255);
 
@@ -537,8 +541,9 @@ switch ($action) {
         echo json_encode([
             'token'         => $accessToken,
             'refresh_token' => $refreshToken,
-            'expires_in'    => JWT_ACCESS_TTL,
-            'user'          => [
+            'expires_in'      => JWT_ACCESS_TTL,
+            'session_ends_in' => JWT_REFRESH_TTL,
+            'user'            => [
                 'id'         => $user['user_id'],
                 'username'   => $user['username'],
                 'name'       => $user['full_name'],
@@ -607,8 +612,9 @@ switch ($action) {
             echo json_encode([
                 'token'         => $accessToken,
                 'refresh_token' => $refreshToken,
-                'expires_in'    => JWT_ACCESS_TTL,
-                'user'          => [
+                'expires_in'      => JWT_ACCESS_TTL,
+                'session_ends_in' => JWT_REFRESH_TTL,
+                'user'            => [
                     'id'       => $user['user_id'],
                     'username' => $user['username'],
                     'name'     => $user['full_name'],
@@ -658,6 +664,20 @@ switch ($action) {
                 }
             }
         }
+        // Revoke the refresh token so the session cannot be resumed after logout.
+        $input      = json_decode(file_get_contents('php://input'), true);
+        $rawRefresh = is_array($input) ? trim($input['refresh_token'] ?? '') : '';
+        if ($rawRefresh !== '') {
+            $refreshHash = hash('sha256', $rawRefresh);
+            $now         = date('Y-m-d H:i:s');
+            $revoke = $conn->prepare(
+                'UPDATE refresh_tokens SET revoked_at = ? WHERE token_hash = ? AND revoked_at IS NULL'
+            );
+            $revoke->bind_param('ss', $now, $refreshHash);
+            $revoke->execute();
+            $revoke->close();
+        }
+
         echo json_encode(["success" => true]);
         break;
 
@@ -1300,7 +1320,8 @@ switch ($action) {
             break;
         }
 
-        if (strtotime($rtRow['expires_at']) < time()) {
+        $sessionEndsAt = strtotime($rtRow['expires_at']);
+        if ($sessionEndsAt < time()) {
             http_response_code(401);
             echo json_encode(['error' => 'Refresh token ໝົດອາຍຸ ກະລຸນາ login ໃໝ່', 'code' => 'REFRESH_EXPIRED']);
             break;
@@ -1327,13 +1348,16 @@ switch ($action) {
             break;
         }
 
+        // Rotation inherits the original session deadline — the session is a hard
+        // JWT_REFRESH_TTL cap from login, not a window that slides on every refresh.
         $newAccessToken  = generateToken($userRow);
-        $newRefreshToken = issueRefreshToken($conn, $userId);
+        $newRefreshToken = issueRefreshToken($conn, $userId, $sessionEndsAt);
 
         echo json_encode([
-            'token'         => $newAccessToken,
-            'refresh_token' => $newRefreshToken,
-            'expires_in'    => JWT_ACCESS_TTL,
+            'token'             => $newAccessToken,
+            'refresh_token'     => $newRefreshToken,
+            'expires_in'        => JWT_ACCESS_TTL,
+            'session_ends_in'   => max(0, $sessionEndsAt - time()),
         ]);
         break;
 

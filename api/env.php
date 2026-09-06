@@ -77,7 +77,7 @@ define('DB_NAME', env('DB_NAME', 'lao_lottery_pro'));
 // ── JWT ────────────────────────────────────────────────────────────
 define('JWT_SECRET',      env('JWT_SECRET',      'dev-insecure-secret-change-me'));
 define('JWT_ACCESS_TTL',  (int) env('JWT_ACCESS_TTL',  900));    // 15 minutes
-define('JWT_REFRESH_TTL', (int) env('JWT_REFRESH_TTL', 604800)); // 7 days
+define('JWT_REFRESH_TTL', (int) env('JWT_REFRESH_TTL', 86400));  // 24 hours — absolute session lifetime
 
 // ── SMTP ───────────────────────────────────────────────────────────
 define('SMTP_HOST',      env('SMTP_HOST',      'localhost'));
