@@ -8,6 +8,7 @@
  * CLI ເທົ່ານັ້ນ — ບໍ່ເປີດຜ່ານ browser.
  *
  *   ສົ່ງທົດສອບ (ໃຊ້ຄ່າໃນ .env):   php api/tools/mail_test.php me@gmail.com
+ *   ລອງ host ອື່ນ:                 php api/tools/mail_test.php me@gmail.com --host=server190.web-hosting.com
  *   ລອງ port ອື່ນ:                 php api/tools/mail_test.php me@gmail.com --port=465
  *   ຂ້າມການກວດ SSL cert:           php api/tools/mail_test.php me@gmail.com --insecure
  *   ລອງທາງ sendmail ຂອງ server:    php api/tools/mail_test.php me@gmail.com --sendmail
@@ -29,6 +30,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 
 $to = null;
+$host = SMTP_HOST;
 $port = SMTP_PORT;
 $insecure = false;
 $useSendmail = false;
@@ -36,17 +38,18 @@ $useSendmail = false;
 foreach (array_slice($argv, 1) as $arg) {
     if ($arg === '--insecure')            { $insecure = true; continue; }
     if ($arg === '--sendmail')            { $useSendmail = true; continue; }
+    if (str_starts_with($arg, '--host=')) { $host = substr($arg, 7); continue; }
     if (str_starts_with($arg, '--port=')) { $port = (int) substr($arg, 7); continue; }
     if ($to === null)                     { $to = $arg; continue; }
 }
 
 if ($to === null) {
-    exit("ໃຊ້: php api/tools/mail_test.php <ອີເມວປາຍທາງ> [--port=465] [--insecure] [--sendmail]\n");
+    exit("ໃຊ້: php api/tools/mail_test.php <ອີເມວປາຍທາງ> [--host=...] [--port=465] [--insecure] [--sendmail]\n");
 }
 
 // ── ຄ່າທີ່ env.php ອ່ານໄດ້ຈິງ (ລະຫັດຜ່ານພິມແຕ່ຄວາມຍາວ) ─────────────
 echo "=== ຄ່າທີ່ອ່ານໄດ້ຈາກ .env ===\n";
-printf("  SMTP_HOST      = %s\n", SMTP_HOST);
+printf("  SMTP_HOST      = %s%s\n", $host, $host === SMTP_HOST ? '' : ' (override)');
 printf("  SMTP_PORT      = %d%s\n", $port, $port === SMTP_PORT ? '' : ' (override)');
 printf("  SMTP_USER      = %s\n", SMTP_USER === '' ? '(ຫວ່າງ)' : SMTP_USER);
 printf("  SMTP_PASS      = %s (ຍາວ %d ຕົວ)\n",
@@ -72,16 +75,16 @@ $mail->Body    = '<p>ຖ້າທ່ານໄດ້ຮັບເມວນີ້ �
 $mail->AltBody = 'ຖ້າທ່ານໄດ້ຮັບເມວນີ້ ແປວ່າ SMTP ໃຊ້ງານໄດ້ແລ້ວ. ສົ່ງເມື່ອ: ' . date('Y-m-d H:i:s');
 
 $sendmailPath = $useSendmail || SMTP_USER === ''
-             || SMTP_HOST === 'localhost' || SMTP_HOST === '127.0.0.1';
+             || $host === 'localhost' || $host === '127.0.0.1';
 
 if ($sendmailPath) {
     echo "ທາງທີ່ໃຊ້: sendmail ຂອງ server (isSendmail)\n";
     echo "  ເຫດຜົນ: " . ($useSendmail ? '--sendmail' : 'SMTP_USER ຫວ່າງ ຫຼື host ເປັນ localhost') . "\n\n";
     $mail->isSendmail();
 } else {
-    echo "ທາງທີ່ໃຊ້: SMTP ພາຍນອກ (" . SMTP_HOST . ":" . $port . ")\n\n";
+    echo "ທາງທີ່ໃຊ້: SMTP ພາຍນອກ (" . $host . ":" . $port . ")\n\n";
     $mail->isSMTP();
-    $mail->Host       = SMTP_HOST;
+    $mail->Host       = $host;
     $mail->SMTPAuth   = true;
     $mail->Username   = SMTP_USER;
     $mail->Password   = SMTP_PASS;
