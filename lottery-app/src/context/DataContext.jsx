@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { API } from '../utils/api';
+import { APP_CACHE_KEY, CACHE_VERSION_KEY, clearDataCache } from '../utils/cache';
 
 const DataContext = createContext({
   animals: [],
@@ -13,7 +14,7 @@ const DataContext = createContext({
 // ── localStorage stale-while-revalidate cache ─────────────────────
 // ຂໍ້ມູນ animals/types ບໍ່ຄ່ອຍປ່ຽນ → cache 5 ນາທີ (fresh window)
 // ຂໍ້ມູນ draws ອາດປ່ຽນທຸກ session → cache 60 ວິ (ສັ້ນ)
-const CACHE_KEY   = 'lao_lottery_data_v1';
+const CACHE_KEY   = APP_CACHE_KEY;
 const DRAWS_TTL   =  60 * 1000;   // 60 ວິ — draws fresh window
 const STATIC_TTL  =   5 * 60 * 1000; // 5 ນາທີ — animals/types fresh window
 
@@ -43,6 +44,31 @@ function expireDrawsCache() {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ ...cache, ts: 0 }));
   } catch {
     // silently ignore
+  }
+}
+
+// ── Server-driven invalidation ────────────────────────────────────
+// Admin ກົດ "ລ້າງ cache" ໃນ /admin/cache → server ບັມ cache_version.
+// ທຸກ browser ເຫັນເລກໃໝ່ແລ້ວຖິ້ມ cache ຂອງຕົນເອງ.
+// @returns {Promise<boolean>} true = cache ຖືກລ້າງ, ຕ້ອງດຶງຂໍ້ມູນໃໝ່
+async function syncCacheVersion() {
+  try {
+    const res = await fetch(`${API}/index.php?action=cache_version`, { cache: 'no-store' });
+    if (!res.ok) return false;
+    const { cache_version: serverVer } = await res.json();
+    if (!serverVer) return false;
+
+    const localVer = localStorage.getItem(CACHE_VERSION_KEY);
+    localStorage.setItem(CACHE_VERSION_KEY, serverVer);
+    // ຄັ້ງທຳອິດ (localVer === null) ພຽງແຕ່ຈື່ໄວ້ — ບໍ່ຕ້ອງລ້າງ
+    if (localVer !== null && localVer !== serverVer) {
+      clearDataCache();
+      return true;
+    }
+    return false;
+  } catch {
+    // ອອບໄລນ໌ / server ຍັງບໍ່ມີ endpoint — ໃຊ້ cache ເກົ່າຕໍ່ໄປ
+    return false;
   }
 }
 
@@ -163,11 +189,17 @@ export const DataProvider = ({ children }) => {
     }
   }, []);
 
+  // ກວດເວີຊັນຈາກ server ກ່ອນທຸກຮອບ — ຖ້າ admin ລ້າງ cache ແລ້ວ ຈະດຶງໃໝ່ທັງໝົດ
+  const refreshCycle = useCallback(async () => {
+    const invalidated = await syncCacheVersion();
+    return fetchData(invalidated);
+  }, [fetchData]);
+
   useEffect(() => {
-    fetchData();
+    refreshCycle();
 
     // Full data refresh every 60s (was 30s — reduces server load by 50%)
-    const fullInterval = setInterval(fetchData, 60000);
+    const fullInterval = setInterval(refreshCycle, 60000);
 
     // Live settings poll every 10s (lightweight — single small query)
     const liveInterval = setInterval(fetchLiveOnly, 10000);
@@ -176,15 +208,22 @@ export const DataProvider = ({ children }) => {
       clearInterval(fullInterval);
       clearInterval(liveInterval);
     };
-  }, [fetchData, fetchLiveOnly]);
+  }, [refreshCycle, fetchLiveOnly]);
 
   const refreshData = useCallback(async () => {
     expireDrawsCache();
     return fetchData(true); // force=true bypasses browser HTTP cache
   }, [fetchData]);
 
+  // ໃຊ້ໂດຍໜ້າ /admin/cache — ຖິ້ມ cache ທັງໝົດແລ້ວດຶງຂໍ້ມູນສົດ
+  const clearCache = useCallback(async () => {
+    clearDataCache();
+    prevDrawsJsonRef.current = '';
+    return fetchData(true);
+  }, [fetchData]);
+
   return (
-    <DataContext.Provider value={{ animals, draws, types, yearsByType, liveSettings, loading, error, refreshData }}>
+    <DataContext.Provider value={{ animals, draws, types, yearsByType, liveSettings, loading, error, refreshData, clearCache }}>
       {children}
     </DataContext.Provider>
   );

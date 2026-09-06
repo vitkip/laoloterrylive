@@ -26,6 +26,7 @@ function getNavItems(role) {
     { path: '/admin/betting/rates', icon: 'payments', label: 'ອັດຕາຈ່າຍຫວຍ', badge: null },
     { path: '/admin/betting/wallets', icon: 'account_balance_wallet', label: 'ກະເປົາເງິນຈຳລອງ', badge: null },
     { path: '/admin/logs', icon: 'history', label: 'Audit Logs', badge: null },
+    { path: '/admin/cache', icon: 'cached', label: 'ຈັດການ Cache', badge: null },
   ];
   const staffOnly = [
     { path: '/admin/animals', icon: 'image', label: 'ຮູບນາມສັດ', badge: null },
@@ -572,6 +573,7 @@ function Breadcrumb({ location }) {
     '/admin/profile': 'Profile ຂອງຂ້ອຍ',
     '/admin/happy545': 'Happy 545',
     '/admin/puplatao': 'ຫວຍປູປາເຕົ້າ',
+    '/admin/cache': 'ຈັດການ Cache',
   };
   const label = LABELS[location.pathname] || location.pathname.split('/').pop();
   return (

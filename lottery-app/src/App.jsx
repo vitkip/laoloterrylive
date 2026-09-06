@@ -40,6 +40,7 @@ const AdminContacts       = lazy(() => import('./pages/AdminContacts'))
 const AdminBettingRounds  = lazy(() => import('./pages/AdminBettingRounds'))
 const AdminBettingRates   = lazy(() => import('./pages/AdminBettingRates'))
 const AdminWallets        = lazy(() => import('./pages/AdminWallets'))
+const AdminCache          = lazy(() => import('./pages/AdminCache'))
 
 const TermsPage            = lazy(() => import('./pages/TermsPage'))
 const ContactPage          = lazy(() => import('./pages/ContactPage'))
@@ -189,6 +190,7 @@ export default function App() {
                 <Route path="/admin/logs" element={<UserLogsPage />} />
                 <Route path="/admin/betting/rates"   element={<AdminBettingRates />} />
                 <Route path="/admin/betting/wallets" element={<AdminWallets />} />
+                <Route path="/admin/cache" element={<AdminCache />} />
               </Route>
             </Route>
           </Route>

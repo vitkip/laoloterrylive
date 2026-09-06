@@ -1762,6 +1762,171 @@ switch ($action) {
         echo json_encode(["success" => true]);
         break;
 
+    // ══════════════════════════════════════════════
+    // ── CACHE MANAGEMENT ──────────────────────────
+    // ══════════════════════════════════════════════
+
+    // Public — every client polls this to learn when an admin invalidated
+    // the shared cache. Must never be cached itself.
+    case 'cache_version':
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        $res = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'cache_version'");
+        $row = $res ? $res->fetch_assoc() : null;
+        echo json_encode(['cache_version' => (string)($row['setting_value'] ?? '0')]);
+        break;
+
+    case 'cache_info':
+        requireAuth('admin');
+        header('Cache-Control: no-store');
+
+        $settings = [];
+        $res = $conn->query("SELECT setting_key, setting_value FROM system_settings
+                             WHERE setting_key IN ('cache_version','cache_cleared_at','cache_cleared_by')");
+        while ($res && $row = $res->fetch_assoc()) {
+            $settings[$row['setting_key']] = $row['setting_value'];
+        }
+
+        // PHP bytecode cache — enabled on most production hosts, often off in XAMPP
+        $opcache = ['enabled' => false];
+        if (function_exists('opcache_get_status')) {
+            $st = @opcache_get_status(false);
+            if (is_array($st) && !empty($st['opcache_enabled'])) {
+                $mem  = isset($st['memory_usage'])       ? $st['memory_usage']       : [];
+                $stat = isset($st['opcache_statistics']) ? $st['opcache_statistics'] : [];
+                $opcache = [
+                    'enabled'        => true,
+                    'cached_scripts' => (int)($stat['num_cached_scripts'] ?? 0),
+                    'hits'           => (int)($stat['hits'] ?? 0),
+                    'misses'         => (int)($stat['misses'] ?? 0),
+                    'hit_rate'       => round((float)($stat['opcache_hit_rate'] ?? 0), 2),
+                    'memory_used_mb' => round(((float)($mem['used_memory'] ?? 0)) / 1048576, 2),
+                    'memory_free_mb' => round(((float)($mem['free_memory'] ?? 0)) / 1048576, 2),
+                ];
+            }
+        }
+
+        // Rows that a 'logs' / 'expired' clear would remove right now
+        // ບາງ install ອາດຍັງບໍ່ມີຕາຕະລາງເຫຼົ່ານີ້ — ນັບບໍ່ໄດ້ກໍ່ຄືນ 0 ແທນທີ່ຈະ error
+        $countOf = function ($sql) use ($conn) {
+            try {
+                $r = $conn->query($sql);
+                return $r ? (int)$r->fetch_row()[0] : 0;
+            } catch (Throwable $e) {
+                return 0;
+            }
+        };
+
+        echo json_encode([
+            'cache_version'    => (string)($settings['cache_version'] ?? '0'),
+            'cache_cleared_at' => $settings['cache_cleared_at'] ?? null,
+            'cache_cleared_by' => $settings['cache_cleared_by'] ?? null,
+            'server_time'      => date('Y-m-d H:i:s'),
+            'opcache'          => $opcache,
+            // max-age (seconds) each cached endpoint sends to browsers
+            'http_cache'       => ['animals' => 300, 'types' => 600, 'draws' => 60, 'draw_years' => 60],
+            'purgeable'        => [
+                'visitor_stats'       => $countOf("SELECT COUNT(*) FROM visitor_stats WHERE visited_at < NOW() - INTERVAL 90 DAY"),
+                'user_logs'           => $countOf("SELECT COUNT(*) FROM user_logs WHERE created_at < NOW() - INTERVAL 365 DAY"),
+                'otp_codes'           => $countOf("SELECT COUNT(*) FROM otp_codes WHERE expires_at < NOW()"),
+                'refresh_tokens'      => $countOf("SELECT COUNT(*) FROM refresh_tokens WHERE expires_at < NOW() OR revoked_at < NOW() - INTERVAL 7 DAY"),
+                'password_resets'     => $countOf("SELECT COUNT(*) FROM password_resets WHERE expires_at < NOW()"),
+                'email_verifications' => $countOf("SELECT COUNT(*) FROM email_verifications WHERE expires_at < NOW() AND verified_at IS NULL"),
+            ],
+        ]);
+        break;
+
+    case 'clear_cache':
+        $admin = requireAuth('admin');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'POST required']);
+            break;
+        }
+        $body   = json_decode(file_get_contents('php://input'), true) ?? [];
+        $valid  = ['client', 'opcache', 'logs', 'expired'];
+        $scopes = (isset($body['scopes']) && is_array($body['scopes']))
+            ? array_values(array_intersect($valid, $body['scopes']))
+            : ['client', 'opcache'];
+        if (!$scopes) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ບໍ່ມີ scope ທີ່ຖືກຕ້ອງ — ໃຊ້ໄດ້: ' . implode(', ', $valid)]);
+            break;
+        }
+
+        $result = ['success' => true, 'scopes' => $scopes];
+
+        // client — bump the shared version so every browser drops its
+        // localStorage copy on the next poll / page load
+        if (in_array('client', $scopes, true)) {
+            $who = 'user#' . (int)$admin['user_id'];
+            try {
+                $whoStmt = $conn->prepare("SELECT username FROM users WHERE user_id = ?");
+                $whoStmt->bind_param("i", $admin['user_id']);
+                $whoStmt->execute();
+                $whoRow = $whoStmt->get_result()->fetch_assoc();
+                $whoStmt->close();
+                if (!empty($whoRow['username'])) $who = (string)$whoRow['username'];
+            } catch (Throwable $e) {
+                // ຊື່ຜູ້ໃຊ້ເປັນພຽງປ້າຍສະແດງຜົນ — ລ້າງ cache ຕໍ່ໄປໄດ້
+            }
+            $newVer = (string)time();
+            $now    = date('Y-m-d H:i:s');
+
+            $upsert = $conn->prepare("INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)
+                                      ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+            foreach (['cache_version' => $newVer, 'cache_cleared_at' => $now, 'cache_cleared_by' => $who] as $k => $v) {
+                $upsert->bind_param("ss", $k, $v);
+                $upsert->execute();
+            }
+            $upsert->close();
+
+            $result['cache_version']    = $newVer;
+            $result['cache_cleared_at'] = $now;
+            $result['cache_cleared_by'] = $who;
+        }
+
+        // opcache — drop compiled PHP so code changes take effect at once
+        if (in_array('opcache', $scopes, true)) {
+            if (function_exists('opcache_reset')) {
+                $result['opcache_reset'] = @opcache_reset() ? 'ok' : 'failed';
+            } else {
+                $result['opcache_reset'] = 'unavailable';
+            }
+            clearstatcache(true);
+        }
+
+        // logs — trim the audit / visitor tables that grow without bound
+        if (in_array('logs', $scopes, true)) {
+            $conn->query("DELETE FROM visitor_stats WHERE visited_at < NOW() - INTERVAL 90 DAY");
+            $result['visitor_stats_deleted'] = $conn->affected_rows;
+            $conn->query("DELETE FROM user_logs WHERE created_at < NOW() - INTERVAL 365 DAY");
+            $result['user_logs_deleted'] = $conn->affected_rows;
+        }
+
+        // expired — auth rows that are past their expiry and can never be used again
+        if (in_array('expired', $scopes, true)) {
+            $conn->query("DELETE FROM otp_codes WHERE expires_at < NOW()");
+            $result['otp_codes_deleted'] = $conn->affected_rows;
+            // keep revoked tokens 7 days — they are the trail for rotation-reuse detection
+            $conn->query("DELETE FROM refresh_tokens WHERE expires_at < NOW() OR revoked_at < NOW() - INTERVAL 7 DAY");
+            $result['refresh_tokens_deleted'] = $conn->affected_rows;
+            $conn->query("DELETE FROM password_resets WHERE expires_at < NOW()");
+            $result['password_resets_deleted'] = $conn->affected_rows;
+            $conn->query("DELETE FROM email_verifications WHERE expires_at < NOW() AND verified_at IS NULL");
+            $result['email_verifications_deleted'] = $conn->affected_rows;
+        }
+
+        $ip  = substr($_SERVER['REMOTE_ADDR'] ?? '', 0, 45);
+        $act = 'Clear cache (' . implode(', ', $scopes) . ')';
+        $logStmt = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address) VALUES (?,?,?)");
+        $logStmt->bind_param("iss", $admin['user_id'], $act, $ip);
+        $logStmt->execute();
+        $logStmt->close();
+
+        echo json_encode($result);
+        break;
+
     default:
         http_response_code(400);
         echo json_encode(["error" => "Unknown action"]);
