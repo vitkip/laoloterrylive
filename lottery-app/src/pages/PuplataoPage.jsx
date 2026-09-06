@@ -207,6 +207,13 @@ export default function PuplataoPage() {
   const coldByKey  = useMemo(() => Object.fromEntries(coldRanked.map(r => [r.key, r])), [coldRanked])
   const hotConf    = useMemo(() => pickConfidence(hotRanked, draws.length),  [hotRanked, draws.length])
   const coldConf   = useMemo(() => pickConfidence(coldRanked, draws.length), [coldRanked, draws.length])
+  // ບິນຄູ່ຫຼີກຊະນະເມື່ອ "ອອກທັງສອງລູກ" ຄືກັນກັບຄູ່ແທງ — ບັດເດີມພັນຈຶ່ງຕ້ອງ
+  // ສະແດງໂອກາດອອກທັງຄູ່ (pBoth) ບໍ່ແມ່ນໂອກາດບໍ່ອອກ (pNone) ທີ່ໃຊ້ຈັດອັນດັບ
+  const coldForBet = useMemo(
+    () => coldRanked.map(r => ({ ...r, prob: r.probBoth })),
+    [coldRanked],
+  )
+  const coldPickForBet = coldForBet[0]
 
   // ── #6 ຮ້ອນ / ເຢັນ ຕາມช่วง 5 / 10 / 20 / 50 ງວດ + ເທຣນ ─────────────
   const rolling = useMemo(() => {
@@ -711,11 +718,11 @@ export default function PuplataoPage() {
             </p>
 
             <AiPickBanner
-              pick={coldRanked[0]}
+              pick={coldPickForBet}
               conf={coldConf}
               accent="#3b82f6"
               symById={symById}
-              outcomeLabel="ບໍ່ອອກທັງຄູ່"
+              outcomeLabel="ອອກທັງຄູ່"
               rate={betting.rateOf('avoid_pair')}
             />
 
@@ -786,8 +793,8 @@ export default function PuplataoPage() {
             betKind="avoid_pair"
             accent="#3b82f6"
             title="ແທງຄູ່ທີ່ອອກພ້ອມກັນໜ້ອຍສຸດ — ງວດຖັດໄປ"
-            winLabel="ບໍ່ອອກທັງສອງລູກ"
-            pairs={coldRanked}
+            winLabel="ອອກທັງສອງລູກ"
+            pairs={coldForBet}
             symOf={symById}
           />
 

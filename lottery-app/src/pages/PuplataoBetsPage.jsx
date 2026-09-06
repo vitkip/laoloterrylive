@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { API as API_BASE } from '../utils/api'
+import FrontPagination from '../components/FrontPagination'
 
 const API = `${API_BASE}/puplatao-bets.php`
 
@@ -15,7 +16,7 @@ const KIND_META = {
     accent: '#f97316', Icon: Target, href: '/puplatao/next',
   },
   avoid_pair: {
-    short: 'ຄູ່ຫຼີກ', title: 'ຄູ່ລູກ ທີ່ຄວນຫຼີກ', win: 'ບໍ່ອອກທັງສອງລູກ',
+    short: 'ຄູ່ຫຼີກ', title: 'ຄູ່ລູກ ທີ່ຄວນຫຼີກ', win: 'ອອກທັງສອງລູກ',
     accent: '#6366f1', Icon: ShieldOff, href: '/puplatao/avoid',
   },
 }
@@ -234,6 +235,8 @@ export default function PuplataoBetsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [kindFilter, setKindFilter]     = useState('all')
   const [symbols, setSymbols] = useState([])
+  const [betPage, setBetPage]         = useState(1)
+  const [betPageSize, setBetPageSize] = useState(20)
 
   useEffect(() => {
     fetch(`${API_BASE}/puplatao.php?r=symbols`)
@@ -271,6 +274,13 @@ export default function PuplataoBetsPage() {
   }, [authFetch, statusFilter, kindFilter])
 
   useEffect(() => { fetchAll() }, [fetchAll])
+
+  // ຖ້າລາຍການຫົດລົງ (ໂຫຼດໃໝ່/ຕົວກອງ) ຢ່າຄ້າງຢູ່ໜ້າທີ່ບໍ່ມີແຖວ
+  const betPageSafe = Math.min(betPage, Math.max(1, Math.ceil(bets.length / betPageSize)))
+  const pagedBets = useMemo(
+    () => bets.slice((betPageSafe - 1) * betPageSize, betPageSafe * betPageSize),
+    [bets, betPageSafe, betPageSize],
+  )
 
   const overall = pl?.overall
   const hasBets = (overall?.total_bets ?? 0) > 0
@@ -458,7 +468,7 @@ export default function PuplataoBetsPage() {
               <h3 className="font-black text-sm text-[#0f172a] dark:text-[#f1f5f9]">ບິນເດີມພັນ</h3>
               <div className="flex gap-1.5 flex-wrap">
                 {[['all', 'ທັງໝົດ'], ['pending', 'ລໍຜົນ'], ['won', 'ຖືກ'], ['lost', 'ບໍ່ຖືກ'], ['void', 'ຍົກເລີກ']].map(([v, label]) => (
-                  <button key={v} onClick={() => setStatusFilter(v)}
+                  <button key={v} onClick={() => { setStatusFilter(v); setBetPage(1) }}
                           className="px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer transition-colors"
                           style={statusFilter === v
                             ? { background: '#16a34a', color: '#fff' }
@@ -468,7 +478,7 @@ export default function PuplataoBetsPage() {
                 ))}
                 <span className="w-px bg-[#e8edf8] dark:bg-white/10 mx-1" />
                 {[['all', 'ທຸກສູດ'], ['predict_pair', 'ຄູ່ແທງ'], ['avoid_pair', 'ຄູ່ຫຼີກ']].map(([v, label]) => (
-                  <button key={v} onClick={() => setKindFilter(v)}
+                  <button key={v} onClick={() => { setKindFilter(v); setBetPage(1) }}
                           className="px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer transition-colors"
                           style={kindFilter === v
                             ? { background: '#334155', color: '#fff' }
@@ -482,85 +492,97 @@ export default function PuplataoBetsPage() {
             {bets.length === 0 ? (
               <p className="text-sm text-[#64748b] text-center py-8">ບໍ່ມີບິນທີ່ກົງກັບຕົວກອງນີ້</p>
             ) : (
-              <div className="overflow-x-auto -mx-1 px-1">
-                <table className="w-full min-w-[620px] text-left">
-                  <thead>
-                    <tr className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8]">
-                      <th className="pb-2">ງວດ</th>
-                      <th className="pb-2">ຄູ່ລູກ</th>
-                      <th className="pb-2">ສູດ</th>
-                      <th className="pb-2 text-right">ເດີມພັນ</th>
-                      <th className="pb-2">ຜົນອອກ</th>
-                      <th className="pb-2 text-center">ສະຖານະ</th>
-                      <th className="pb-2 text-right">ກຳໄລ/ຂາດທຶນ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bets.map(b => {
-                      const meta = KIND_META[b.bet_kind]
-                      const st = STATUS_META[b.status]
-                      return (
-                        <tr key={b.bet_id} className="border-t border-[#f1f5f9] dark:border-white/5">
-                          <td className="py-2 text-[11px] tabular-nums text-[#64748b] whitespace-nowrap">
-                            {b.target_draw_no}
-                            <span className="block text-[10px] text-[#cbd5e1] dark:text-[#475569]">{fmtDateTime(b.draw_at || b.created_at)}</span>
-                          </td>
-                          <td className="py-2">
-                            <span className="flex items-center gap-1">
-                              <SymBall id={b.symbol_a} emoji={b.emoji_a} size={24} />
-                              <SymBall id={b.symbol_b} emoji={b.emoji_b} size={24} />
-                            </span>
-                          </td>
-                          <td className="py-2">
-                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md whitespace-nowrap"
-                                  style={{ background: meta.accent + '1a', color: meta.accent }}>
-                              {meta.short}{b.rank_at_bet ? ` #${b.rank_at_bet}` : ''}
-                            </span>
-                          </td>
-                          <td className="py-2 text-right text-[11px] tabular-nums text-[#334155] dark:text-[#cbd5e1] whitespace-nowrap">
-                            {fmt(b.stake)}
-                            <span className="block text-[10px] text-[#94a3b8]">×{b.multiplier_snapshot}</span>
-                          </td>
-                          <td className="py-2">
-                            {b.result
-                              ? <span className="flex items-center gap-0.5">
-                                  {b.result.map((id, i) => {
-                                    const hit = id === b.symbol_a || id === b.symbol_b
-                                    const c = SYM_COLOR[id] || '#64748b'
-                                    return (
-                                      <span key={i}
-                                            title={symName[id] || `ລູກ ${id}`}
-                                            className="inline-flex items-center justify-center w-6 h-6 rounded-md"
-                                            style={{
-                                              background: c + (hit ? '33' : '12'),
-                                              outline: hit ? `1.5px solid ${c}88` : 'none',
-                                              opacity: hit ? 1 : 0.45,
-                                            }}>
-                                        <span style={{ fontSize: 12, lineHeight: 1 }}>{symEmoji[id] || id}</span>
-                                      </span>
-                                    )
-                                  })}
-                                </span>
-                              : <span className="text-[11px] text-[#cbd5e1] dark:text-[#475569]">—</span>}
-                          </td>
-                          <td className="py-2 text-center">
-                            <span className="text-[10px] font-black px-2 py-0.5 rounded-md whitespace-nowrap"
-                                  style={{ background: st.bg, color: st.color }}>
-                              {st.label}
-                            </span>
-                          </td>
-                          <td className="py-2 text-right text-xs font-black tabular-nums whitespace-nowrap"
-                              style={{ color: b.status === 'pending' ? '#94a3b8' : plColor(b.profit_loss) }}>
-                            {b.status === 'pending'
-                              ? `ໄດ້ຄືນ ${fmt(b.potential_payout)}`
-                              : signed(b.profit_loss)}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                <div className="overflow-x-auto -mx-1 px-1">
+                  <table className="w-full min-w-[620px] text-left">
+                    <thead>
+                      <tr className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8]">
+                        <th className="pb-2">ງວດ</th>
+                        <th className="pb-2">ຄູ່ລູກ</th>
+                        <th className="pb-2">ສູດ</th>
+                        <th className="pb-2 text-right">ເດີມພັນ</th>
+                        <th className="pb-2">ຜົນອອກ</th>
+                        <th className="pb-2 text-center">ສະຖານະ</th>
+                        <th className="pb-2 text-right">ກຳໄລ/ຂາດທຶນ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagedBets.map(b => {
+                        const meta = KIND_META[b.bet_kind]
+                        const st = STATUS_META[b.status]
+                        return (
+                          <tr key={b.bet_id} className="border-t border-[#f1f5f9] dark:border-white/5">
+                            <td className="py-2 text-[11px] tabular-nums text-[#64748b] whitespace-nowrap">
+                              {b.target_draw_no}
+                              <span className="block text-[10px] text-[#cbd5e1] dark:text-[#475569]">{fmtDateTime(b.draw_at || b.created_at)}</span>
+                            </td>
+                            <td className="py-2">
+                              <span className="flex items-center gap-1">
+                                <SymBall id={b.symbol_a} emoji={b.emoji_a} size={24} />
+                                <SymBall id={b.symbol_b} emoji={b.emoji_b} size={24} />
+                              </span>
+                            </td>
+                            <td className="py-2">
+                              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md whitespace-nowrap"
+                                    style={{ background: meta.accent + '1a', color: meta.accent }}>
+                                {meta.short}{b.rank_at_bet ? ` #${b.rank_at_bet}` : ''}
+                              </span>
+                            </td>
+                            <td className="py-2 text-right text-[11px] tabular-nums text-[#334155] dark:text-[#cbd5e1] whitespace-nowrap">
+                              {fmt(b.stake)}
+                              <span className="block text-[10px] text-[#94a3b8]">×{b.multiplier_snapshot}</span>
+                            </td>
+                            <td className="py-2">
+                              {b.result
+                                ? <span className="flex items-center gap-0.5">
+                                    {b.result.map((id, i) => {
+                                      const hit = id === b.symbol_a || id === b.symbol_b
+                                      const c = SYM_COLOR[id] || '#64748b'
+                                      return (
+                                        <span key={i}
+                                              title={symName[id] || `ລູກ ${id}`}
+                                              className="inline-flex items-center justify-center w-6 h-6 rounded-md"
+                                              style={{
+                                                background: c + (hit ? '33' : '12'),
+                                                outline: hit ? `1.5px solid ${c}88` : 'none',
+                                                opacity: hit ? 1 : 0.45,
+                                              }}>
+                                          <span style={{ fontSize: 12, lineHeight: 1 }}>{symEmoji[id] || id}</span>
+                                        </span>
+                                      )
+                                    })}
+                                  </span>
+                                : <span className="text-[11px] text-[#cbd5e1] dark:text-[#475569]">—</span>}
+                            </td>
+                            <td className="py-2 text-center">
+                              <span className="text-[10px] font-black px-2 py-0.5 rounded-md whitespace-nowrap"
+                                    style={{ background: st.bg, color: st.color }}>
+                                {st.label}
+                              </span>
+                            </td>
+                            <td className="py-2 text-right text-xs font-black tabular-nums whitespace-nowrap"
+                                style={{ color: b.status === 'pending' ? '#94a3b8' : plColor(b.profit_loss) }}>
+                              {b.status === 'pending'
+                                ? `ໄດ້ຄືນ ${fmt(b.potential_payout)}`
+                                : signed(b.profit_loss)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="-mx-4">
+                  <FrontPagination
+                    total={bets.length}
+                    page={betPageSafe}
+                    pageSize={betPageSize}
+                    onPageChange={setBetPage}
+                    onPageSizeChange={setBetPageSize}
+                  />
+                </div>
+              </>
             )}
 
             <p className="mt-3 text-[11px] text-[#94a3b8] leading-relaxed">

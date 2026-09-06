@@ -92,15 +92,17 @@ function puplatao_wallet_apply(
 
 /**
  * ບິນນີ້ຊະນະບໍ່?
- *   predict_pair — ຕ້ອງອອກ "ທັງສອງລູກ" ໃນ 3 ໜ່ວຍ
- *   avoid_pair   — ຕ້ອງ "ບໍ່ອອກທັງສອງລູກ" ເລີຍ
+ *   ທັງ predict_pair ແລະ avoid_pair — ຕ້ອງອອກ "ທັງສອງລູກ" ໃນ 3 ໜ່ວຍ
+ *
+ * bet_kind ບອກພຽງແຕ່ວ່າຄູ່ນີ້ມາຈາກສູດໃດ (ຄູ່ແທງ = ຄູ່ທີ່ໜ້າຈະອອກ,
+ * ຄູ່ຫຼີກ = ຄູ່ທີ່ໜ້າຈະບໍ່ອອກ) — ບໍ່ໄດ້ປ່ຽນເງື່ອນໄຂຊະນະ. ຜູ້ໃຊ້ທີ່ເອົາ
+ * ຄູ່ຫຼີກໄປແທງ ຄືການແທງວ່າຄູ່ນັ້ນຈະອອກແທ້ ຈຶ່ງຖືວ່າຖືກເມື່ອອອກທັງສອງລູກ.
+ *
  * $result = symbol_id 3 ໜ່ວຍຂອງງວດນັ້ນ
  */
 function puplatao_bet_is_win(string $kind, array $result, int $a, int $b): bool
 {
-    $hasA = in_array($a, $result, true);
-    $hasB = in_array($b, $result, true);
-    return $kind === 'avoid_pair' ? (!$hasA && !$hasB) : ($hasA && $hasB);
+    return in_array($a, $result, true) && in_array($b, $result, true);
 }
 
 /**

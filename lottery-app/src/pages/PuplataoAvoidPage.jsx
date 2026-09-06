@@ -203,7 +203,7 @@ function buildAvoidPairPredictions(draws, symbols, hazard = null) {
       const bothProb = Math.max(0, Math.min(1,
         1 - Math.pow(1 - q[a], 3) - Math.pow(1 - q[b], 3) + Math.pow(rAB, 3)))
       const notBothProb = 1 - bothProb
-      pairs.push({ a, b, third, score, noneProb, notBothProb })
+      pairs.push({ a, b, third, score, noneProb, bothProb, notBothProb })
     }
   }
   pairs.sort((x, y) => y.score - x.score)
@@ -218,10 +218,12 @@ function buildAvoidPairPredictions(draws, symbols, hazard = null) {
       if (!hasA && !hasB) none++
       if (!(hasA && hasB)) notBoth++
     })
+    const both = bt.length - notBoth   // ອອກພ້ອມກັນ = ເງື່ອນໄຂຊະນະຂອງບິນເດີມພັນ
     p.backtest = {
-      n: bt.length, none, notBoth,
+      n: bt.length, none, notBoth, both,
       pctNone: bt.length ? Math.round((none / bt.length) * 100) : 0,
       pctNotBoth: bt.length ? Math.round((notBoth / bt.length) * 100) : 0,
+      pctBoth: bt.length ? Math.round((both / bt.length) * 100) : 0,
     }
   })
 
@@ -787,11 +789,11 @@ export default function PuplataoAvoidPage() {
             betting={betting}
             betKind="avoid_pair"
             accent={ACCENT}
-            winLabel="ບໍ່ອອກທັງສອງລູກ"
+            winLabel="ອອກທັງສອງລູກ"
             symOf={result.symOf}
             pairs={result.top.map((p, i) => ({
-              a: p.a, b: p.b, rank: i + 1, score: p.score, prob: p.noneProb,
-              hint: `ຍ້ອນຫຼັງ ${p.backtest.n} ງວດ — ບໍ່ອອກເລີຍ ${p.backtest.none} ຄັ້ງ (${p.backtest.pctNone}%)`,
+              a: p.a, b: p.b, rank: i + 1, score: p.score, prob: p.bothProb,
+              hint: `ຍ້ອນຫຼັງ ${p.backtest.n} ງວດ — ອອກພ້ອມກັນ ${p.backtest.both} ຄັ້ງ (${p.backtest.pctBoth}%)`,
             }))}
           />
 

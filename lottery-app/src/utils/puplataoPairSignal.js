@@ -185,7 +185,7 @@ export function signalReason(sig, mode) {
  * @param signals  ຜົນຈາກ buildPairSignals
  * @param cardPairs [{ a, b }] — 7 ຄູ່ທີ່ບັດນັ້ນສະແດງ
  * @param mode     'both' = ຫາຄູ່ທີ່ໜ້າຈະອອກທັງສອງລູກ · 'none' = ຫາຄູ່ທີ່ໜ້າຈະບໍ່ອອກເລີຍ
- * @returns [{ a, b, rank, prob, score, hint, reason, isPick, edgeVsBase }] ຮຽງອັນດັບ 1 → 7
+ * @returns [{ a, b, rank, prob, probBoth, score, hint, reason, isPick, edgeVsBase }] ຮຽງອັນດັບ 1 → 7
  */
 export function rankCardPairs(signals, cardPairs, mode) {
   if (!signals?.n || !cardPairs?.length) return []
@@ -207,6 +207,8 @@ export function rankCardPairs(signals, cardPairs, mode) {
     key: r.sig.key,
     rank: i + 1,
     prob: r.prob,
+    // ໂອກາດ "ອອກທັງສອງລູກ" — ເງື່ອນໄຂຊະນະຂອງບິນເດີມພັນ (ທັງສອງສູດ)
+    probBoth: r.sig.pBoth,
     // score 0–1 = ແຮງກວ່າຄູ່ອື່ນໃນບັດນີ້ຫຼາຍປານໃດ (ເກັບໄວ້ກັບບິນເດີມພັນ)
     score: hi > lo ? (r.prob - lo) / (hi - lo) : 1,
     edgeVsBase: base > 0 ? r.prob / base - 1 : 0,
